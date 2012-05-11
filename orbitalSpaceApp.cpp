@@ -5,13 +5,11 @@
 #ifdef _WIN32
 # include <SDL.h>
 # include <SDL_opengl.h>
-# include <GL/glut.h>
 #else
 # include <SDL/SDL.h>
 # include <SDL/SDL_opengl.h>
 # include <GL/gl.h>
 # include <GL/glu.h>
-# include <GL/glut.h>
 #endif
 
 #include <string>
@@ -214,6 +212,58 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
   }
 }
 
+void OrbitalSpaceApp::DrawWireSphere(float const radius, int const slices, int const stacks)
+{
+    int curStack, curSlice;
+
+    /* Adjust z and radius as stacks and slices are drawn. */
+
+    double r;
+    double x,y,z;
+
+    double const sliceInc = 2*M_PI / (-slices);
+    double const stackInc = 2*M_PI / (2*stacks);
+    /* Draw a line loop for each stack */
+
+    for (curStack = 1; curStack < stacks; curStack++)
+    {
+        y = cos( curStack * stackInc );
+        r = sin( curStack * stackInc );
+
+        glBegin(GL_LINE_LOOP);
+
+            for(curSlice = 0; curSlice <= slices; curSlice++)
+            {
+                x = cos( curSlice * sliceInc );
+                z = sin( curSlice * sliceInc );
+
+                glNormal3d(x,y,z);
+                glVertex3d(x*r*radius,y*r*radius,z*radius);
+            }
+
+        glEnd();
+    }
+
+    /* Draw a line loop for each slice */
+
+    for (curSlice = 0; curSlice < slices; curSlice++)
+    {
+        glBegin(GL_LINE_STRIP);
+
+            for (curStack = 1; curStack < stacks; curStack++)
+            {
+                x = cos( curSlice * sliceInc ) * sin( curStack * stackInc );
+                z = sin( curSlice * sliceInc ) * sin( curStack * stackInc );
+                y = cos( curStack * stackInc );
+
+                glNormal3d(x,y,z);
+                glVertex3d(x*radius,y*radius,z*radius);
+            }
+
+        glEnd();
+    }
+}
+
 void OrbitalSpaceApp::RenderState()
 {
   glMatrixMode(GL_PROJECTION);
@@ -313,7 +363,7 @@ void OrbitalSpaceApp::RenderState()
     DrawTrail(m_curStep, &m_poseHist[0], trailCol);
   }
   
-  glutWireSphere(10.0, 32, 32);
+  DrawWireSphere(100.0, 32, 32);
 
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s Tick: %04d \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime, m_curStep);
 }

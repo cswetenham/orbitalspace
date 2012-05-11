@@ -3,7 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitalSpace", "SDLTest.vcxproj", "{59A0CC2B-696D-47ED-9176-E8C5AC78EEEF}"
 	ProjectSection(ProjectDependencies) = postProject
-		{1AE4E979-0D35-4747-BF8E-DD60358F49DB} = {1AE4E979-0D35-4747-BF8E-DD60358F49DB}
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68} = {81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}
 	EndProjectSection
 EndProject

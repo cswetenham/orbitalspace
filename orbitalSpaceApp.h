@@ -42,6 +42,8 @@ protected:
   virtual void RenderState();
 
 private:
+  void DrawWireSphere(float const radius, int const slices, int const stacks);
+
   void DrawRobots(int const _n, Pose const* const _poses, float const* const _weights, Vec3 const& _frontCol, Vec3 const& backCol);
   
   void DrawSensors(int const _n, Pose const* const _poses, float const* const _weights, Pose const* const _sensorPose, Vec3 const& _lineCol);
