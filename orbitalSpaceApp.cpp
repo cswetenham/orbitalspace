@@ -2,15 +2,8 @@
 
 #include "perftimer.h"
 
-#ifdef _WIN32
-# include <SDL.h>
-# include <SDL_opengl.h>
-#else
-# include <SDL/SDL.h>
-# include <SDL/SDL_opengl.h>
 # include <GL/gl.h>
 # include <GL/glu.h>
-#endif
 
 #include <string>
 #include <sstream>
@@ -106,7 +99,7 @@ void OrbitalSpaceApp::ShutdownState()
   App::ShutdownState();
 }
 
-void OrbitalSpaceApp::HandleEvent(SDL_Event const& _event)
+void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 {
   // TODO: individually toggle rendering of avg pose, std dev of pose, real pose, particles
   // TODO: print keys on startup

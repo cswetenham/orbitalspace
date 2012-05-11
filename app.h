@@ -11,10 +11,13 @@
 #include "timer.h"
 
 #ifdef _WIN32
-# include <SDL.h>
-#else
-# include <SDL/SDL.h>
+# include <Windows.h>
 #endif
+
+# include <GL/gl.h>
+# include <GL/glu.h>
+
+#include <SFML/Window.hpp>
 
 class App
 {
@@ -29,7 +32,7 @@ protected:
   virtual void InitState();
   virtual void ShutdownState();
   
-  virtual void HandleEvent(SDL_Event const& _event) = 0;
+  virtual void HandleEvent(sf::Event const& _event) = 0;
   
   virtual void UpdateState(float const _dt) = 0;
   
@@ -47,7 +50,6 @@ protected:
   void EndRender();
     
 protected:
-  SDL_Surface* m_display;
   Timer::PerfTime m_lastFrameDuration;
   bool m_running;
 };

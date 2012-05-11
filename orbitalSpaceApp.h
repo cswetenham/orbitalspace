@@ -12,12 +12,6 @@
 #include "sv_particlefilter.h"
 #include "app.h"
 
-#ifdef _WIN32
-# include <SDL.h>
-#else
-# include <SDL/SDL.h>
-#endif
-
 class OrbitalSpaceApp :
   public App
 {
@@ -36,7 +30,7 @@ protected:
   virtual void InitState();
   virtual void ShutdownState();
 
-  virtual void HandleEvent(SDL_Event const& _event);
+  virtual void HandleEvent(sf::Event const& _event);
   virtual void UpdateState(float const _dt);
   
   virtual void RenderState();

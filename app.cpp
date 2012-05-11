@@ -3,18 +3,10 @@
 #include "perftimer.h"
 #include "util.h"
 
-#ifdef _WIN32
-# include <SDL.h>
-# include <SDL_opengl.h>
-#else
-# include <SDL/SDL.h>
-# include <SDL/SDL_opengl.h>
 # include <GL/gl.h>
 # include <GL/glu.h>
-#endif
 
 App::App():
-  m_display(NULL),
   m_lastFrameDuration(0),
   m_running(true)
 {
