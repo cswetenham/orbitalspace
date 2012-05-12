@@ -7,6 +7,7 @@
 # include <GL/glu.h>
 
 App::App():
+  m_window(NULL),
   m_lastFrameDuration(0),
   m_running(true)
 {
@@ -15,6 +16,7 @@ App::App():
 
 App::~App()
 {
+  delete m_window; m_window = NULL;
   PerfTimer::StaticShutdown(); // TODO terrible code
 }
 
@@ -34,14 +36,11 @@ void App::Shutdown()
 
 void App::InitRender()
 {
-  if(SDL_Init(SDL_INIT_EVERYTHING | SDL_INIT_NOPARACHUTE) < 0) {
-    exit(1);
-  }
-
-  SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-  if((m_display = SDL_SetVideoMode(640, 480, 32, SDL_HWSURFACE | SDL_OPENGL)) == NULL) {
-    exit(3);
-  }
+  sf::ContextSettings settings;
+  settings.depthBits         = 24; // Request a 24 bits depth buffer
+  settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
+  settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
+  m_window = new sf::Window(sf::VideoMode(800, 600, 32), "SFML OpenGL", sf::Style::Close, settings);
   
   glClearColor(0, 0, 0, 0);
   glClearDepth(1.0f);
@@ -49,9 +48,17 @@ void App::InitRender()
 
 void App::ShutdownRender()
 {
-  SDL_FreeSurface(m_display);
-  m_display = NULL;
-  SDL_Quit();
+  m_window->close();
+  delete m_window; m_window = NULL;
+}
+
+void App::PollEvents()
+{
+    sf::Event event;
+    while (m_window->pollEvent(event))
+    {
+      HandleEvent(event);
+    }
 }
 
 void App::InitState()
@@ -64,6 +71,8 @@ void App::ShutdownState()
 
 void App::Run()
 {
+  // TODO need to run event loop while (window.isOpen())?
+    
   while (m_running)
   {
     Timer::PerfTime const frameStart = Timer::GetPerfTime();
@@ -99,14 +108,6 @@ void App::Run()
   }
 }
 
-void App::PollEvents()
-{
-  SDL_Event event;
-  while(SDL_PollEvent(&event)) {
-    HandleEvent(event);
-  }
-}
-
 void App::BeginRender()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -115,5 +116,5 @@ void App::BeginRender()
 
 void App::EndRender()
 {
-  SDL_GL_SwapBuffers();
+  m_window->display();
 }

@@ -103,13 +103,11 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 {
   // TODO: individually toggle rendering of avg pose, std dev of pose, real pose, particles
   // TODO: print keys on startup
-  
+  /* TODO
   if(_event.type == SDL_QUIT) {
     m_running = false;
   } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_p) {
     m_paused = !m_paused;
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_s) {
-    /* DISABLED */
   } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_t) {
     m_singleStep = true;
     m_paused = false;
@@ -119,12 +117,18 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     m_useWeights = !m_useWeights;
   } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_k) {
     m_alice.Kidnap(&m_rnd, m_world);
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_r) {
-    /* DISABLED */
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_c) {
-    /* DISABLED */
   }
- 
+ */
+  // Some code for stopping application on close or when escape is pressed...
+  if (_event.type == sf::Event::Resized)
+  {
+    glViewport(0, 0, _event.size.width, _event.size.height);
+  }
+
+  if (_event.type == sf::Event::Closed)
+  {
+    m_running = false;
+  }
 }
 
 void OrbitalSpaceApp::UpdateState(float const _dt)

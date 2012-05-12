@@ -51,6 +51,7 @@ protected:
     
 protected:
   Timer::PerfTime m_lastFrameDuration;
+  sf::Window* m_window;
   bool m_running;
 };
 
