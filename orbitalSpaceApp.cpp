@@ -17,7 +17,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_wireframe(false),
   m_curStep(-1),
   m_camZ(-1000),
-  m_camTheta(0.f)
+  m_camTheta(0.f),
+  m_camPhi(0.f)
 {
 }
 
@@ -43,6 +44,8 @@ void OrbitalSpaceApp::Run()
     
     m_camTheta += mouseDelta.x * M_TAU / 100.f;
     Util::Wrap(m_camTheta, 0.f, M_TAU);
+    m_camPhi += mouseDelta.y * M_TAU / 100.f;
+    Util::Wrap(m_camPhi, 0.f, M_TAU);
 
     {
       PERFTIMER("UpdateState");
@@ -317,7 +320,10 @@ void OrbitalSpaceApp::RenderState()
   Vec3 focus(0.0, 0.0, 0.0);
   Vec3 up(0.0, 1.0, 0.0);
 
+  glTranslatef(0.f, 0.f, m_camZ);
   glRotatef(m_camTheta, 0.0f, 1.0f, 0.0f);
+  glRotatef(m_camPhi, 1.0f, 0.0f, 0.0f);
+  glTranslatef(0.f, 0.f, -m_camZ);
 
   gluLookAt(eye.m_x, eye.m_y, eye.m_z,
             focus.m_x, focus.m_y, focus.m_z,

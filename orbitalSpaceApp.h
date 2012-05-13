@@ -81,6 +81,7 @@ private:
 
   float m_camZ;
   float m_camTheta;
+  float m_camPhi;
 
   enum { NUM_STEPS = 30000 };
   enum { STEP_SIZE_MS = 32 }; // Duration of each step in simulated time
