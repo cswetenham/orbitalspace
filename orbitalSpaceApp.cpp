@@ -293,7 +293,7 @@ void OrbitalSpaceApp::RenderState()
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   float const fov = 35.f;
-  gluPerspective(fov, aspect, 1.0f, 1000.0f);
+  gluPerspective(fov, aspect, 1.0f, 10000.0f);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
