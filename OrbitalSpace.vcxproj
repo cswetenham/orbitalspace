@@ -73,10 +73,10 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;_DEBUG;_USE_MATH_DEFINES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>D:\Coding\SFML-2.0-rc\include;D:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CallingConvention>FastCall</CallingConvention>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -96,7 +96,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;NDEBUG;_USE_MATH_DEFINES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>D:\Coding\SFML-2.0-rc\include;D:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CallingConvention>FastCall</CallingConvention>
+      <CallingConvention>Cdecl</CallingConvention>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>

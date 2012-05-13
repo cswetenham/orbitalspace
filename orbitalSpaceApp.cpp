@@ -2,9 +2,6 @@
 
 #include "perftimer.h"
 
-# include <GL/gl.h>
-# include <GL/glu.h>
-
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -19,7 +16,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_useWeights(true),
   m_wireframe(false),
   m_curStep(-1),
-  m_camZ(-1000)
+  m_camZ(-1000),
+  m_camTheta(0.f)
 {
 }
 
@@ -37,6 +35,11 @@ void OrbitalSpaceApp::Run()
       PERFTIMER("PollEvents");
       PollEvents();
     }
+
+    // Input handling
+    sf::Mouse::setPosition(sf::Vector2i(m_config.width/2, m_config.height/2), *m_window);
+    // TODO get delta
+    // TODO hide pointer
 
     {
       PERFTIMER("UpdateState");
@@ -60,7 +63,7 @@ void OrbitalSpaceApp::Run()
         EndRender();
       }
     }
-
+    
     m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
   }
 }
@@ -79,6 +82,8 @@ void OrbitalSpaceApp::InitRender()
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
   m_window = new sf::Window(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
   
+  m_window->setMouseCursorVisible(false);
+
   glViewport(0, 0, m_config.width, m_config.height);
 
   glClearColor(0, 0, 0, 0);
@@ -140,6 +145,14 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   if (_event.type == sf::Event::MouseWheelMoved)
   {
     m_camZ += 10.f * _event.mouseWheel.delta;
+  }
+
+  if (_event.type == sf::Event::KeyPressed)
+  {
+    if (_event.key.code == sf::Keyboard::Escape)
+    {
+      m_running = false;
+    }
   }
 
   if (_event.type == sf::Event::Closed)
@@ -300,6 +313,8 @@ void OrbitalSpaceApp::RenderState()
   Vec3 eye(0.0, 0.0, m_camZ);
   Vec3 focus(0.0, 0.0, 0.0);
   Vec3 up(0.0, 1.0, 0.0);
+
+  glRotatef(m_camTheta, 0.0f, 1.0f, 0.0f);
 
   gluLookAt(eye.m_x, eye.m_y, eye.m_z,
             focus.m_x, focus.m_y, focus.m_z,

@@ -64,6 +64,7 @@ void App::ShutdownState()
 void App::Run()
 {
   // TODO need to run event loop while (window.isOpen())?
+  // TODO this doesn't get called :|
     
   while (m_running)
   {

@@ -18,6 +18,7 @@
 # include <GL/glu.h>
 
 #include <SFML/Window.hpp>
+#include <SFML/System.hpp>
 
 class App
 {
