@@ -78,6 +78,8 @@ private:
   SimViz::RobotAgent m_bob;
 #endif
   SimViz::World m_world;
+
+  float m_camZ;
     
   enum { NUM_STEPS = 30000 };
   enum { STEP_SIZE_MS = 32 }; // Duration of each step in simulated time

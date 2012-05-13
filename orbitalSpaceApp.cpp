@@ -18,7 +18,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_singleStep(true),
   m_useWeights(true),
   m_wireframe(false),
-  m_curStep(-1)
+  m_curStep(-1),
+  m_camZ(-1000)
 {
 }
 
@@ -67,11 +68,21 @@ void OrbitalSpaceApp::Run()
 void OrbitalSpaceApp::InitRender()
 {
   App::InitRender();
+
+  // TODO
+  m_config.width = 800;
+  m_config.height = 600;
   
-  m_config.width = 640;
-  m_config.height = 480;
+  sf::ContextSettings settings;
+  settings.depthBits         = 24; // Request a 24 bits depth buffer
+  settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
+  settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
+  m_window = new sf::Window(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
   
   glViewport(0, 0, m_config.width, m_config.height);
+
+  glClearColor(0, 0, 0, 0);
+  glClearDepth(1.0f);
 }
 
 void OrbitalSpaceApp::ShutdownRender()
@@ -119,10 +130,16 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     m_alice.Kidnap(&m_rnd, m_world);
   }
  */
-  // Some code for stopping application on close or when escape is pressed...
+  /*
   if (_event.type == sf::Event::Resized)
   {
     glViewport(0, 0, _event.size.width, _event.size.height);
+  }
+  */
+
+  if (_event.type == sf::Event::MouseWheelMoved)
+  {
+    m_camZ += 10.f * _event.mouseWheel.delta;
   }
 
   if (_event.type == sf::Event::Closed)
@@ -235,14 +252,13 @@ void OrbitalSpaceApp::DrawWireSphere(float const radius, int const slices, int c
                 z = sin( curSlice * sliceInc );
 
                 glNormal3d(x,y,z);
-                glVertex3d(x*r*radius,y*r*radius,z*radius);
+                glVertex3d(x*r*radius,y*radius,z*r*radius);
             }
 
         glEnd();
     }
 
     /* Draw a line loop for each slice */
-
     for (curSlice = 0; curSlice < slices; curSlice++)
     {
         glBegin(GL_LINE_STRIP);
@@ -281,7 +297,7 @@ void OrbitalSpaceApp::RenderState()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  Vec3 eye(0.0, 0.0, -1000);
+  Vec3 eye(0.0, 0.0, m_camZ);
   Vec3 focus(0.0, 0.0, 0.0);
   Vec3 up(0.0, 1.0, 0.0);
 

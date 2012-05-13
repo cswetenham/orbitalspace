@@ -36,14 +36,6 @@ void App::Shutdown()
 
 void App::InitRender()
 {
-  sf::ContextSettings settings;
-  settings.depthBits         = 24; // Request a 24 bits depth buffer
-  settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
-  settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
-  m_window = new sf::Window(sf::VideoMode(800, 600, 32), "SFML OpenGL", sf::Style::Close, settings);
-  
-  glClearColor(0, 0, 0, 0);
-  glClearDepth(1.0f);
 }
 
 void App::ShutdownRender()
