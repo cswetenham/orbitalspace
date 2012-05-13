@@ -92,7 +92,9 @@ void OrbitalSpaceApp::InitRender()
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  glClearColor(0, 0, 0, 0);
+  Vec3 c(41.f,42.f,34.f);
+  c /= 255.0f;
+  glClearColor(c.m_x, c.m_y, c.m_z, 0);
   glClearDepth(1.0f);
 }
 
@@ -123,30 +125,14 @@ void OrbitalSpaceApp::ShutdownState()
 
 void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 {
-  // TODO: individually toggle rendering of avg pose, std dev of pose, real pose, particles
-  // TODO: print keys on startup
-  /* TODO
-  if(_event.type == SDL_QUIT) {
-    m_running = false;
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_p) {
-    m_paused = !m_paused;
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_t) {
-    m_singleStep = true;
-    m_paused = false;
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_w) {
-    m_wireframe = !m_wireframe;
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_e) {
-    m_useWeights = !m_useWeights;
-  } else if (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_k) {
-    m_alice.Kidnap(&m_rnd, m_world);
-  }
- */
-  /*
+  /* TODO allow?
   if (_event.type == sf::Event::Resized)
   {
     glViewport(0, 0, _event.size.width, _event.size.height);
   }
   */
+
+  // TODO mouse capture isn't ideal?
 
   if (_event.type == sf::Event::MouseWheelMoved)
   {
@@ -256,8 +242,8 @@ void OrbitalSpaceApp::DrawWireSphere(float const radius, int const slices, int c
 
     double const sliceInc = M_TAU / (-slices);
     double const stackInc = M_TAU / (2*stacks);
+    
     /* Draw a line loop for each stack */
-
     for (curStack = 1; curStack < stacks; curStack++)
     {
         y = cos( curStack * stackInc );
@@ -342,64 +328,9 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
-  float const realW = 1.f;
-  Vec3 const realCol(1.f, 1.f, 0.f);
-  Vec3 const obstacleCol(0.f, 1.f, 0.f);
-  Vec3 const avgCol(0.f, 1.f, 1.f);
-  {
-    PERFTIMER("DrawRobots");
-  
-    Vec3 const frontCol(1.f, 0.f, 0.f);
-    Vec3 const backCol(0.f, 0.f, 1.f);
-    Vec3 const lineCol(0.f, 1.f, 0.f);
-    
-    DrawRobots(1, &m_alice.m_model.states.currPoses[0], &realW, realCol, realCol);
-
-#if SSRM_SECTION == 4
-    DrawRobots(1, &m_bob.m_model.states.currPoses[0], &realW, obstacleCol, obstacleCol);
-#endif
-    
-    // ~TODO~ skeletons :V
-    for (int i = 0; i < SimViz::World::NUM_SENSORS; ++i)
-    {
-      DrawSensors(1, &m_alice.m_model.states.currPoses[0], &realW, &m_world.m_sensorPose[i], realCol);
-    }
-  }
-  
-  {
-    PERFTIMER("DrawWalls");
-  
-    DrawWalls(SimViz::World::NUM_WALLS, &m_world.m_wall[0]);
-  }
-  
-  {
-    PERFTIMER("UpdateContacts")
-    // TODO needs robot sensor poses
-    for (int i = 0; i < SimViz::World::NUM_SENSORS; ++i)
-    {
-      UpdateContacts(1, m_world.m_sensorPose[i], &m_alice.m_model.states.currPoses[0], &m_alice.m_model.readings.sensorDist[i], &m_sensorContact[i]);
-    }
-  }
-
-  {
-    PERFTIMER("DrawPoints");
-
-    Vec3 const pointCol(1.f, 0.f, 1.f);
-    
-    for (int i = 0; i < SimViz::World::NUM_SENSORS; ++i)
-    {
-      DrawPoints(1, &m_sensorContact[i], &realW, pointCol);
-    }
-  }
-
-  {
-    PERFTIMER("DrawTrail");
-
-    Vec3 const trailCol(1.f, 0.f, 1.f);
-    
-    DrawTrail(m_curStep, &m_poseHist[0], trailCol);
-  }
-  
+  Vec3 c(99.f,115.f,76.f);
+  c /= 255.0f;
+  glColor3f(c.m_x, c.m_y, c.m_z);
   DrawWireSphere(100.0, 32, 32);
 
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s Tick: %04d \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime, m_curStep);
