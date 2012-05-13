@@ -30,7 +30,7 @@ struct Pose
   
   void Update(float const _turn, float const _distance)
   {
-    dir = Util::Wrap(dir + _turn, -(float)M_PI, +(float)M_PI);
+    dir = Util::Wrap(dir + _turn, -.5f * M_TAU, +.5f * M_TAU);
     pos += Vec2::FromDirLen(dir, _distance);
   }
   
@@ -38,7 +38,7 @@ struct Pose
   {
     for (int i = 0; i < _n; ++i)
     {
-      float const newDir = Util::Wrap(i_prevPoses[i].dir + _turns[i], 0.f, 2.f * (float)M_PI);
+      float const newDir = Util::Wrap(i_prevPoses[i].dir + _turns[i], 0.f, M_TAU);
       o_currPoses[i].dir = newDir;
       o_currPoses[i].pos = i_prevPoses[i].pos + Vec2::FromDirLen(newDir, _distances[i]);
     }

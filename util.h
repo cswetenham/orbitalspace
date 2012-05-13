@@ -22,6 +22,8 @@ Logging and verification utility macros and functions
 
 /******************************** Structures *********************************/
 
+#define M_TAU      6.28318530717958647693f
+
 class Util
 {
 public:
@@ -52,7 +54,7 @@ public:
                          _v;
   }
 
-  /* Wrap a value into the given range, for example -M_PI to M_PI */
+  /* Wrap a value into the given range, for example -.5f*M_TAU to +.5f*M_TAU */
   template <typename T>
   static T Wrap(T const _x, T const _min, T const _max) {
       return FMod(_x - _min, _max - _min) + _min;

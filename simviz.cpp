@@ -24,7 +24,7 @@ SimViz::World::World() :
   
   for (int i = 0; i < NUM_SENSORS; ++i)
   {
-    float theta = i * 2.f * (float)M_PI / NUM_SENSORS;
+    float theta = i * M_TAU / NUM_SENSORS;
     m_sensorPose[i].dir = theta;
     m_sensorPose[i].pos = Vec2(10.f, 0.f).RotatedBy(theta);
   }
@@ -121,7 +121,7 @@ void SimViz::RobotAgent::UpdateMotion(Rnd64* const _rnd, SimViz::Motion* const o
     }
     case Behaviour_Turn:
     {
-      newMotion.angSpeed = 2.f * (float)M_PI * 100.f / 360.f; // rad/s
+      newMotion.angSpeed = M_TAU * 100.f / 360.f; // rad/s
       break;
     }
   }
@@ -281,7 +281,7 @@ void SimViz::RobotAgent::Kidnap(Rnd64* const _rnd, World const& _world)
   
   UniformDistribution xDist(-w2, +w2);
   UniformDistribution yDist(-h2, +h2);
-  UniformDistribution angDist(-(float)M_PI, +(float)M_PI);
+  UniformDistribution angDist(-.5f*M_TAU, +.5f*M_TAU);
   float xs;
   float ys;
   float ts;

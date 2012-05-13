@@ -37,9 +37,12 @@ void OrbitalSpaceApp::Run()
     }
 
     // Input handling
-    sf::Mouse::setPosition(sf::Vector2i(m_config.width/2, m_config.height/2), *m_window);
-    // TODO get delta
-    // TODO hide pointer
+    sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+    sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
+    sf::Mouse::setPosition(centerPos, *m_window);
+    
+    m_camTheta += mouseDelta.x * M_TAU / 100.f;
+    Util::Wrap(m_camTheta, 0.f, M_TAU);
 
     {
       PERFTIMER("UpdateState");
@@ -248,8 +251,8 @@ void OrbitalSpaceApp::DrawWireSphere(float const radius, int const slices, int c
     double r;
     double x,y,z;
 
-    double const sliceInc = 2*M_PI / (-slices);
-    double const stackInc = 2*M_PI / (2*stacks);
+    double const sliceInc = M_TAU / (-slices);
+    double const stackInc = M_TAU / (2*stacks);
     /* Draw a line loop for each stack */
 
     for (curStack = 1; curStack < stacks; curStack++)
@@ -431,7 +434,7 @@ void OrbitalSpaceApp::DrawRobots(int const _n, Pose const* const _poses, float c
   {
     glPushMatrix();
     glTranslatef( _poses[i].pos.m_x, _poses[i].pos.m_y, 0.f );
-    glRotatef( _poses[i].dir * 180.f / (float)M_PI, 0.f, 0.f, 1.f );
+    glRotatef( _poses[i].dir * 360.f / M_TAU, 0.f, 0.f, 1.f );
     
     glBegin(GL_LINE_LOOP);
       
@@ -442,7 +445,7 @@ void OrbitalSpaceApp::DrawRobots(int const _n, Pose const* const _poses, float c
     Vec2 radiusV(radius, 0.f);
     for (int i = 0; i < SEGMENTS; ++i)
     {
-      Vec2 p = radiusV.RotatedBy(i * 2.f * (float)M_PI / SEGMENTS);
+      Vec2 p = radiusV.RotatedBy(i * M_TAU / SEGMENTS);
 
       glVertex3f(p.m_x, p.m_y, 0);
     }
@@ -463,7 +466,7 @@ void OrbitalSpaceApp::DrawSensors(int const _n, Pose const* const _robotPoses, f
     {
       // glPushMatrix();
       // glTranslatef( _poses[i].pos.m_x, _poses[i].pos.m_y, 0 );
-      // glRotatef( _poses[i].dir * 180 / M_PI, 0, 0, 1 );
+      // glRotatef( _poses[i].dir * 360 / M_TAU, 0, 0, 1 );
       float const weight = AlphaFromProb(_weights[i]);
       
       {
