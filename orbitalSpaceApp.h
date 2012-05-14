@@ -8,9 +8,10 @@
 #ifndef SSRM1APP_H
 #define	SSRM1APP_H
 
-#include "simviz.h"
-#include "sv_particlefilter.h"
 #include "app.h"
+#include "vector.h"
+#include "rnd.h"
+#include "util.h"
 
 class OrbitalSpaceApp :
   public App
@@ -36,21 +37,10 @@ protected:
   virtual void RenderState();
 
 private:
+  void DrawCircle(float const radius, int const steps);
   void DrawWireSphere(float const radius, int const slices, int const stacks);
 
-  void DrawRobots(int const _n, Pose const* const _poses, float const* const _weights, Vec3 const& _frontCol, Vec3 const& backCol);
-  
-  void DrawSensors(int const _n, Pose const* const _poses, float const* const _weights, Pose const* const _sensorPose, Vec3 const& _lineCol);
-
-  void DrawWalls(int const _n, SimViz::Wall const* const _walls);
-
-  void UpdateContacts(int const _n, Pose const& _sensorPose, Pose const* const _poses, float const* const _dists, Vec2* const o_points);
-
-  void DrawPoints(int const _n, Vec2 const* const _points, float const* const _weights, Vec3 const _col);
-  void DrawTrail(int const _n, Pose const* const _poses, Vec3 const _col);
-
 private:
-  inline float AlphaFromProb(float const _p);
   inline static void SetDrawColour(Vec3 const _c);
 
 private:
@@ -70,28 +60,24 @@ private:
   bool m_paused;
   bool m_singleStep;
   // Rendering options
-  bool m_useWeights;
   bool m_wireframe;
      
-  SimViz::RobotAgent m_alice;
-#if SSRM_SECTION == 4
-  SimViz::RobotAgent m_bob;
-#endif
-  SimViz::World m_world;
-
   float m_camZ;
   float m_camTheta;
   float m_camPhi;
 
-  enum { NUM_STEPS = 30000 };
-  enum { STEP_SIZE_MS = 32 }; // Duration of each step in simulated time
+  Vec3 m_shipPos;
+  Vec3 m_shipVel;
 
-  int m_curStep;
-  
-  Pose m_poseHist[NUM_STEPS];
-  float m_sensorHist[NUM_STEPS][SimViz::World::NUM_SENSORS];
+  enum { NUM_TRAIL_PTS = 1000 };
+  Vec3 m_trailPts[NUM_TRAIL_PTS];
+  int m_trailIdx;
 
-  Vec2 m_sensorContact[SimViz::World::NUM_SENSORS];
+  Vec3 m_col1;
+  Vec3 m_col2;
+  Vec3 m_col3;
+  Vec3 m_col4;
+  Vec3 m_col5;
 };
 
 #endif	/* SSRM1APP_H */

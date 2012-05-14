@@ -183,7 +183,7 @@ class UniformDistribution
 public:
   struct Config
   {
-    Config(float const _min, float const _max):min(_min), max(_max) {}
+    Config(float const _min, float const _max) : min(_min), max(_max) {}
     float min;
     float max;
   };
