@@ -105,8 +105,8 @@ void OrbitalSpaceApp::InitRender()
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  Vec3 c = m_col1;
-  glClearColor(c.m_x, c.m_y, c.m_z, 0);
+  Vector3f c = m_col1;
+  glClearColor(c.x(), c.y(), c.z(), 0);
   glClearDepth(1.0f);
 }
 
@@ -165,14 +165,16 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
     
     m_shipPos += m_shipVel * dt;
     
-    Vec3 origin(0,0,0);
+    Vector3f origin(0,0,0);
     float const G = 6.6738480e-11f;
     float const M = 5.9742e24f;
-    Vec3 d = (origin - m_shipPos);
-    float const r = d.GetLength();
+    Vector3f d = (origin - m_shipPos);
+    float const r = d.norm();
     // TODO there are better ways of doing this I'm sure
-    Vec3 n = d/r;
-    Vec3 dv = dt * 0.00000001f * n * (G * M) / (r * r);
+    // TODO get scales, distances right. Maybe need scaling matrix for rendering?
+    float const HAX_SCALE_FACTOR = 0.00000001f;
+    Vector3f n = d/r;
+    Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
     m_shipVel += dv;
 
     m_trailIdx++;
@@ -268,9 +270,9 @@ void OrbitalSpaceApp::RenderState()
   float const aspect = m_config.width / (float)m_config.height;
   float const height = 500.f; // cm
   float const width = height * aspect;
-  Vec2 size(width, height);
-  Vec2 tl = -.5f * size;
-  Vec2 br = .5f * size;
+  Vector2f size(width, height);
+  Vector2f tl = -.5f * size;
+  Vector2f br = .5f * size;
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -279,18 +281,18 @@ void OrbitalSpaceApp::RenderState()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  Vec3 eye(0.0, 0.0, m_camZ);
-  Vec3 focus(0.0, 0.0, 0.0);
-  Vec3 up(0.0, 1.0, 0.0);
+  Vector3f eye(0.0, 0.0, m_camZ);
+  Vector3f focus(0.0, 0.0, 0.0);
+  Vector3f up(0.0, 1.0, 0.0);
 
   glTranslatef(0.f, 0.f, m_camZ);
   glRotatef(m_camTheta, 0.0f, 1.0f, 0.0f);
   glRotatef(m_camPhi, 1.0f, 0.0f, 0.0f);
   glTranslatef(0.f, 0.f, -m_camZ);
 
-  gluLookAt(eye.m_x, eye.m_y, eye.m_z,
-            focus.m_x, focus.m_y, focus.m_z,
-            up.m_x, up.m_y, up.m_z);
+  gluLookAt(eye.x(), eye.y(), eye.z(),
+            focus.x(), focus.y(), focus.z(),
+            up.x(), up.y(), up.z());
 
   glEnable(GL_TEXTURE_2D);
   
@@ -315,15 +317,15 @@ void OrbitalSpaceApp::RenderState()
     {
       int idx = m_trailIdx + i - NUM_TRAIL_PTS + 1;
       if (idx < 0) { idx += NUM_TRAIL_PTS; }
-      Vec3 v = m_trailPts[idx];
-      glVertex3f(v.m_x,v.m_y,v.m_z);
+      Vector3f v = m_trailPts[idx];
+      glVertex3f(v.x(),v.y(),v.z());
     }
   glEnd();
 
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime);
 }
 
-void OrbitalSpaceApp::SetDrawColour(Vec3 const _c)
+void OrbitalSpaceApp::SetDrawColour(Vector3f const _c)
 {
-  glColor3f(_c.m_x, _c.m_y, _c.m_z);
+  glColor3f(_c.x(), _c.y(), _c.z());
 }

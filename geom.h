@@ -13,19 +13,19 @@
 
 struct Ray2D
 {
-  Vec2 pos;
-  Vec2 dir; // Unit
+  Vector2f pos;
+  Vector2f dir; // Unit
 };
 
 struct Segment2D
 {
-  Vec2 start;
-  Vec2 end;
+  Vector2f start;
+  Vector2f end;
 };
 
 struct Circle2D
 {
-  Vec2 center;
+  Vector2f center;
   float radius;
 };
 
@@ -38,16 +38,16 @@ struct RayCastResult
 // Algorithm from Computational Geometry in C (Second Edition)
 inline void TestRaySegment(Ray2D const& _ray, Segment2D const& _segment, RayCastResult* o_result)
 {
-  Vec2 const dr = _ray.dir;
-  Vec2 const ds = _segment.end - _segment.start;
+  Vector2f const dr = _ray.dir;
+  Vector2f const ds = _segment.end - _segment.start;
 
-  Vec2 const u = _ray.pos - _segment.start;
+  Vector2f const u = _ray.pos - _segment.start;
 
   // Might be negative!
-  float const scale = (dr.m_y * ds.m_x - dr.m_x * ds.m_y);
+  float const scale = (dr.y() * ds.x() - dr.x() * ds.y());
 
-  float const r = (u.m_x * ds.m_y - u.m_y * ds.m_x) / scale;
-  float const s = (u.m_x * dr.m_y - u.m_y * dr.m_x) / scale;
+  float const r = (u.x() * ds.y() - u.y() * ds.x()) / scale;
+  float const s = (u.x() * dr.y() - u.y() * dr.x()) / scale;
 
   o_result->col = (0.f < r) & (0.f < s) & (s < 1.f);
   o_result->dist = r;
@@ -55,19 +55,19 @@ inline void TestRaySegment(Ray2D const& _ray, Segment2D const& _segment, RayCast
 
 inline void TestRaysSegment(int const _n, Ray2D const* const _ray, Segment2D const& _segment, RayCastResult* const o_results)
 {
-  Vec2 const ds = _segment.end - _segment.start;
+  Vector2f const ds = _segment.end - _segment.start;
   
   for (int i = 0; i < _n; ++i)
   {
-    Vec2 const dr = _ray[i].dir;
+    Vector2f const dr = _ray[i].dir;
 
-    Vec2 const u = _ray[i].pos - _segment.start;
+    Vector2f const u = _ray[i].pos - _segment.start;
 
     // Might be negative!
-    float const scale = (dr.m_y * ds.m_x - dr.m_x * ds.m_y);
+    float const scale = (dr.y() * ds.x() - dr.x() * ds.y());
 
-    float const r = (u.m_x * ds.m_y - u.m_y * ds.m_x) / scale;
-    float const s = (u.m_x * dr.m_y - u.m_y * dr.m_x) / scale;
+    float const r = (u.x() * ds.y() - u.y() * ds.x()) / scale;
+    float const s = (u.x() * dr.y() - u.y() * dr.x()) / scale;
 
     o_results[i].col = (0.f < r) & (0.f < s) & (s < 1.f);
     o_results[i].dist = r;
@@ -77,8 +77,8 @@ inline void TestRaysSegment(int const _n, Ray2D const* const _ray, Segment2D con
 inline void TestRayCircle(Ray2D const& _ray, Circle2D const& _circle, RayCastResult* o_result)
 {
   // Algo taken from http://stackoverflow.com/questions/1073336/circle-line-collision-detection
-  Vec2 d = _ray.dir;
-  Vec2 f = _ray.pos - _circle.center;
+  Vector2f d = _ray.dir;
+  Vector2f f = _ray.pos - _circle.center;
   float r = _circle.radius;
     
   float a = d.Dot( d ) ;
@@ -120,7 +120,7 @@ struct CircleTestResult
 {
   bool col;
   float dist;
-  Vec2 colNormal;
+  Vector2f colNormal;
 };
 
 inline void TestCircleSegment(Circle2D const& _circle, Segment2D const& _segment, CircleTestResult* const o_result)
@@ -129,19 +129,19 @@ inline void TestCircleSegment(Circle2D const& _circle, Segment2D const& _segment
   // TODO: check whether closest point falls within segment; if not,
   // check distance to each end of the segment (or just the end the closest point is on the side of)
 
-  Vec2 const segVec = _segment.end - _segment.start;
-  Vec2 const segDir = segVec / segVec.GetLength();
-  Vec2 p = _circle.center - _segment.start;
-  float r = fabsf(segDir.m_x * p.m_y - p.m_x * segDir.m_y);
+  Vector2f const segVec = _segment.end - _segment.start;
+  Vector2f const segDir = segVec / segVec.GetLength();
+  Vector2f p = _circle.center - _segment.start;
+  float r = fabsf(segDir.x() * p.y() - p.x() * segDir.y());
 
   o_result->dist = r;
   o_result->col = (r < _circle.radius);
-  o_result->colNormal = Vec2(-segDir.m_y, segDir.m_x);
+  o_result->colNormal = Vector2f(-segDir.y(), segDir.x());
 }
 
 inline void TestCircleCircle(Circle2D const& _c1, Circle2D const& _c2, CircleTestResult* const o_result)
 {
-  Vec2 colVec = _c2.center - _c1.center;
+  Vector2f colVec = _c2.center - _c1.center;
   float dist = colVec.GetLength();
 
   

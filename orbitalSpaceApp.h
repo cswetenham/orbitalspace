@@ -9,9 +9,12 @@
 #define	SSRM1APP_H
 
 #include "app.h"
-#include "vector.h"
 #include "rnd.h"
 #include "util.h"
+#include <Eigen/Eigen>
+#include <Eigen/OpenGLSupport>
+
+EIGEN_USING_MATRIX_TYPEDEFS;
 
 class OrbitalSpaceApp :
   public App
@@ -41,7 +44,7 @@ private:
   void DrawWireSphere(float const radius, int const slices, int const stacks);
 
 private:
-  inline static void SetDrawColour(Vec3 const _c);
+  inline static void SetDrawColour(Vector3f const _c);
 
 private:
   Rnd64 m_rnd;
@@ -66,18 +69,20 @@ private:
   float m_camTheta;
   float m_camPhi;
 
-  Vec3 m_shipPos;
-  Vec3 m_shipVel;
+  Vector3f m_shipPos;
+  Vector3f m_shipVel;
 
+  // TODO this stores a fixed number of frames, not the best approach
+  // On the other hand the break in the ellipse is a good way of seeing ship location for now
   enum { NUM_TRAIL_PTS = 1000 };
-  Vec3 m_trailPts[NUM_TRAIL_PTS];
+  Vector3f m_trailPts[NUM_TRAIL_PTS];
   int m_trailIdx;
 
-  Vec3 m_col1;
-  Vec3 m_col2;
-  Vec3 m_col3;
-  Vec3 m_col4;
-  Vec3 m_col5;
+  Vector3f m_col1;
+  Vector3f m_col2;
+  Vector3f m_col3;
+  Vector3f m_col4;
+  Vector3f m_col5;
 };
 
 #endif	/* SSRM1APP_H */
