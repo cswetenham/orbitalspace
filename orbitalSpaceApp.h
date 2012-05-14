@@ -69,14 +69,22 @@ private:
   float m_camTheta;
   float m_camPhi;
 
-  Vector3f m_shipPos;
-  Vector3f m_shipVel;
+  struct Ship
+  {
+    Ship();
 
-  // TODO this stores a fixed number of frames, not the best approach
-  // On the other hand the break in the ellipse is a good way of seeing ship location for now
-  enum { NUM_TRAIL_PTS = 1000 };
-  Vector3f m_trailPts[NUM_TRAIL_PTS];
-  int m_trailIdx;
+    Vector3f m_pos;
+    Vector3f m_vel;
+
+    // TODO this stores a fixed number of frames, not the best approach
+    // On the other hand the break in the ellipse is a good way of seeing ship location for now
+    enum { NUM_TRAIL_PTS = 100 };
+    Vector3f m_trailPts[NUM_TRAIL_PTS];
+    int m_trailIdx;
+  };
+  
+  enum { NUM_SHIPS = 100 };
+  Ship m_ships[NUM_SHIPS];
 
   Vector3f m_col1;
   Vector3f m_col2;

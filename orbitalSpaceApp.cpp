@@ -21,10 +21,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_col2(77,82,50),
   m_col3(99,115,76),
   m_col4(151,168,136),
-  m_col5(198,222,172),
-  m_shipPos(0.f, 0.f, 200.f),
-  m_shipVel(100.f, 0.f, 0.f),
-  m_trailIdx(0)
+  m_col5(198,222,172)
 {
   m_col1/=255;
   m_col2/=255;
@@ -32,9 +29,24 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_col4/=255;
   m_col5/=255;
 
+  float rnds[6 * NUM_SHIPS];
+  UniformDistribution dist(-10.f, +10.f);
+  dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
+  for (int i = 0; i < NUM_SHIPS; ++i)
+  {
+    m_ships[i].m_pos += Vector3f(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]);
+    m_ships[i].m_vel += Vector3f(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]);
+  }
+}
+
+OrbitalSpaceApp::Ship::Ship() :
+  m_pos(0.f, 0.f, 200.f),
+  m_vel(130.f, 0.f, 0.f),
+  m_trailIdx(0)
+{
   for (int i = 0; i < NUM_TRAIL_PTS; ++i)
   {
-    m_trailPts[i] = m_shipPos;
+    m_trailPts[i] = m_pos;
   }
 }
 
@@ -163,23 +175,26 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
 
     float const dt = _dt / 1000.f;
     
-    m_shipPos += m_shipVel * dt;
+    for (int i = 0; i < NUM_SHIPS; ++i)
+    {
+      m_ships[i].m_pos += m_ships[i].m_vel * dt;
     
-    Vector3f origin(0,0,0);
-    float const G = 6.6738480e-11f;
-    float const M = 5.9742e24f;
-    Vector3f d = (origin - m_shipPos);
-    float const r = d.norm();
-    // TODO there are better ways of doing this I'm sure
-    // TODO get scales, distances right. Maybe need scaling matrix for rendering?
-    float const HAX_SCALE_FACTOR = 0.00000001f;
-    Vector3f n = d/r;
-    Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
-    m_shipVel += dv;
+      Vector3f origin(0,0,0);
+      float const G = 6.6738480e-11f;
+      float const M = 5.9742e24f;
+      Vector3f d = (origin - m_ships[i].m_pos);
+      float const r = d.norm();
+      // TODO there are better ways of doing this I'm sure
+      // TODO get scales, distances right. Maybe need scaling matrix for rendering?
+      float const HAX_SCALE_FACTOR = 0.00000001f;
+      Vector3f n = d/r;
+      Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
+      m_ships[i].m_vel += dv;
 
-    m_trailIdx++;
-    if (m_trailIdx >= NUM_TRAIL_PTS) { m_trailIdx = 0; }
-    m_trailPts[m_trailIdx] = m_shipPos;
+      m_ships[i].m_trailIdx++;
+      if (m_ships[i].m_trailIdx >= Ship::NUM_TRAIL_PTS) { m_ships[i].m_trailIdx = 0; }
+      m_ships[i].m_trailPts[m_ships[i].m_trailIdx] = m_ships[i].m_pos;
+    }
   }
 
   if (m_singleStep)
@@ -307,21 +322,27 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
+  SetDrawColour(m_col2);
+  DrawWireSphere(90.0f, 32, 32);
   SetDrawColour(m_col3);
   DrawWireSphere(100.0f, 32, 32);
 
   SetDrawColour(m_col5);
   // DrawCircle(200.0f, 32);
-  glBegin(GL_LINE_STRIP);
-    for (int i = 0; i < NUM_TRAIL_PTS; ++i)
-    {
-      int idx = m_trailIdx + i - NUM_TRAIL_PTS + 1;
-      if (idx < 0) { idx += NUM_TRAIL_PTS; }
-      Vector3f v = m_trailPts[idx];
-      glVertex3f(v.x(),v.y(),v.z());
-    }
-  glEnd();
-
+  for (int s = 0; s < NUM_SHIPS; ++s)
+  {
+    glBegin(GL_LINE_STRIP);
+    
+      for (int i = 0; i < Ship::NUM_TRAIL_PTS; ++i)
+      {
+        int idx = m_ships[s].m_trailIdx + i - Ship::NUM_TRAIL_PTS + 1;
+        if (idx < 0) { idx += Ship::NUM_TRAIL_PTS; }
+        Vector3f v = m_ships[s].m_trailPts[idx];
+        glVertex3f(v.x(),v.y(),v.z());
+      }
+    glEnd();
+  }
+  
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime);
 }
 
