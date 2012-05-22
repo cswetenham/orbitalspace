@@ -21,7 +21,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_col2(77,82,50),
   m_col3(99,115,76),
   m_col4(151,168,136),
-  m_col5(198,222,172)
+  m_col5(198,222,172),
+  m_thrusters(0)
 {
   m_col1/=255;
   m_col2/=255;
@@ -159,6 +160,59 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     {
       m_running = false;
     }
+
+    if (_event.key.code == sf::Keyboard::A)
+    {
+      m_thrusters |= ThrustLeft;
+    }
+    if (_event.key.code == sf::Keyboard::D)
+    {
+      m_thrusters |= ThrustRight;
+    }
+    if (_event.key.code == sf::Keyboard::W)
+    {
+      m_thrusters |= ThrustFwd;
+    }
+    if (_event.key.code == sf::Keyboard::S)
+    {
+      m_thrusters |= ThrustBack;
+    }
+    if (_event.key.code == sf::Keyboard::Up)
+    {
+      m_thrusters |= ThrustUp;
+    }
+    if (_event.key.code == sf::Keyboard::Down)
+    {
+      m_thrusters |= ThrustDown;
+    }
+  }
+
+  if (_event.type == sf::Event::KeyReleased)
+  {
+    if (_event.key.code == sf::Keyboard::A)
+    {
+      m_thrusters &= ~ThrustLeft;
+    }
+    if (_event.key.code == sf::Keyboard::D)
+    {
+      m_thrusters &= ~ThrustRight;
+    }
+    if (_event.key.code == sf::Keyboard::W)
+    {
+      m_thrusters &= ~ThrustFwd;
+    }
+    if (_event.key.code == sf::Keyboard::S)
+    {
+      m_thrusters &= ~ThrustBack;
+    }
+    if (_event.key.code == sf::Keyboard::Up)
+    {
+      m_thrusters &= ~ThrustUp;
+    }
+    if (_event.key.code == sf::Keyboard::Down)
+    {
+      m_thrusters &= ~ThrustDown;
+    }
   }
 
   if (_event.type == sf::Event::Closed)
@@ -173,26 +227,52 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
   {
     m_simTime += _dt;
 
-    float const dt = _dt / 1000.f;
+    float dt = _dt / 1000.f;
+    if (dt > 0.1) { dt = 0.1; } // TODO HAX
     
+    Vector3f origin(0,0,0);
+    float const G = 6.6738480e-11f;
+    float const M = 5.9742e24f;
+
+    // TODO get scales, distances right. Maybe need scaling matrix for rendering?
+    float const HAX_SCALE_FACTOR = 0.00000001f;
+
     for (int i = 0; i < NUM_SHIPS; ++i)
     {
       m_ships[i].m_pos += m_ships[i].m_vel * dt;
     
-      Vector3f origin(0,0,0);
-      float const G = 6.6738480e-11f;
-      float const M = 5.9742e24f;
+      // Apply gravity
       Vector3f d = (origin - m_ships[i].m_pos);
       float const r = d.norm();
-      // TODO there are better ways of doing this I'm sure
-      // TODO get scales, distances right. Maybe need scaling matrix for rendering?
-      float const HAX_SCALE_FACTOR = 0.00000001f;
-      Vector3f n = d/r;
-      Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
+
+      Vector3f n = d/r;
+      Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
+      // Vector3f dv = dt * HAX_SCALE_FACTOR * d * (G * M) / r;
       m_ships[i].m_vel += dv;
 
+      // Apply thrust
+
+      Vector3f fwd = m_ships[i].m_vel / m_ships[i].m_vel.norm();
+      Vector3f dwn = d / r;
+      Vector3f left = fwd.cross(dwn);
+      float const thrustAccel = 10.0;
+      float const thrustDV = thrustAccel * dt;
+      
+      Vector3f thrustVec(0.f,0.f,0.f);
+
+      if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
+      if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
+      if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
+      if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
+      if (m_thrusters & ThrustLeft)  { thrustVec += left; }
+      if (m_thrusters & ThrustRight) { thrustVec -= left; }
+
+      m_ships[i].m_vel += thrustDV * thrustVec;
+
+      // Update trail
       m_ships[i].m_trailIdx++;
       if (m_ships[i].m_trailIdx >= Ship::NUM_TRAIL_PTS) { m_ships[i].m_trailIdx = 0; }
+      
       m_ships[i].m_trailPts[m_ships[i].m_trailIdx] = m_ships[i].m_pos;
     }
   }
@@ -332,7 +412,6 @@ void OrbitalSpaceApp::RenderState()
   for (int s = 0; s < NUM_SHIPS; ++s)
   {
     glBegin(GL_LINE_STRIP);
-    
       for (int i = 0; i < Ship::NUM_TRAIL_PTS; ++i)
       {
         int idx = m_ships[s].m_trailIdx + i - Ship::NUM_TRAIL_PTS + 1;

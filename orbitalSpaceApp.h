@@ -69,6 +69,18 @@ private:
   float m_camTheta;
   float m_camPhi;
 
+  enum Thrusters
+  {
+    ThrustFwd = 1 << 0,
+    ThrustBack = 1 << 1,
+    ThrustLeft = 1 << 2,
+    ThrustRight = 1 << 3,
+    ThrustUp = 1 << 4,
+    ThrustDown = 1 << 5
+  };
+
+  uint32_t m_thrusters;
+
   struct Ship
   {
     Ship();
@@ -78,12 +90,12 @@ private:
 
     // TODO this stores a fixed number of frames, not the best approach
     // On the other hand the break in the ellipse is a good way of seeing ship location for now
-    enum { NUM_TRAIL_PTS = 100 };
+    enum { NUM_TRAIL_PTS = 1000 };
     Vector3f m_trailPts[NUM_TRAIL_PTS];
     int m_trailIdx;
   };
   
-  enum { NUM_SHIPS = 100 };
+  enum { NUM_SHIPS = 1 };
   Ship m_ships[NUM_SHIPS];
 
   Vector3f m_col1;
