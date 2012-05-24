@@ -22,6 +22,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_col3(99,115,76),
   m_col4(151,168,136),
   m_col5(198,222,172),
+  m_light(1, 1, 0),
   m_thrusters(0)
 {
   m_col1/=255;
@@ -29,6 +30,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_col3/=255;
   m_col4/=255;
   m_col5/=255;
+
+  m_light /= m_light.norm();
 
   float rnds[6 * NUM_SHIPS];
   UniformDistribution dist(-10.f, +10.f);
@@ -245,8 +248,10 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
       Vector3f d = (origin - m_ships[i].m_pos);
       float const r = d.norm();
 
-      Vector3f n = d/r;
-      Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
+      Vector3f n = d/r;
+
+      Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
+
       // Vector3f dv = dt * HAX_SCALE_FACTOR * d * (G * M) / r;
       m_ships[i].m_vel += dv;
 
@@ -255,7 +260,7 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
       Vector3f fwd = m_ships[i].m_vel / m_ships[i].m_vel.norm();
       Vector3f dwn = d / r;
       Vector3f left = fwd.cross(dwn);
-      float const thrustAccel = 10.0;
+      float const thrustAccel = 100.0;
       float const thrustDV = thrustAccel * dt;
       
       Vector3f thrustVec(0.f,0.f,0.f);
@@ -412,12 +417,26 @@ void OrbitalSpaceApp::RenderState()
   for (int s = 0; s < NUM_SHIPS; ++s)
   {
     glBegin(GL_LINE_STRIP);
+      int prevIdx = 0;
       for (int i = 0; i < Ship::NUM_TRAIL_PTS; ++i)
       {
         int idx = m_ships[s].m_trailIdx + i - Ship::NUM_TRAIL_PTS + 1;
         if (idx < 0) { idx += Ship::NUM_TRAIL_PTS; }
         Vector3f v = m_ships[s].m_trailPts[idx];
+
+        // TODO this is just a hack, not correct 'lighting'
+        if (i > 0) // TODO in fact, want to set this BEFORE the first vertex using the NEXT idx
+        {
+          Vector3f vp = m_ships[s].m_trailPts[prevIdx];
+          Vector3f dp = (v - vp).normalized();
+          float const l = dp.dot(m_light);
+          // TODO lerp with background colour, no pure black
+          SetDrawColour(m_col5 * l);
+        }
+
         glVertex3f(v.x(),v.y(),v.z());
+
+        prevIdx = idx;
       }
     glEnd();
   }

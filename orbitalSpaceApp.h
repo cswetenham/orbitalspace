@@ -103,6 +103,8 @@ private:
   Vector3f m_col3;
   Vector3f m_col4;
   Vector3f m_col5;
+
+  Vector3f m_light;
 };
 
 #endif	/* SSRM1APP_H */
