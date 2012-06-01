@@ -12,6 +12,9 @@ Logging and verification utility macros and functions
 #include <stdlib.h>
 #include <assert.h>
 
+#include <Eigen/Eigen>
+EIGEN_USING_MATRIX_TYPEDEFS;
+
 /******************************** Defines *********************************/
 
 #ifdef _WIN32
@@ -91,6 +94,8 @@ public:
   }
 
   static void SleepMicros(uint32_t const _usecs);
+
+  static void SetDrawColour(Vector3f const& _c);
 
 private:
   static void SigAbrt(int);

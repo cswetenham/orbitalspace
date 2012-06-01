@@ -20,6 +20,9 @@ Logging and verification utility macros and functions
 # include <unistd.h>
 #endif
 
+// For glColor3f()
+#include <Eigen/OpenGLSupport>
+
 static bool x_shouldExit;
 
 static struct MagicInit
@@ -60,6 +63,11 @@ void Util::SleepMicros(uint32_t const _usecs)
 #else
   usleep(_usecs);
 #endif
+}
+
+void Util::SetDrawColour(Vector3f const& _c)
+{
+  glColor3f(_c.x(), _c.y(), _c.z());
 }
 
 void Util::SigAbrt(int)

@@ -38,20 +38,15 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
   for (int i = 0; i < NUM_SHIPS; ++i)
   {
-    m_ships[i].m_pos += Vector3f(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]);
-    m_ships[i].m_vel += Vector3f(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]);
+    m_ships[i].m_physics.m_pos += Vector3f(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]);
+    m_ships[i].m_physics.m_vel += Vector3f(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]);
   }
 }
 
 OrbitalSpaceApp::Ship::Ship() :
-  m_pos(0.f, 0.f, 200.f),
-  m_vel(130.f, 0.f, 0.f),
-  m_trailIdx(0)
+  m_physics(Vector3f(0.f, 0.f, 200.f), Vector3f(130.f, 0.f, 0.f)),
+  m_trail(3.f)
 {
-  for (int i = 0; i < NUM_TRAIL_PTS; ++i)
-  {
-    m_trailPts[i] = m_pos;
-  }
 }
 
 OrbitalSpaceApp::~OrbitalSpaceApp()
@@ -245,10 +240,11 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
     for (int i = 0; i < NUM_SHIPS; ++i)
     {
       // Define directions
+      PhysicsBody& pb = m_ships[i].m_physics;
 
-      Vector3f v = m_ships[i].m_vel;
+      Vector3f v = pb.m_vel;
 
-      Vector3f r = (origin - m_ships[i].m_pos);
+      Vector3f r = (origin - pb.m_pos);
       float const r_mag = r.norm();
 
       Vector3f r_dir = r/r_mag;
@@ -276,11 +272,12 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
         Vector3f x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
         Vector3f y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
 
-        m_ships[i].m_orbit.e = e;
-        m_ships[i].m_orbit.p = p;
-        m_ships[i].m_orbit.theta = theta;
-        m_ships[i].m_orbit.x_dir = x_dir;
-        m_ships[i].m_orbit.y_dir = y_dir;
+        OrbitParams& op = m_ships[i].m_orbit;
+        op.e = e;
+        op.p = p;
+        op.theta = theta;
+        op.x_dir = x_dir;
+        op.y_dir = y_dir;
       }
             
       // Apply gravity
@@ -296,9 +293,9 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
       
       Vector3f thrustVec(0.f,0.f,0.f);
 
-      Vector3f fwd = m_ships[i].m_vel / m_ships[i].m_vel.norm(); // Prograde
+      Vector3f fwd = pb.m_vel / pb.m_vel.norm(); // Prograde
       Vector3f left = fwd.cross(r_dir); // name? (and is the order right?)
-      Vector3f dwn = fwd.cross(left); // name? (and is the order right?)
+      Vector3f dwn = left.cross(fwd); // name? (and is the order right?)
 
       if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
       if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
@@ -309,16 +306,13 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
 
       v += thrustDV * thrustVec;
 
-      m_ships[i].m_vel = v;
+      pb.m_vel = v;
 
       // Update position
-      m_ships[i].m_pos += m_ships[i].m_vel * dt;
+      pb.m_pos += pb.m_vel * dt;
 
       // Update trail
-      m_ships[i].m_trailIdx++;
-      if (m_ships[i].m_trailIdx >= Ship::NUM_TRAIL_PTS) { m_ships[i].m_trailIdx = 0; }
-      
-      m_ships[i].m_trailPts[m_ships[i].m_trailIdx] = m_ships[i].m_pos;
+      m_ships[i].m_trail.Update(_dt, pb.m_pos);
 
 
     }
@@ -445,6 +439,7 @@ void OrbitalSpaceApp::RenderState()
   glLineWidth(1);
   glEnable(GL_POINT_SMOOTH);
   glEnable(GL_LINE_SMOOTH);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   if (m_wireframe)
   {
@@ -455,28 +450,28 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
-  SetDrawColour(m_col2);
+  Util::SetDrawColour(m_col2);
   DrawWireSphere(90.0f, 32, 32);
-  SetDrawColour(m_col3);
+  Util::SetDrawColour(m_col3);
   DrawWireSphere(100.0f, 32, 32);
 
   // TODO collision detection
 
-  SetDrawColour(m_col5);
+  Util::SetDrawColour(m_col5);
   // DrawCircle(200.0f, 32);
   for (int s = 0; s < NUM_SHIPS; ++s)
   {
     // Draw ship
     glPointSize(10.f);
     glBegin(GL_POINTS);
-    Vector3f p = m_ships[s].m_pos;
+    Vector3f p = m_ships[s].m_physics.m_pos;
     glVertex3f(p.x(), p.y(), p.z());
     glEnd();
     glPointSize(1.f);
 
     // Draw orbit
     {
-      Ship::OrbitParams const& orbit = m_ships[s].m_orbit;
+      OrbitParams const& orbit = m_ships[s].m_orbit;
       
       int const steps = 10000;
       // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
@@ -498,12 +493,12 @@ void OrbitalSpaceApp::RenderState()
       float const mint = -range;
       float const maxt = range;
       glBegin(GL_LINE_STRIP);
+      Util::SetDrawColour(m_col3);
       for (int i = 0; i <= steps; ++i)
       {
           float const ct = Util::Lerp(mint, maxt, (float)i / steps);
           float const cr = orbit.p / (1 + orbit.e * cos(ct));
-          
-          // TODO this part seems broken?
+
           float const x_len = cr * -cos(ct);
           float const y_len = cr * -sin(ct);
           Vector3f pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
@@ -513,39 +508,9 @@ void OrbitalSpaceApp::RenderState()
     }
 
     // Draw trail
-    glBegin(GL_LINE_STRIP);
-      int prevIdx = 0;
-      for (int i = 0; i < Ship::NUM_TRAIL_PTS; ++i)
-      {
-        int idx = m_ships[s].m_trailIdx + i - Ship::NUM_TRAIL_PTS + 1;
-        if (idx < 0) { idx += Ship::NUM_TRAIL_PTS; }
-        Vector3f v = m_ships[s].m_trailPts[idx];
-
-        // TODO this is just a hack, not correct 'lighting'
-        if (i > 0) // TODO in fact, want to set this BEFORE the first vertex using the NEXT idx
-        {
-          Vector3f vp = m_ships[s].m_trailPts[prevIdx];
-          Vector3f dp = v - vp;
-          float const d_mag = dp.norm();
-          if (d_mag > 0.0000001f)
-          {
-            Vector3f d_dir = dp / d_mag;
-            float const l = Util::Max(d_dir.dot(m_light), 0.f);
-            SetDrawColour(Util::Lerp(m_col1, m_col5, l));
-          }
-        }
-
-        glVertex3f(v.x(),v.y(),v.z());
-
-        prevIdx = idx;
-      }
-    glEnd();
+    m_ships[s].m_trail.Render(m_col1, m_col5);
   }
   
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime);
 }
 
-void OrbitalSpaceApp::SetDrawColour(Vector3f const& _c)
-{
-  glColor3f(_c.x(), _c.y(), _c.z());
-}
