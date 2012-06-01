@@ -1,0 +1,35 @@
+Kepler orbits
+
+Add moon, earth-moon lagrange points? L points should come out of the sim ideally
+
+Sphere of influence / patched conics
+
+story/gameplay?
+
+orbital police/enforcers? private/public?
+
+how crowded is orbital space/various orbits?
+
+how to chase, how to take down/capture?
+
+Large nets between rockets - could surround target, but how would it force it to change orbit/immobilise
+it once caught?
+
+Lasers - have to keep in range/line of sight/firing arc for long enough
+
+Kinectic slugs
+
+Missiles
+
+In real time, minutes or hours to respond to enemy orbit changes.
+
+If see enemy can quickly estimate position, after a litte time velocity and thereby orbit
+
+If see enemy burn can figure out new velocity, but also engine type, ship mass, etc.
+
+If burn beyond horizon can make surprise/hidden orbit changes. The lower the orbit the easier it will be.
+
+Scale of orbiting ships - satellites, modular stations, rotating stations, oneill cylinders?
+
+Include normal traffic between orbit, landing and launching from surface of moon and earth?
+

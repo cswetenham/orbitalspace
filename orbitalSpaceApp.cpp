@@ -231,39 +231,74 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
     m_simTime += _dt;
 
     float dt = _dt / 1000.f;
-    if (dt > 0.1) { dt = 0.1; } // TODO HAX
+    if (dt > 0.1f) { dt = 0.1f; } // TODO HAX
     
     Vector3f origin(0,0,0);
-    float const G = 6.6738480e-11f;
-    float const M = 5.9742e24f;
-
+    double const G = 6.6738480e-11f;
+    double const M = 5.9742e24f;
+    
     // TODO get scales, distances right. Maybe need scaling matrix for rendering?
     float const HAX_SCALE_FACTOR = 0.00000001f;
 
+    float const mu = (float)(HAX_SCALE_FACTOR * G * M);
+    
     for (int i = 0; i < NUM_SHIPS; ++i)
     {
-      m_ships[i].m_pos += m_ships[i].m_vel * dt;
-    
+      // Define directions
+
+      Vector3f v = m_ships[i].m_vel;
+
+      Vector3f r = (origin - m_ships[i].m_pos);
+      float const r_mag = r.norm();
+
+      Vector3f r_dir = r/r_mag;
+
+      float const vr_mag = r_dir.dot(v);
+      Vector3f vr = r_dir * vr_mag; // radial velocity
+      Vector3f vt = v - vr; // tangent velocity
+      float const vt_mag = vt.norm();
+      Vector3f t_dir = vt/vt_mag;
+
+      // Compute Kepler orbit
+      // TODO compute this AFTER update, before render
+
+      {
+        float const p = pow(r_mag * vt_mag, 2) / mu;
+        float const v0 = sqrtf(mu/p); // todo compute more accurately/efficiently?
+
+        Vector3f ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
+        float const e = ex.norm();
+
+        float const ec = (vt_mag / v0) - 1;
+        float const es = (vr_mag / v0);
+        float const theta = atan2(es, ec);
+
+        Vector3f x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
+        Vector3f y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
+
+        m_ships[i].m_orbit.e = e;
+        m_ships[i].m_orbit.p = p;
+        m_ships[i].m_orbit.theta = theta;
+        m_ships[i].m_orbit.x_dir = x_dir;
+        m_ships[i].m_orbit.y_dir = y_dir;
+      }
+            
       // Apply gravity
-      Vector3f d = (origin - m_ships[i].m_pos);
-      float const r = d.norm();
-
-      Vector3f n = d/r;
-
-      Vector3f dv = dt * HAX_SCALE_FACTOR * n * (G * M) / (r * r);
+      Vector3f dv = dt * r_dir * mu / (r_mag * r_mag);
 
       // Vector3f dv = dt * HAX_SCALE_FACTOR * d * (G * M) / r;
-      m_ships[i].m_vel += dv;
+      v += dv;
 
       // Apply thrust
-
-      Vector3f fwd = m_ships[i].m_vel / m_ships[i].m_vel.norm();
-      Vector3f dwn = d / r;
-      Vector3f left = fwd.cross(dwn);
+    
       float const thrustAccel = 100.0;
       float const thrustDV = thrustAccel * dt;
       
       Vector3f thrustVec(0.f,0.f,0.f);
+
+      Vector3f fwd = m_ships[i].m_vel / m_ships[i].m_vel.norm(); // Prograde
+      Vector3f left = fwd.cross(r_dir); // name? (and is the order right?)
+      Vector3f dwn = fwd.cross(left); // name? (and is the order right?)
 
       if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
       if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
@@ -272,13 +307,20 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
       if (m_thrusters & ThrustLeft)  { thrustVec += left; }
       if (m_thrusters & ThrustRight) { thrustVec -= left; }
 
-      m_ships[i].m_vel += thrustDV * thrustVec;
+      v += thrustDV * thrustVec;
+
+      m_ships[i].m_vel = v;
+
+      // Update position
+      m_ships[i].m_pos += m_ships[i].m_vel * dt;
 
       // Update trail
       m_ships[i].m_trailIdx++;
       if (m_ships[i].m_trailIdx >= Ship::NUM_TRAIL_PTS) { m_ships[i].m_trailIdx = 0; }
       
       m_ships[i].m_trailPts[m_ships[i].m_trailIdx] = m_ships[i].m_pos;
+
+
     }
   }
 
@@ -361,14 +403,18 @@ void OrbitalSpaceApp::DrawCircle(float const radius, int const steps)
     glEnd();
 }
 
+Vector3f lerp(Vector3f const& _x0, Vector3f const& _x1, float const _a) {
+    return _x0 * (1 - _a) + _x1 * _a;
+}
+
 void OrbitalSpaceApp::RenderState()
 {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  // Units: cm
+  // Units: ...?
   float const aspect = m_config.width / (float)m_config.height;
-  float const height = 500.f; // cm
+  float const height = 500.f;
   float const width = height * aspect;
   Vector2f size(width, height);
   Vector2f tl = -.5f * size;
@@ -397,6 +443,8 @@ void OrbitalSpaceApp::RenderState()
   glEnable(GL_TEXTURE_2D);
   
   glLineWidth(1);
+  glEnable(GL_POINT_SMOOTH);
+  glEnable(GL_LINE_SMOOTH);
 
   if (m_wireframe)
   {
@@ -412,10 +460,59 @@ void OrbitalSpaceApp::RenderState()
   SetDrawColour(m_col3);
   DrawWireSphere(100.0f, 32, 32);
 
+  // TODO collision detection
+
   SetDrawColour(m_col5);
   // DrawCircle(200.0f, 32);
   for (int s = 0; s < NUM_SHIPS; ++s)
   {
+    // Draw ship
+    glPointSize(10.f);
+    glBegin(GL_POINTS);
+    Vector3f p = m_ships[s].m_pos;
+    glVertex3f(p.x(), p.y(), p.z());
+    glEnd();
+    glPointSize(1.f);
+
+    // Draw orbit
+    {
+      Ship::OrbitParams const& orbit = m_ships[s].m_orbit;
+      
+      int const steps = 10000;
+      // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
+      // restrict the range of theta?
+      float const delta = .0001f;
+      float const HAX_RANGE = .9f; // limit range to stay out of very large values
+      // TODO want to instead limit the range based on... some viewing area?
+      // might be two visible segments, one from +ve and one from -ve theta, with
+      // different visible ranges. Could determine 
+      // TODO and want to take steps of fixed length/distance
+      float range;
+      if (orbit.e < 1 - delta) { // ellipse
+          range = .5f * M_TAU;
+      } else if (orbit.e < 1 + delta) { // parabola
+          range = .5f * M_TAU * HAX_RANGE;
+      } else { // hyperbola
+          range = acos(-1/orbit.e) * HAX_RANGE;
+      }
+      float const mint = -range;
+      float const maxt = range;
+      glBegin(GL_LINE_STRIP);
+      for (int i = 0; i <= steps; ++i)
+      {
+          float const ct = Util::Lerp(mint, maxt, (float)i / steps);
+          float const cr = orbit.p / (1 + orbit.e * cos(ct));
+          
+          // TODO this part seems broken?
+          float const x_len = cr * -cos(ct);
+          float const y_len = cr * -sin(ct);
+          Vector3f pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
+          glVertex3f(pos.x(), pos.y(), pos.z());
+      }
+      glEnd();
+    }
+
+    // Draw trail
     glBegin(GL_LINE_STRIP);
       int prevIdx = 0;
       for (int i = 0; i < Ship::NUM_TRAIL_PTS; ++i)
@@ -428,10 +525,14 @@ void OrbitalSpaceApp::RenderState()
         if (i > 0) // TODO in fact, want to set this BEFORE the first vertex using the NEXT idx
         {
           Vector3f vp = m_ships[s].m_trailPts[prevIdx];
-          Vector3f dp = (v - vp).normalized();
-          float const l = dp.dot(m_light);
-          // TODO lerp with background colour, no pure black
-          SetDrawColour(m_col5 * l);
+          Vector3f dp = v - vp;
+          float const d_mag = dp.norm();
+          if (d_mag > 0.0000001f)
+          {
+            Vector3f d_dir = dp / d_mag;
+            float const l = Util::Max(d_dir.dot(m_light), 0.f);
+            SetDrawColour(Util::Lerp(m_col1, m_col5, l));
+          }
         }
 
         glVertex3f(v.x(),v.y(),v.z());
@@ -444,7 +545,7 @@ void OrbitalSpaceApp::RenderState()
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime);
 }
 
-void OrbitalSpaceApp::SetDrawColour(Vector3f const _c)
+void OrbitalSpaceApp::SetDrawColour(Vector3f const& _c)
 {
   glColor3f(_c.x(), _c.y(), _c.z());
 }

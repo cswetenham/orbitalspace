@@ -44,7 +44,7 @@ private:
   void DrawWireSphere(float const radius, int const slices, int const stacks);
 
 private:
-  inline static void SetDrawColour(Vector3f const _c);
+  inline static void SetDrawColour(Vector3f const& _c);
 
 private:
   Rnd64 m_rnd;
@@ -93,6 +93,17 @@ private:
     enum { NUM_TRAIL_PTS = 1000 };
     Vector3f m_trailPts[NUM_TRAIL_PTS];
     int m_trailIdx;
+
+    struct OrbitParams
+    {
+      float p;
+      float e;
+      float theta;
+      Vector3f x_dir;
+      Vector3f y_dir;
+    };
+
+    OrbitParams m_orbit;
   };
   
   enum { NUM_SHIPS = 1 };
