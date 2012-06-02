@@ -297,12 +297,15 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
       Vector3f left = fwd.cross(r_dir); // name? (and is the order right?)
       Vector3f dwn = left.cross(fwd); // name? (and is the order right?)
 
-      if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
-      if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
-      if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
-      if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
-      if (m_thrusters & ThrustLeft)  { thrustVec += left; }
-      if (m_thrusters & ThrustRight) { thrustVec -= left; }
+      if (i == 0) // TODO HAX
+      {
+        if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
+        if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
+        if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
+        if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
+        if (m_thrusters & ThrustLeft)  { thrustVec += left; }
+        if (m_thrusters & ThrustRight) { thrustVec -= left; }
+      }
 
       v += thrustDV * thrustVec;
 

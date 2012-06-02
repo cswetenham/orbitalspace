@@ -180,7 +180,7 @@ private:
     Trail m_trail;
   };
   
-  enum { NUM_SHIPS = 1 };
+  enum { NUM_SHIPS = 2 };
   Ship m_ships[NUM_SHIPS];
 
   // TODO make into a palette array.
