@@ -17,20 +17,21 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camZ(-1000),
   m_camTheta(0.f),
   m_camPhi(0.f),
-  m_col1(41,42,34),
-  m_col2(77,82,50),
-  m_col3(99,115,76),
-  m_col4(151,168,136),
-  m_col5(198,222,172),
   m_light(1, 1, 0),
   m_thrusters(0)
 {
-  m_col1/=255;
-  m_col2/=255;
-  m_col3/=255;
-  m_col4/=255;
-  m_col5/=255;
+  m_colG[0] = Vector3f(41,42,34)/255;
+  m_colG[1] = Vector3f(77,82,50)/255;
+  m_colG[2] = Vector3f(99,115,76)/255;
+  m_colG[3] = Vector3f(151,168,136)/255;
+  m_colG[4] = Vector3f(198,222,172)/255;
 
+  for (int i = 0; i < NUM_COLS; ++i)
+  {
+    m_colR[i] = Vector3f(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
+    m_colB[i] = Vector3f(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
+  }
+  
   m_light /= m_light.norm();
 
   float rnds[6 * NUM_SHIPS];
@@ -116,7 +117,7 @@ void OrbitalSpaceApp::InitRender()
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  Vector3f c = m_col1;
+  Vector3f c = m_colG[0];
   glClearColor(c.x(), c.y(), c.z(), 0);
   glClearDepth(1.0f);
 }
@@ -444,6 +445,7 @@ void OrbitalSpaceApp::RenderState()
   glEnable(GL_LINE_SMOOTH);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+  // TODO clean up
   if (m_wireframe)
   {
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -453,21 +455,24 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
-  Util::SetDrawColour(m_col2);
+  Util::SetDrawColour(m_colG[1]);
   DrawWireSphere(90.0f, 32, 32);
-  Util::SetDrawColour(m_col3);
+  Util::SetDrawColour(m_colG[2]);
   DrawWireSphere(100.0f, 32, 32);
 
   // TODO collision detection
 
-  Util::SetDrawColour(m_col5);
-  // DrawCircle(200.0f, 32);
   for (int s = 0; s < NUM_SHIPS; ++s)
   {
     // Draw ship
     glPointSize(10.f);
     glBegin(GL_POINTS);
     Vector3f p = m_ships[s].m_physics.m_pos;
+    if (s == 0) {
+      Util::SetDrawColour(m_colB[4]);
+    } else {
+      Util::SetDrawColour(m_colR[4]);
+    }
     glVertex3f(p.x(), p.y(), p.z());
     glEnd();
     glPointSize(1.f);
@@ -496,7 +501,11 @@ void OrbitalSpaceApp::RenderState()
       float const mint = -range;
       float const maxt = range;
       glBegin(GL_LINE_STRIP);
-      Util::SetDrawColour(m_col3);
+      if (s == 0) {
+        Util::SetDrawColour(m_colB[2]);
+      } else {
+        Util::SetDrawColour(m_colR[2]);
+      }
       for (int i = 0; i <= steps; ++i)
       {
           float const ct = Util::Lerp(mint, maxt, (float)i / steps);
@@ -511,7 +520,11 @@ void OrbitalSpaceApp::RenderState()
     }
 
     // Draw trail
-    m_ships[s].m_trail.Render(m_col1, m_col5);
+    if (s == 0) {
+      m_ships[s].m_trail.Render(m_colB[0], m_colB[4]);
+    } else {
+      m_ships[s].m_trail.Render(m_colR[0], m_colR[4]);
+    }
   }
   
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime);

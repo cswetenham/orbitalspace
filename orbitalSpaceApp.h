@@ -185,12 +185,11 @@ private:
 
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
-  Vector3f m_col1;
-  Vector3f m_col2;
-  Vector3f m_col3;
-  Vector3f m_col4;
-  Vector3f m_col5;
-
+  enum {NUM_COLS = 5};
+  Vector3f m_colG[NUM_COLS];
+  Vector3f m_colR[NUM_COLS];
+  Vector3f m_colB[NUM_COLS];
+  
   Vector3f m_light;
 };
 
