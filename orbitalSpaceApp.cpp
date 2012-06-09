@@ -14,9 +14,12 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_paused(false),
   m_singleStep(false),
   m_wireframe(false),
-  m_camZ(-1000),
+  m_camDist(-1000),
   m_camTheta(0.f),
   m_camPhi(0.f),
+  m_camTarget(&m_earthBody),
+  m_camTargetIdx(0),
+  m_earthBody(),
   m_light(1, 1, 0),
   m_thrusters(0)
 {
@@ -34,6 +37,9 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   m_light /= m_light.norm();
 
+  m_earthBody.m_pos = Vector3f(0.f, 0.f, 0.f);
+  m_earthBody.m_mass = 5.9742e24f;
+
   float rnds[6 * NUM_SHIPS];
   UniformDistribution dist(-10.f, +10.f);
   dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
@@ -45,9 +51,11 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 }
 
 OrbitalSpaceApp::Ship::Ship() :
-  m_physics(Vector3f(0.f, 0.f, 200.f), Vector3f(130.f, 0.f, 0.f)),
+  m_physics(),
   m_trail(3.f)
 {
+  m_physics.m_pos = Vector3f(0.f, 0.f, 200.f);
+  m_physics.m_vel = Vector3f(130.f, 0.f, 0.f);
 }
 
 OrbitalSpaceApp::~OrbitalSpaceApp()
@@ -150,7 +158,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 
   if (_event.type == sf::Event::MouseWheelMoved)
   {
-    m_camZ += 10.f * _event.mouseWheel.delta;
+    m_camDist += 30.f * _event.mouseWheel.delta;
   }
 
   if (_event.type == sf::Event::KeyPressed)
@@ -158,6 +166,18 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::Escape)
     {
       m_running = false;
+    }
+
+    if (_event.key.code == sf::Keyboard::Tab)
+    {
+      // TODO pick next camera target
+      m_camTargetIdx++;
+      if (m_camTargetIdx > NUM_SHIPS) {
+        m_camTargetIdx = 0;
+        m_camTarget = &m_earthBody;
+      } else {
+        m_camTarget = &m_ships[m_camTargetIdx - 1].m_physics;
+      }
     }
 
     if (_event.key.code == sf::Keyboard::A)
@@ -231,7 +251,7 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
     
     Vector3f origin(0,0,0);
     double const G = 6.6738480e-11f;
-    double const M = 5.9742e24f;
+    double const M = m_earthBody.m_mass;
     
     // TODO get scales, distances right. Maybe need scaling matrix for rendering?
     float const HAX_SCALE_FACTOR = 0.00000001f;
@@ -425,17 +445,19 @@ void OrbitalSpaceApp::RenderState()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  Vector3f eye(0.0, 0.0, m_camZ);
-  Vector3f focus(0.0, 0.0, 0.0);
   Vector3f up(0.0, 1.0, 0.0);
 
-  glTranslatef(0.f, 0.f, m_camZ);
+  Vector3f const camPos = Vector3f(0.0, 0.0, m_camDist);
+  assert(m_camTarget);
+  Vector3f const camTarget = m_camTarget->m_pos;
+
+  glTranslatef(0.f, 0.f, m_camDist);
   glRotatef(m_camTheta, 0.0f, 1.0f, 0.0f);
   glRotatef(m_camPhi, 1.0f, 0.0f, 0.0f);
-  glTranslatef(0.f, 0.f, -m_camZ);
+  glTranslatef(0.f, 0.f, -m_camDist);
 
-  gluLookAt(eye.x(), eye.y(), eye.z(),
-            focus.x(), focus.y(), focus.z(),
+  gluLookAt(camPos.x(), camPos.y(), camPos.z(),
+            camTarget.x(), camTarget.y(), camTarget.z(),
             up.x(), up.y(), up.z());
 
   glEnable(GL_TEXTURE_2D);

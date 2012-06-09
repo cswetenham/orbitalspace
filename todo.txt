@@ -1,4 +1,27 @@
-Kepler orbits
+DONE - Kepler orbits
+
+Real units/constants
+
+Camera - targeted, switching between targets (tab?) or free-roaming. 
+- two aspects: camera position, camera direction
+
+first/third person cams:
+- at target, third-person, prograde direction/retrograde direction
+- at target, third-person, +ve/-ve(?) direction (wrt parent body)
+- at target, third-person, up/down direction (wrt parent body)
+- at target, third-person, looking at target2
+- at target, first-person, all of the above
+
+overview cams:
+keep some target in view
+keep multiple targets in view
+keep entire orbit of some target in view
+keep entire orbit of multiple targets in view
+keep multiple targets, entire orbits of other multiple targets, in view
+
+mixed?
+- at target1, first/third-person, keep entire orbit of target2/multiple targets in view
+
 
 Add moon, earth-moon lagrange points? L points should come out of the sim ideally
 

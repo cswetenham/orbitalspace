@@ -62,9 +62,29 @@ private:
   // Rendering options
   bool m_wireframe;
      
-  float m_camZ;
+  float m_camDist;
   float m_camTheta;
   float m_camPhi;
+  
+  struct Body
+  {
+    Vector3f m_pos;
+  };
+
+  struct MassiveBody : public Body
+  {
+    float m_mass;
+  };
+
+  struct PhysicsBody : public Body
+  {
+    Vector3f m_vel;
+  };
+
+  Body* m_camTarget;
+  size_t m_camTargetIdx;
+
+  MassiveBody m_earthBody;
 
   enum Thrusters
   {
@@ -77,19 +97,6 @@ private:
   };
 
   uint32_t m_thrusters;
-
-  struct MassiveBody
-  {
-    float m_mass;
-    Vector3d m_pos;
-  };
-
-  struct PhysicsBody
-  {
-    PhysicsBody(Vector3f const& _pos, Vector3f const& _vel) : m_pos(_pos), m_vel(_vel) {}
-    Vector3f m_pos;
-    Vector3f m_vel;
-  };
 
   struct OrbitParams
   {
