@@ -119,7 +119,7 @@ void OrbitalSpaceApp::Run()
       EndRender();
     }
     
-    sf::sleep(sf::milliseconds(1.f)); // TODO sleep according to frame duration
+    sf::sleep(sf::milliseconds(1)); // TODO sleep according to frame duration
 
     m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
   }
@@ -455,11 +455,11 @@ void OrbitalSpaceApp::RenderState()
   
   {
     sf::Font font(sf::Font::getDefaultFont());
-    Vector3f ct = m_colG[4] * 255;
+    Eigen::Matrix<sf::Uint8, 3, 1> ct = (m_colG[4] * 255).cast<sf::Uint8>();
     
     std::ostringstream str;
 
-    uint32_t const fontSize = 12;
+    uint32_t const fontSize = 14;
     sf::Text text(sf::String("Hello, World!"), font, fontSize);
     text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
     text.setPosition(8, 8);
@@ -470,8 +470,6 @@ void OrbitalSpaceApp::RenderState()
         
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
-    str << "Test 3:" << 0.001f << "\n";
-    str << "Test 3:" << 100.001f << "\n";
 
     // TODO: better float value text formatting
     // TODO: small visualisations for the angle etc values
