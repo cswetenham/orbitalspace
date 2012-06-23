@@ -22,6 +22,7 @@ keep multiple targets, entire orbits of other multiple targets, in view
 mixed?
 - at target1, first/third-person, keep entire orbit of target2/multiple targets in view
 
+Different intertial frames (?) - e.g show earth-moon orbit in "stationary" frame, or in rotating frame where the Lagrange points are stationary.
 
 Add moon, earth-moon lagrange points? L points should come out of the sim ideally
 

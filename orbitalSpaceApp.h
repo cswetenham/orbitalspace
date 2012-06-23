@@ -61,11 +61,12 @@ private:
   bool m_singleStep;
   // Rendering options
   bool m_wireframe;
-     
+  bool m_camOrig;
+
   float m_camDist;
   float m_camTheta;
   float m_camPhi;
-  
+   
   struct Body
   {
     Vector3f m_pos;

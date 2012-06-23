@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <Eigen/Geometry>
+
 OrbitalSpaceApp::OrbitalSpaceApp():
   App(),
   m_rnd(1123LL),
@@ -14,6 +16,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_paused(false),
   m_singleStep(false),
   m_wireframe(false),
+  m_camOrig(true),
   m_camDist(-1000),
   m_camTheta(0.f),
   m_camPhi(0.f),
@@ -119,15 +122,9 @@ void OrbitalSpaceApp::InitRender()
   settings.depthBits         = 24; // Request a 24 bits depth buffer
   settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
-  m_window = new sf::Window(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
+  m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
   
   m_window->setMouseCursorVisible(false);
-
-  glViewport(0, 0, m_config.width, m_config.height);
-
-  Vector3f c = m_colG[0];
-  glClearColor(c.x(), c.y(), c.z(), 0);
-  glClearDepth(1.0f);
 }
 
 void OrbitalSpaceApp::ShutdownRender()
@@ -178,6 +175,11 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
       } else {
         m_camTarget = &m_ships[m_camTargetIdx - 1].m_physics;
       }
+    }
+
+    if (_event.key.code == sf::Keyboard::R)
+    {
+      m_camOrig = !m_camOrig;
     }
 
     if (_event.key.code == sf::Keyboard::A)
@@ -427,6 +429,44 @@ Vector3f lerp(Vector3f const& _x0, Vector3f const& _x1, float const _a) {
 
 void OrbitalSpaceApp::RenderState()
 {
+  m_window->resetGLStates();
+  
+  {
+    sf::Font font(sf::Font::getDefaultFont());
+    Vector3f ct = m_colG[4] * 255;
+    
+    std::ostringstream str;
+
+    uint32_t const fontSize = 12;
+    sf::Text text(sf::String("Hello, World!"), font, fontSize);
+    text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
+    text.setPosition(8, 8);
+
+    str.precision(3);
+    str.flags(std::ios::right + std::ios::fixed);
+    str.width(7);
+
+
+    str << "Test 1:" << 0.0f << "\n";
+    str << "Test 2:" << 1.0f << "\n";
+    str << "Test 3:" << 0.001f << "\n";
+    str << "Test 3:" << 100.001f << "\n";
+
+    // TODO: float value text formatting
+    // TODO: small visualisations for the angle etc values
+   
+    text.setString(str.str());
+    m_window->draw(text);
+  }
+
+  m_window->resetGLStates();
+
+  glViewport(0, 0, m_config.width, m_config.height);
+
+  Vector3f c = m_colG[0];
+  glClearColor(c.x(), c.y(), c.z(), 0);
+  glClearDepth(1.0f);
+
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
@@ -447,18 +487,43 @@ void OrbitalSpaceApp::RenderState()
   glLoadIdentity();
   Vector3f up(0.0, 1.0, 0.0);
 
-  Vector3f const camPos = Vector3f(0.0, 0.0, m_camDist);
+  Vector3f camPos = Vector3f(0.0, 0.0, m_camDist);
   assert(m_camTarget);
   Vector3f const camTarget = m_camTarget->m_pos;
 
-  glTranslatef(0.f, 0.f, m_camDist);
-  glRotatef(m_camTheta, 0.0f, 1.0f, 0.0f);
-  glRotatef(m_camPhi, 1.0f, 0.0f, 0.0f);
-  glTranslatef(0.f, 0.f, -m_camDist);
+  // TODO output text for theta, phi
 
-  gluLookAt(camPos.x(), camPos.y(), camPos.z(),
-            camTarget.x(), camTarget.y(), camTarget.z(),
-            up.x(), up.y(), up.z());
+  Eigen::AngleAxisf thetaRot(m_camTheta, Vector3f(0.f, 1.f, 0.f));
+  Eigen::AngleAxisf phiRot(m_camPhi, Vector3f(1.f, 0.f, 0.f));
+
+  Eigen::Affine3f camMat1;
+  camMat1.setIdentity();
+  // TODO ugh all broken now
+  camMat1.rotate(thetaRot).rotate(phiRot).translate(camPos);
+
+  camPos = camMat1 * camPos;
+
+  if (m_camOrig) {
+    gluLookAt(camPos.x(), camPos.y(), camPos.z(),
+              camTarget.x(), camTarget.y(), camTarget.z(),
+              up.x(), up.y(), up.z());
+  } else {
+    Vector3f camF = (camTarget - camPos).normalized();
+    Vector3f camR = camF.cross(up);
+    Vector3f camU = camF.cross(camR);
+
+    Matrix3f camMat;
+    camMat.col(0) = -camR;
+    camMat.col(1) = -camU;
+    camMat.col(2) = camF;
+
+    Eigen::Affine3f camT;
+    camT.linear() = camMat;
+
+    glMultMatrix(camT);
+
+    glTranslate(camPos);
+  }
 
   glEnable(GL_TEXTURE_2D);
   

@@ -17,8 +17,9 @@
 # include <GL/gl.h>
 # include <GL/glu.h>
 
-#include <SFML/Window.hpp>
 #include <SFML/System.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 class App
 {
@@ -52,7 +53,7 @@ protected:
     
 protected:
   Timer::PerfTime m_lastFrameDuration;
-  sf::Window* m_window;
+  sf::RenderWindow* m_window;
   bool m_running;
 };
 
