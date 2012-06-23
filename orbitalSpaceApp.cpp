@@ -68,6 +68,16 @@ OrbitalSpaceApp::~OrbitalSpaceApp()
 
 void OrbitalSpaceApp::Run()
 {
+  float const a = Util::FMod(3.f, 2.f);
+  if ( a != 1.f ) {
+    __debugbreak();
+  }
+
+  float const b = Util::Wrap(3.5f, 1.f, 2.f);
+  if (b != 1.5f) {
+    __debugbreak();
+  }
+
   while (m_running)
   {
     Timer::PerfTime const frameStart = Timer::GetPerfTime();
@@ -83,10 +93,10 @@ void OrbitalSpaceApp::Run()
       sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
       sf::Mouse::setPosition(centerPos, *m_window);
     
-      m_camTheta += mouseDelta.x * M_TAU / 100.f;
-      Util::Wrap(m_camTheta, 0.f, M_TAU);
-      m_camPhi += mouseDelta.y * M_TAU / 100.f;
-      Util::Wrap(m_camPhi, 0.f, M_TAU);
+      m_camTheta += mouseDelta.x * M_TAU / 300.f;
+      m_camTheta = Util::Wrap(m_camTheta, 0.f, M_TAU);
+      m_camPhi += mouseDelta.y * M_TAU / 300.f;
+      m_camPhi = Util::Clamp(m_camPhi, -.249f * M_TAU, .249f * M_TAU);
     }
 
     {
@@ -156,8 +166,6 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
   */
 
-  // TODO mouse capture isn't ideal?
-
   if (_event.type == sf::Event::MouseWheelMoved)
   {
     m_camDist += 30.f * _event.mouseWheel.delta;
@@ -172,7 +180,6 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 
     if (_event.key.code == sf::Keyboard::Tab)
     {
-      // TODO pick next camera target
       m_camTargetIdx++;
       if (m_camTargetIdx > NUM_SHIPS) {
         m_camTargetIdx = 0;
@@ -458,11 +465,11 @@ void OrbitalSpaceApp::RenderState()
     text.setPosition(8, 8);
 
     str.precision(3);
-    str.flags(std::ios::right + std::ios::fixed);
     str.width(7);
-    
-    str << "Test 1:" << 0.0f << "\n";
-    str << "Test 2:" << 1.0f << "\n";
+    str.flags(std::ios::right + std::ios::fixed);
+        
+    str << "Cam Theta:" << m_camTheta << "\n";
+    str << "Cam Phi:" << m_camPhi << "\n";
     str << "Test 3:" << 0.001f << "\n";
     str << "Test 3:" << 100.001f << "\n";
 
@@ -512,7 +519,6 @@ void OrbitalSpaceApp::RenderState()
 
   Eigen::Affine3f camMat1;
   camMat1.setIdentity();
-  // TODO ugh all broken now
   camMat1.rotate(thetaRot).rotate(phiRot).translate(camPos);
 
   camPos = camMat1 * camPos;
