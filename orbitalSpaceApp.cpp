@@ -24,7 +24,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camTargetIdx(0),
   m_earthBody(),
   m_light(1, 1, 0),
-  m_thrusters(0)
+  m_thrusters(0),
+  m_hasFocus(false)
 {
   m_colG[0] = Vector3f(41,42,34)/255;
   m_colG[1] = Vector3f(77,82,50)/255;
@@ -76,15 +77,17 @@ void OrbitalSpaceApp::Run()
       PollEvents();
     }
 
-    // Input handling
-    sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
-    sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
-    sf::Mouse::setPosition(centerPos, *m_window);
+    if (m_hasFocus) {
+      // Input handling
+      sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+      sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
+      sf::Mouse::setPosition(centerPos, *m_window);
     
-    m_camTheta += mouseDelta.x * M_TAU / 100.f;
-    Util::Wrap(m_camTheta, 0.f, M_TAU);
-    m_camPhi += mouseDelta.y * M_TAU / 100.f;
-    Util::Wrap(m_camPhi, 0.f, M_TAU);
+      m_camTheta += mouseDelta.x * M_TAU / 100.f;
+      Util::Wrap(m_camTheta, 0.f, M_TAU);
+      m_camPhi += mouseDelta.y * M_TAU / 100.f;
+      Util::Wrap(m_camPhi, 0.f, M_TAU);
+    }
 
     {
       PERFTIMER("UpdateState");
@@ -106,6 +109,8 @@ void OrbitalSpaceApp::Run()
       EndRender();
     }
     
+    sf::sleep(sf::milliseconds(1.f)); // TODO sleep according to frame duration
+
     m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
   }
 }
@@ -239,6 +244,16 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   if (_event.type == sf::Event::Closed)
   {
     m_running = false;
+  }
+
+  if (_event.type == sf::Event::LostFocus)
+  {
+    m_hasFocus = false;
+  }
+
+  if (_event.type == sf::Event::GainedFocus)
+  {
+    m_hasFocus = true;
   }
 }
 
@@ -445,14 +460,13 @@ void OrbitalSpaceApp::RenderState()
     str.precision(3);
     str.flags(std::ios::right + std::ios::fixed);
     str.width(7);
-
-
+    
     str << "Test 1:" << 0.0f << "\n";
     str << "Test 2:" << 1.0f << "\n";
     str << "Test 3:" << 0.001f << "\n";
     str << "Test 3:" << 100.001f << "\n";
 
-    // TODO: float value text formatting
+    // TODO: better float value text formatting
     // TODO: small visualisations for the angle etc values
    
     text.setString(str.str());

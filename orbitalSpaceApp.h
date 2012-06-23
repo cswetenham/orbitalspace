@@ -199,6 +199,8 @@ private:
   Vector3f m_colB[NUM_COLS];
   
   Vector3f m_light;
+
+  bool m_hasFocus;
 };
 
 #endif	/* SSRM1APP_H */
