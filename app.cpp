@@ -69,8 +69,8 @@ void App::Run()
   while (m_running)
   {
     Timer::PerfTime const frameStart = Timer::GetPerfTime();
-    float dt = Timer::PerfTimeToMillis(m_lastFrameDuration)/1000.f;
-    dt = Util::Min(dt, .1f); // Clamp simulation stepsize
+    double dt = Timer::PerfTimeToMillis(m_lastFrameDuration)/1000;
+    dt = Util::Min(dt, .1); // Clamp simulation stepsize
     
     {
       PERFTIMER("PollEvents");

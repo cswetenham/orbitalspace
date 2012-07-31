@@ -9,57 +9,73 @@
 
 #include <Eigen/Geometry>
 
+// meters
+#define EARTH_RADIUS 6371e6
+// kg
+#define EARTH_MASS 5.9742e24
+
+#define UNHAX_DISTANCE_FACTOR (EARTH_RADIUS / 100.0)
+
 OrbitalSpaceApp::OrbitalSpaceApp():
   App(),
   m_rnd(1123LL),
-  m_simTime(0.f),
+  m_simTime(0.0),
   m_paused(false),
   m_singleStep(false),
   m_wireframe(false),
   m_camOrig(true),
-  m_camDist(-1000),
-  m_camTheta(0.f),
-  m_camPhi(0.f),
+  m_camDist(-500 * UNHAX_DISTANCE_FACTOR),
+  m_camTheta(0.0),
+  m_camPhi(0.0),
   m_camTarget(&m_earthBody),
   m_camTargetIdx(0),
   m_earthBody(),
   m_light(1, 1, 0),
   m_thrusters(0),
-  m_hasFocus(false)
+  m_hasFocus(false),
+  m_music(),
+  m_timeScale(1.0)
 {
-  m_colG[0] = Vector3f(41,42,34)/255;
-  m_colG[1] = Vector3f(77,82,50)/255;
-  m_colG[2] = Vector3f(99,115,76)/255;
-  m_colG[3] = Vector3f(151,168,136)/255;
-  m_colG[4] = Vector3f(198,222,172)/255;
+  m_colG[0] = Vector3d(41,42,34)/255;
+  m_colG[1] = Vector3d(77,82,50)/255;
+  m_colG[2] = Vector3d(99,115,76)/255;
+  m_colG[3] = Vector3d(151,168,136)/255;
+  m_colG[4] = Vector3d(198,222,172)/255;
 
   for (int i = 0; i < NUM_COLS; ++i)
   {
-    m_colR[i] = Vector3f(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
-    m_colB[i] = Vector3f(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
+    m_colR[i] = Vector3d(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
+    m_colB[i] = Vector3d(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
   }
   
   m_light /= m_light.norm();
 
-  m_earthBody.m_pos = Vector3f(0.f, 0.f, 0.f);
-  m_earthBody.m_mass = 5.9742e24f;
+  // TODO real-time date/time + time scale factor display
 
+  m_earthBody.m_pos = Vector3d(0.0, 0.0, 0.0);
+  m_earthBody.m_mass = EARTH_MASS; // kg
+  m_earthBody.m_radius = EARTH_RADIUS; // m
+  
   float rnds[6 * NUM_SHIPS];
-  UniformDistribution dist(-10.f, +10.f);
+  UniformDistribution dist(-10.0, +10.0);
   dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
   for (int i = 0; i < NUM_SHIPS; ++i)
   {
-    m_ships[i].m_physics.m_pos += Vector3f(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]);
-    m_ships[i].m_physics.m_vel += Vector3f(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]);
+    m_ships[i].m_physics.m_pos = Vector3d(0.0, 0.0, 200.0 * UNHAX_DISTANCE_FACTOR);
+    m_ships[i].m_physics.m_vel = Vector3d(170.0, 0.0, 0.0);
+    m_ships[i].m_physics.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * UNHAX_DISTANCE_FACTOR;
+    m_ships[i].m_physics.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]);
   }
+
+  m_music.openFromFile("spacething3_mastered_fullq.ogg");
+  m_music.setLoop(true);
+  m_music.play();
 }
 
 OrbitalSpaceApp::Ship::Ship() :
   m_physics(),
-  m_trail(3.f)
+  m_trail(3.0)
 {
-  m_physics.m_pos = Vector3f(0.f, 0.f, 200.f);
-  m_physics.m_vel = Vector3f(130.f, 0.f, 0.f);
 }
 
 OrbitalSpaceApp::~OrbitalSpaceApp()
@@ -68,13 +84,13 @@ OrbitalSpaceApp::~OrbitalSpaceApp()
 
 void OrbitalSpaceApp::Run()
 {
-  float const a = Util::FMod(3.f, 2.f);
-  if ( a != 1.f ) {
+  double const a = Util::FMod(3.0, 2.0);
+  if ( a != 1.0 ) {
     __debugbreak();
   }
 
-  float const b = Util::Wrap(3.5f, 1.f, 2.f);
-  if (b != 1.5f) {
+  double const b = Util::Wrap(3.5, 1.0, 2.0);
+  if (b != 1.5) {
     __debugbreak();
   }
 
@@ -93,10 +109,10 @@ void OrbitalSpaceApp::Run()
       sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
       sf::Mouse::setPosition(centerPos, *m_window);
     
-      m_camTheta += mouseDelta.x * M_TAU / 300.f;
-      m_camTheta = Util::Wrap(m_camTheta, 0.f, M_TAU);
-      m_camPhi += mouseDelta.y * M_TAU / 300.f;
-      m_camPhi = Util::Clamp(m_camPhi, -.249f * M_TAU, .249f * M_TAU);
+      m_camTheta += mouseDelta.x * M_TAU / 300.0;
+      m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
+      m_camPhi += mouseDelta.y * M_TAU / 300.0;
+      m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
     }
 
     {
@@ -168,7 +184,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 
   if (_event.type == sf::Event::MouseWheelMoved)
   {
-    m_camDist += 30.f * _event.mouseWheel.delta;
+    m_camDist += 30.0 * UNHAX_DISTANCE_FACTOR * _event.mouseWheel.delta;
   }
 
   if (_event.type == sf::Event::KeyPressed)
@@ -192,6 +208,16 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::R)
     {
       m_camOrig = !m_camOrig;
+    }
+
+    if (_event.key.code == sf::Keyboard::Add)
+    {
+      m_timeScale *= 2;
+    }
+
+    if (_event.key.code == sf::Keyboard::Subtract)
+    {
+      m_timeScale /= 2;
     }
 
     if (_event.key.code == sf::Keyboard::A)
@@ -264,58 +290,54 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-void OrbitalSpaceApp::UpdateState(float const _dt)
+void OrbitalSpaceApp::UpdateState(double const _dt)
 {
   if (!m_paused)
   {
     m_simTime += _dt;
 
-    float dt = _dt / 1000.f;
-    if (dt > 0.1f) { dt = 0.1f; } // TODO HAX
-    
-    Vector3f origin(0,0,0);
-    double const G = 6.6738480e-11f;
+    double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
+        
+    Vector3d origin(0,0,0);
+    double const G = 6.6738480e-11;
     double const M = m_earthBody.m_mass;
     
-    // TODO get scales, distances right. Maybe need scaling matrix for rendering?
-    float const HAX_SCALE_FACTOR = 0.00000001f;
-
-    float const mu = (float)(HAX_SCALE_FACTOR * G * M);
+    double const mu = M * G;
     
     for (int i = 0; i < NUM_SHIPS; ++i)
     {
       // Define directions
       PhysicsBody& pb = m_ships[i].m_physics;
 
-      Vector3f v = pb.m_vel;
+      Vector3d v = pb.m_vel;
 
-      Vector3f r = (origin - pb.m_pos);
-      float const r_mag = r.norm();
+      Vector3d r = (origin - pb.m_pos);
+      double const r_mag = r.norm();
 
-      Vector3f r_dir = r/r_mag;
+      Vector3d r_dir = r/r_mag;
 
-      float const vr_mag = r_dir.dot(v);
-      Vector3f vr = r_dir * vr_mag; // radial velocity
-      Vector3f vt = v - vr; // tangent velocity
-      float const vt_mag = vt.norm();
-      Vector3f t_dir = vt/vt_mag;
+      double const vr_mag = r_dir.dot(v);
+      Vector3d vr = r_dir * vr_mag; // radial velocity
+      Vector3d vt = v - vr; // tangent velocity
+      double const vt_mag = vt.norm();
+      Vector3d t_dir = vt/vt_mag;
 
       // Compute Kepler orbit
       // TODO compute this AFTER update, before render
 
       {
-        float const p = pow(r_mag * vt_mag, 2) / mu;
-        float const v0 = sqrtf(mu/p); // todo compute more accurately/efficiently?
+        double const p = pow(r_mag * vt_mag, 2) / mu;
+        double const v0 = sqrt(mu/p); // todo compute more accurately/efficiently?
 
-        Vector3f ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
-        float const e = ex.norm();
+        Vector3d ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
+        double const e = ex.norm();
 
-        float const ec = (vt_mag / v0) - 1;
-        float const es = (vr_mag / v0);
-        float const theta = atan2(es, ec);
+        double const ec = (vt_mag / v0) - 1;
+        double const es = (vr_mag / v0);
+        double const theta = atan2(es, ec);
 
-        Vector3f x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
-        Vector3f y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
+        Vector3d x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
+        Vector3d y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
 
         OrbitParams& op = m_ships[i].m_orbit;
         op.e = e;
@@ -326,21 +348,21 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
       }
             
       // Apply gravity
-      Vector3f dv = dt * r_dir * mu / (r_mag * r_mag);
+      Vector3d dv = dt * r_dir * mu / (r_mag * r_mag);
 
-      // Vector3f dv = dt * HAX_SCALE_FACTOR * d * (G * M) / r;
+      // Vector3d dv = dt * HAX_SCALE_FACTOR * d * (G * M) / r;
       v += dv;
 
       // Apply thrust
     
-      float const thrustAccel = 100.0;
-      float const thrustDV = thrustAccel * dt;
+      double const thrustAccel = 100.0;
+      double const thrustDV = thrustAccel * dt;
       
-      Vector3f thrustVec(0.f,0.f,0.f);
+      Vector3d thrustVec(0.0,0.0,0.0);
 
-      Vector3f fwd = pb.m_vel / pb.m_vel.norm(); // Prograde
-      Vector3f left = fwd.cross(r_dir); // name? (and is the order right?)
-      Vector3f dwn = left.cross(fwd); // name? (and is the order right?)
+      Vector3d fwd = pb.m_vel / pb.m_vel.norm(); // Prograde
+      Vector3d left = fwd.cross(r_dir); // name? (and is the order right?)
+      Vector3d dwn = left.cross(fwd); // name? (and is the order right?)
 
       if (i == 0) // TODO HAX
       {
@@ -373,7 +395,7 @@ void OrbitalSpaceApp::UpdateState(float const _dt)
   }
 }
 
-void OrbitalSpaceApp::DrawWireSphere(float const radius, int const slices, int const stacks)
+void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int const stacks)
 {
     int curStack, curSlice;
 
@@ -424,7 +446,7 @@ void OrbitalSpaceApp::DrawWireSphere(float const radius, int const slices, int c
     }
 }
 
-void OrbitalSpaceApp::DrawCircle(float const radius, int const steps)
+void OrbitalSpaceApp::DrawCircle(double const radius, int const steps)
 {
     /* Adjust z and radius as stacks and slices are drawn. */
 
@@ -439,13 +461,13 @@ void OrbitalSpaceApp::DrawCircle(float const radius, int const steps)
         x = cos( curStep * stepInc );
         y = sin( curStep * stepInc );
 
-        glNormal3d(x,y,0.f);
-        glVertex3d(x*radius, y*radius, 0.f);
+        glNormal3d(x,y,0.0);
+        glVertex3d(x*radius, y*radius, 0.0);
     }
     glEnd();
 }
 
-Vector3f lerp(Vector3f const& _x0, Vector3f const& _x1, float const _a) {
+Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
 
@@ -468,10 +490,11 @@ void OrbitalSpaceApp::RenderState()
     str.width(7);
     str.flags(std::ios::right + std::ios::fixed);
         
+    str << "Time Scale: " << m_timeScale << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
 
-    // TODO: better float value text formatting
+    // TODO: better double value text formatting
     // TODO: small visualisations for the angle etc values
    
     text.setString(str.str());
@@ -482,40 +505,40 @@ void OrbitalSpaceApp::RenderState()
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  Vector3f c = m_colG[0];
+  Vector3d c = m_colG[0];
   glClearColor(c.x(), c.y(), c.z(), 0);
-  glClearDepth(1.0f);
+  glClearDepth(1.0);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
   // Units: ...?
-  float const aspect = m_config.width / (float)m_config.height;
-  float const height = 500.f;
-  float const width = height * aspect;
-  Vector2f size(width, height);
-  Vector2f tl = -.5f * size;
-  Vector2f br = .5f * size;
+  double const aspect = m_config.width / (double)m_config.height;
+  double const height = 500.0 * UNHAX_DISTANCE_FACTOR;
+  double const width = height * aspect;
+  Vector2d size(width, height);
+  Vector2d tl = -.5 * size;
+  Vector2d br = .5 * size;
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  float const fov = 35.f;
-  gluPerspective(fov, aspect, 1.0f, 10000.0f);
+  double const fov = 35.0;
+  gluPerspective(fov, aspect, 1.0, 10000.0 * UNHAX_DISTANCE_FACTOR);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  Vector3f up(0.0, 1.0, 0.0);
+  Vector3d up(0.0, 1.0, 0.0);
 
-  Vector3f camPos = Vector3f(0.0, 0.0, m_camDist);
+  Vector3d camPos = Vector3d(0.0, 0.0, m_camDist);
   assert(m_camTarget);
-  Vector3f const camTarget = m_camTarget->m_pos;
+  Vector3d const camTarget = m_camTarget->m_pos;
 
   // TODO output text for theta, phi
 
-  Eigen::AngleAxisf thetaRot(m_camTheta, Vector3f(0.f, 1.f, 0.f));
-  Eigen::AngleAxisf phiRot(m_camPhi, Vector3f(1.f, 0.f, 0.f));
+  Eigen::AngleAxisd thetaRot(m_camTheta, Vector3d(0.0, 1.0, 0.0));
+  Eigen::AngleAxisd phiRot(m_camPhi, Vector3d(1.0, 0.0, 0.0));
 
-  Eigen::Affine3f camMat1;
+  Eigen::Affine3d camMat1;
   camMat1.setIdentity();
   camMat1.rotate(thetaRot).rotate(phiRot).translate(camPos);
 
@@ -526,16 +549,16 @@ void OrbitalSpaceApp::RenderState()
               camTarget.x(), camTarget.y(), camTarget.z(),
               up.x(), up.y(), up.z());
   } else {
-    Vector3f camF = (camTarget - camPos).normalized();
-    Vector3f camR = camF.cross(up);
-    Vector3f camU = camF.cross(camR);
+    Vector3d camF = (camTarget - camPos).normalized();
+    Vector3d camR = camF.cross(up);
+    Vector3d camU = camF.cross(camR);
 
-    Matrix3f camMat;
+    Matrix3d camMat;
     camMat.col(0) = -camR;
     camMat.col(1) = -camU;
     camMat.col(2) = camF;
 
-    Eigen::Affine3f camT;
+    Eigen::Affine3d camT;
     camT.linear() = camMat;
 
     glMultMatrix(camT);
@@ -560,27 +583,28 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
-  Util::SetDrawColour(m_colG[1]);
-  DrawWireSphere(90.0f, 32, 32);
-  Util::SetDrawColour(m_colG[2]);
-  DrawWireSphere(100.0f, 32, 32);
+  {
+    Vector3f c = m_colG[1].cast<float>();
+    Util::SetDrawColour(c);
+  }
+  DrawWireSphere(m_earthBody.m_radius, 32, 32);
 
   // TODO collision detection
 
   for (int s = 0; s < NUM_SHIPS; ++s)
   {
     // Draw ship
-    glPointSize(10.f);
+    glPointSize(10.0);
     glBegin(GL_POINTS);
-    Vector3f p = m_ships[s].m_physics.m_pos;
+    Vector3d p = m_ships[s].m_physics.m_pos;
     if (s == 0) {
       Util::SetDrawColour(m_colB[4]);
     } else {
       Util::SetDrawColour(m_colR[4]);
     }
-    glVertex3f(p.x(), p.y(), p.z());
+    glVertex3d(p.x(), p.y(), p.z());
     glEnd();
-    glPointSize(1.f);
+    glPointSize(1.0);
 
     // Draw orbit
     {
@@ -589,22 +613,22 @@ void OrbitalSpaceApp::RenderState()
       int const steps = 10000;
       // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
       // restrict the range of theta?
-      float const delta = .0001f;
-      float const HAX_RANGE = .9f; // limit range to stay out of very large values
+      double const delta = .0001;
+      double const HAX_RANGE = .9; // limit range to stay out of very large values
       // TODO want to instead limit the range based on... some viewing area?
       // might be two visible segments, one from +ve and one from -ve theta, with
       // different visible ranges. Could determine 
       // TODO and want to take steps of fixed length/distance
-      float range;
+      double range;
       if (orbit.e < 1 - delta) { // ellipse
-          range = .5f * M_TAU;
+          range = .5 * M_TAU;
       } else if (orbit.e < 1 + delta) { // parabola
-          range = .5f * M_TAU * HAX_RANGE;
+          range = .5 * M_TAU * HAX_RANGE;
       } else { // hyperbola
           range = acos(-1/orbit.e) * HAX_RANGE;
       }
-      float const mint = -range;
-      float const maxt = range;
+      double const mint = -range;
+      double const maxt = range;
       glBegin(GL_LINE_STRIP);
       if (s == 0) {
         Util::SetDrawColour(m_colB[2]);
@@ -613,13 +637,13 @@ void OrbitalSpaceApp::RenderState()
       }
       for (int i = 0; i <= steps; ++i)
       {
-          float const ct = Util::Lerp(mint, maxt, (float)i / steps);
-          float const cr = orbit.p / (1 + orbit.e * cos(ct));
+          double const ct = Util::Lerp(mint, maxt, (double)i / steps);
+          double const cr = orbit.p / (1 + orbit.e * cos(ct));
 
-          float const x_len = cr * -cos(ct);
-          float const y_len = cr * -sin(ct);
-          Vector3f pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
-          glVertex3f(pos.x(), pos.y(), pos.z());
+          double const x_len = cr * -cos(ct);
+          double const y_len = cr * -sin(ct);
+          Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
+          glVertex3d(pos.x(), pos.y(), pos.z());
       }
       glEnd();
     }
@@ -632,6 +656,6 @@ void OrbitalSpaceApp::RenderState()
     }
   }
   
-  printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime);
+  printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
 

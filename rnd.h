@@ -268,7 +268,7 @@ public:
     }
 
     float const u = (_in - m_config.mean) / m_config.std;
-    float const k = 1.f / (sqrtf(M_TAU) * m_config.std);
+    float const k = 1.f / (sqrtf(M_TAU_F) * m_config.std);
     return k * expf(-.5f * u * u);
   }
   

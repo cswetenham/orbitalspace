@@ -25,7 +25,8 @@ EIGEN_USING_MATRIX_TYPEDEFS;
 
 /******************************** Structures *********************************/
 
-#define M_TAU      6.28318530717958647693f
+#define M_TAU      6.28318530717958647693
+#define M_TAU_F    6.28318530717958647693f
 
 class Util
 {
@@ -96,6 +97,7 @@ public:
   static void SleepMicros(uint32_t const _usecs);
 
   static void SetDrawColour(Vector3f const& _c);
+  static void SetDrawColour(Vector3d const& _c);
 
 private:
   static void SigAbrt(int);

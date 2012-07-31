@@ -36,7 +36,7 @@ protected:
   
   virtual void HandleEvent(sf::Event const& _event) = 0;
   
-  virtual void UpdateState(float const _dt) = 0;
+  virtual void UpdateState(double const _dt) = 0;
   
   virtual void RenderState() = 0;
 

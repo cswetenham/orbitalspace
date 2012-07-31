@@ -16,6 +16,8 @@
 
 EIGEN_USING_MATRIX_TYPEDEFS;
 
+#include <SFML/Audio/Music.hpp>
+
 class OrbitalSpaceApp :
   public App
 {
@@ -35,18 +37,18 @@ protected:
   virtual void ShutdownState();
 
   virtual void HandleEvent(sf::Event const& _event);
-  virtual void UpdateState(float const _dt);
+  virtual void UpdateState(double const _dt);
   
   virtual void RenderState();
 
 private:
-  void DrawCircle(float const radius, int const steps);
-  void DrawWireSphere(float const radius, int const slices, int const stacks);
+  void DrawCircle(double const radius, int const steps);
+  void DrawWireSphere(double const radius, int const slices, int const stacks);
 
 private:
   Rnd64 m_rnd;
   
-  float m_simTime;
+  double m_simTime;
 
   struct Config
   {
@@ -63,23 +65,24 @@ private:
   bool m_wireframe;
   bool m_camOrig;
 
-  float m_camDist;
-  float m_camTheta;
-  float m_camPhi;
+  double m_camDist;
+  double m_camTheta;
+  double m_camPhi;
    
   struct Body
   {
-    Vector3f m_pos;
+    Vector3d m_pos;
   };
 
   struct MassiveBody : public Body
   {
-    float m_mass;
+    double m_radius;
+    double m_mass;
   };
 
   struct PhysicsBody : public Body
   {
-    Vector3f m_vel;
+    Vector3d m_vel;
   };
 
   Body* m_camTarget;
@@ -101,16 +104,16 @@ private:
 
   struct OrbitParams
   {
-    float p;
-    float e;
-    float theta;
-    Vector3f x_dir;
-    Vector3f y_dir;
+    double p;
+    double e;
+    double theta;
+    Vector3d x_dir;
+    Vector3d y_dir;
   };
 
   struct Trail
   {
-    Trail(float const _duration) :
+    Trail(double const _duration) :
       m_duration(_duration), // TODO make sure this works as a value!
       m_timeSinceUpdate(0.f),    
       m_headIdx(0),
@@ -118,11 +121,11 @@ private:
     {
       for (int i = 0; i < NUM_TRAIL_PTS; ++i)
       {
-        m_trailPts[i] = Vector3f::Zero();
+        m_trailPts[i] = Vector3d::Zero();
       }
     }
 
-    void Update(float const _dt, Vector3f _pos)
+    void Update(double const _dt, Vector3d _pos)
     {
       // TODO can have a list of past points and their durations, and cut up trail linearly
 
@@ -146,7 +149,7 @@ private:
       // assert(m_headIdx != m_tailIdx);
     }
 
-    void Render(Vector3f const& _col0, Vector3f const& _col1)
+    void Render(Vector3d const& _col0, Vector3d const& _col1)
     {
       glBegin(GL_LINE_STRIP);
       int prevIdx = 0;
@@ -155,12 +158,14 @@ private:
       {
         int idx = m_headIdx + i - Trail::NUM_TRAIL_PTS + 1;
         if (idx < 0) { idx += Trail::NUM_TRAIL_PTS; }
-        Vector3f v = m_trailPts[idx];
+        Vector3d v = m_trailPts[idx];
 
-        float const l = (float)i / Trail::NUM_TRAIL_PTS;
-        Util::SetDrawColour(Util::Lerp(_col0, _col1, l));
+        double const l = (double)i / Trail::NUM_TRAIL_PTS;
+        Vector3d cd = Util::Lerp(_col0, _col1, l);
+        Vector3f c = cd.cast<float>();
+        Util::SetDrawColour(c);
 
-        glVertex3f(v.x(),v.y(),v.z());
+        glVertex3d(v.x(),v.y(),v.z());
 
         prevIdx = idx;
       }
@@ -170,13 +175,13 @@ private:
     // TODO this stores a fixed number of frames, not the best approach
     // On the other hand the break in the ellipse is a good way of seeing ship location for now
     enum { NUM_TRAIL_PTS = 1000 };
-    float m_duration;
-    float m_timeSinceUpdate;
+    double m_duration;
+    double m_timeSinceUpdate;
 
     int m_headIdx;
     int m_tailIdx;
-    Vector3f m_trailPts[NUM_TRAIL_PTS];
-    float m_trailDuration[NUM_TRAIL_PTS];
+    Vector3d m_trailPts[NUM_TRAIL_PTS];
+    double m_trailDuration[NUM_TRAIL_PTS];
   };
 
   struct Ship
@@ -194,13 +199,17 @@ private:
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
   enum {NUM_COLS = 5};
-  Vector3f m_colG[NUM_COLS];
-  Vector3f m_colR[NUM_COLS];
-  Vector3f m_colB[NUM_COLS];
+  Vector3d m_colG[NUM_COLS];
+  Vector3d m_colR[NUM_COLS];
+  Vector3d m_colB[NUM_COLS];
   
-  Vector3f m_light;
+  Vector3d m_light;
 
   bool m_hasFocus;
+
+  sf::Music m_music;
+
+  double m_timeScale;
 };
 
 #endif	/* SSRM1APP_H */
