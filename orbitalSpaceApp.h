@@ -42,6 +42,10 @@ protected:
   virtual void RenderState();
 
 private:
+  struct PhysicsBody;
+  struct OrbitParams;
+  void ComputeKeplerParams(PhysicsBody const& body, OrbitParams& o_params);
+
   void DrawCircle(double const radius, int const steps);
   void DrawWireSphere(double const radius, int const slices, int const stacks);
 

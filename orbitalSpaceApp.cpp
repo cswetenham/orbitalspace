@@ -9,12 +9,14 @@
 
 #include <Eigen/Geometry>
 
+// TODO #include <boost/posix_time.hpp>
+
 // meters
-#define EARTH_RADIUS 6371e6
+#define EARTH_RADIUS 6.371e9
 // kg
 #define EARTH_MASS 5.9742e24
-
-#define UNHAX_DISTANCE_FACTOR (EARTH_RADIUS / 100.0)
+// ??
+#define GRAV_CONSTANT 6.6738480e-11
 
 OrbitalSpaceApp::OrbitalSpaceApp():
   App(),
@@ -24,7 +26,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_singleStep(false),
   m_wireframe(false),
   m_camOrig(true),
-  m_camDist(-500 * UNHAX_DISTANCE_FACTOR),
+  m_camDist(-3.1855e10),
   m_camTheta(0.0),
   m_camPhi(0.0),
   m_camTarget(&m_earthBody),
@@ -57,14 +59,14 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_earthBody.m_radius = EARTH_RADIUS; // m
   
   float rnds[6 * NUM_SHIPS];
-  UniformDistribution dist(-10.0, +10.0);
+  UniformDistribution dist(-1, +1);
   dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
   for (int i = 0; i < NUM_SHIPS; ++i)
   {
-    m_ships[i].m_physics.m_pos = Vector3d(0.0, 0.0, 200.0 * UNHAX_DISTANCE_FACTOR);
-    m_ships[i].m_physics.m_vel = Vector3d(170.0, 0.0, 0.0);
-    m_ships[i].m_physics.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * UNHAX_DISTANCE_FACTOR;
-    m_ships[i].m_physics.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]);
+    m_ships[i].m_physics.m_pos = Vector3d(0.0, 0.0, 1.3e10);
+    m_ships[i].m_physics.m_vel = Vector3d(1.7e2, 0.0, 0.0);
+    m_ships[i].m_physics.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e7;
+    m_ships[i].m_physics.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e1;
   }
 
   m_music.openFromFile("spacething3_mastered_fullq.ogg");
@@ -184,7 +186,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 
   if (_event.type == sf::Event::MouseWheelMoved)
   {
-    m_camDist += 30.0 * UNHAX_DISTANCE_FACTOR * _event.mouseWheel.delta;
+    m_camDist *= pow(0.9, _event.mouseWheel.delta);
   }
 
   if (_event.type == sf::Event::KeyPressed)
@@ -297,10 +299,10 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     m_simTime += _dt;
 
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
-        
-    Vector3d origin(0,0,0);
-    double const G = 6.6738480e-11;
+    
+    double const G = GRAV_CONSTANT;
     double const M = m_earthBody.m_mass;
+    Vector3d origin = m_earthBody.m_pos;
     
     double const mu = M * G;
     
@@ -322,31 +324,6 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       double const vt_mag = vt.norm();
       Vector3d t_dir = vt/vt_mag;
 
-      // Compute Kepler orbit
-      // TODO compute this AFTER update, before render
-
-      {
-        double const p = pow(r_mag * vt_mag, 2) / mu;
-        double const v0 = sqrt(mu/p); // todo compute more accurately/efficiently?
-
-        Vector3d ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
-        double const e = ex.norm();
-
-        double const ec = (vt_mag / v0) - 1;
-        double const es = (vr_mag / v0);
-        double const theta = atan2(es, ec);
-
-        Vector3d x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
-        Vector3d y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
-
-        OrbitParams& op = m_ships[i].m_orbit;
-        op.e = e;
-        op.p = p;
-        op.theta = theta;
-        op.x_dir = x_dir;
-        op.y_dir = y_dir;
-      }
-            
       // Apply gravity
       Vector3d dv = dt * r_dir * mu / (r_mag * r_mag);
 
@@ -364,7 +341,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       Vector3d left = fwd.cross(r_dir); // name? (and is the order right?)
       Vector3d dwn = left.cross(fwd); // name? (and is the order right?)
 
-      if (i == 0) // TODO HAX
+      if (i == 0) // TODO HAX, selecting first ship as controllable one
       {
         if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
         if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
@@ -381,10 +358,10 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       // Update position
       pb.m_pos += pb.m_vel * dt;
 
+      ComputeKeplerParams(m_ships[i].m_physics, m_ships[i].m_orbit);
+      
       // Update trail
       m_ships[i].m_trail.Update(_dt, pb.m_pos);
-
-
     }
   }
 
@@ -393,6 +370,47 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     m_singleStep = false;
     m_paused = true;
   }
+}
+
+void OrbitalSpaceApp::ComputeKeplerParams(PhysicsBody const& body, OrbitParams& o_params) {
+  // Compute Kepler orbit
+  double const G = GRAV_CONSTANT;
+  double const M = m_earthBody.m_mass;
+  Vector3d origin = m_earthBody.m_pos;
+    
+  double const mu = M * G;
+
+  Vector3d v = body.m_vel;
+
+  Vector3d r = (origin - body.m_pos);
+  double const r_mag = r.norm();
+
+  Vector3d r_dir = r/r_mag;
+
+  double const vr_mag = r_dir.dot(v);
+  Vector3d vr = r_dir * vr_mag; // radial velocity
+  Vector3d vt = v - vr; // tangent velocity
+  double const vt_mag = vt.norm();
+  Vector3d t_dir = vt/vt_mag;
+
+  double const p = pow(r_mag * vt_mag, 2) / mu;
+  double const v0 = sqrt(mu/p); // todo compute more accurately/efficiently?
+
+  Vector3d ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
+  double const e = ex.norm();
+
+  double const ec = (vt_mag / v0) - 1;
+  double const es = (vr_mag / v0);
+  double const theta = atan2(es, ec);
+
+  Vector3d x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
+  Vector3d y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
+
+  o_params.e = e;
+  o_params.p = p;
+  o_params.theta = theta;
+  o_params.x_dir = x_dir;
+  o_params.y_dir = y_dir;
 }
 
 void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int const stacks)
@@ -491,6 +509,7 @@ void OrbitalSpaceApp::RenderState()
     str.flags(std::ios::right + std::ios::fixed);
         
     str << "Time Scale: " << m_timeScale << "\n";
+    str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
 
@@ -512,58 +531,53 @@ void OrbitalSpaceApp::RenderState()
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  // Units: ...?
   double const aspect = m_config.width / (double)m_config.height;
-  double const height = 500.0 * UNHAX_DISTANCE_FACTOR;
-  double const width = height * aspect;
-  Vector2d size(width, height);
-  Vector2d tl = -.5 * size;
-  Vector2d br = .5 * size;
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  double const fov = 35.0;
-  gluPerspective(fov, aspect, 1.0, 10000.0 * UNHAX_DISTANCE_FACTOR);
+  double const fov = 35.0; // degrees?
+  gluPerspective(fov, aspect, 1.0, 1e14); // meters
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   Vector3d up(0.0, 1.0, 0.0);
 
-  Vector3d camPos = Vector3d(0.0, 0.0, m_camDist);
   assert(m_camTarget);
   Vector3d const camTarget = m_camTarget->m_pos;
 
-  // TODO output text for theta, phi
+  Vector3d camPos = Vector3d(0.0, 0.0, m_camDist);
 
   Eigen::AngleAxisd thetaRot(m_camTheta, Vector3d(0.0, 1.0, 0.0));
   Eigen::AngleAxisd phiRot(m_camPhi, Vector3d(1.0, 0.0, 0.0));
 
   Eigen::Affine3d camMat1;
   camMat1.setIdentity();
-  camMat1.rotate(thetaRot).rotate(phiRot).translate(camPos);
+  camMat1.rotate(thetaRot).rotate(phiRot);
 
   camPos = camMat1 * camPos;
+  camPos += camTarget;
 
+  // TODO remove the gluLookAt? Or just have it off by default for now?
   if (m_camOrig) {
     gluLookAt(camPos.x(), camPos.y(), camPos.z(),
               camTarget.x(), camTarget.y(), camTarget.z(),
               up.x(), up.y(), up.z());
   } else {
+    // Finally does the same as gluLookAt!
     Vector3d camF = (camTarget - camPos).normalized();
-    Vector3d camR = camF.cross(up);
-    Vector3d camU = camF.cross(camR);
+    Vector3d camR = camF.cross(up).normalized();
+    Vector3d camU = camF.cross(camR).normalized();
 
     Matrix3d camMat;
-    camMat.col(0) = -camR;
+    camMat.col(0) = camR;
     camMat.col(1) = -camU;
-    camMat.col(2) = camF;
+    camMat.col(2) = -camF;
 
     Eigen::Affine3d camT;
     camT.linear() = camMat;
+    camT.translation() = camPos;
 
-    glMultMatrix(camT);
-
-    glTranslate(camPos);
+    glMultMatrix(camT.inverse());
   }
 
   glEnable(GL_TEXTURE_2D);
