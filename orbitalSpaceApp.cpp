@@ -12,7 +12,7 @@
 // TODO #include <boost/posix_time.hpp>
 
 // meters
-#define EARTH_RADIUS 6.371e9
+#define EARTH_RADIUS 6.371e6
 // kg
 #define EARTH_MASS 5.9742e24
 // ??
@@ -26,7 +26,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_singleStep(false),
   m_wireframe(false),
   m_camOrig(true),
-  m_camDist(-3.1855e10),
+  m_camDist(-3.1855e7),
   m_camTheta(0.0),
   m_camPhi(0.0),
   m_camTarget(&m_earthBody),
@@ -63,10 +63,10 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
   for (int i = 0; i < NUM_SHIPS; ++i)
   {
-    m_ships[i].m_physics.m_pos = Vector3d(0.0, 0.0, 1.3e10);
-    m_ships[i].m_physics.m_vel = Vector3d(1.7e2, 0.0, 0.0);
-    m_ships[i].m_physics.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e7;
-    m_ships[i].m_physics.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e1;
+    m_ships[i].m_physics.m_pos = Vector3d(0.0, 0.0, 1.3e7);
+    m_ships[i].m_physics.m_vel = Vector3d(5e3, 0.0, 0.0);
+    m_ships[i].m_physics.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e4;
+    m_ships[i].m_physics.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
   }
 
   m_music.openFromFile("spacething3_mastered_fullq.ogg");
@@ -332,7 +332,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       // Apply thrust
     
-      double const thrustAccel = 100.0;
+      double const thrustAccel = 1.0; // meters per second squared - TODO what is a realistic value?
       double const thrustDV = thrustAccel * dt;
       
       Vector3d thrustVec(0.0,0.0,0.0);
@@ -485,6 +485,23 @@ void OrbitalSpaceApp::DrawCircle(double const radius, int const steps)
     glEnd();
 }
 
+void OrbitalSpaceApp::LookAt(Vector3d pos, Vector3d target, Vector3d up) {
+  Vector3d camF = (target - pos).normalized();
+  Vector3d camR = camF.cross(up).normalized();
+  Vector3d camU = camF.cross(camR).normalized();
+
+  Matrix3d camMat;
+  camMat.col(0) = camR;
+  camMat.col(1) = -camU;
+  camMat.col(2) = -camF;
+
+  Eigen::Affine3d camT;
+  camT.linear() = camMat;
+  camT.translation() = pos;
+
+  glMultMatrix(camT.inverse());
+}
+
 Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
@@ -512,6 +529,8 @@ void OrbitalSpaceApp::RenderState()
     str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
+    double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
+    str << "Intership Distance:" << shipDist << "\n";
 
     // TODO: better double value text formatting
     // TODO: small visualisations for the angle etc values
@@ -536,7 +555,7 @@ void OrbitalSpaceApp::RenderState()
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   double const fov = 35.0; // degrees?
-  gluPerspective(fov, aspect, 1.0, 1e14); // meters
+  gluPerspective(fov, aspect, 1.0, 1e11); // meters
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -564,20 +583,7 @@ void OrbitalSpaceApp::RenderState()
               up.x(), up.y(), up.z());
   } else {
     // Finally does the same as gluLookAt!
-    Vector3d camF = (camTarget - camPos).normalized();
-    Vector3d camR = camF.cross(up).normalized();
-    Vector3d camU = camF.cross(camR).normalized();
-
-    Matrix3d camMat;
-    camMat.col(0) = camR;
-    camMat.col(1) = -camU;
-    camMat.col(2) = -camF;
-
-    Eigen::Affine3d camT;
-    camT.linear() = camMat;
-    camT.translation() = camPos;
-
-    glMultMatrix(camT.inverse());
+   LookAt(camPos, camTarget, up);
   }
 
   glEnable(GL_TEXTURE_2D);
