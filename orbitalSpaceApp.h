@@ -51,6 +51,9 @@ private:
   void DrawWireSphere(double const radius, int const slices, int const stacks);
 
 private:
+  enum { NUM_BODIES = 1 };
+  enum { NUM_SHIPS = 2 };
+
   Rnd64 m_rnd;
   
   double m_simTime;
@@ -92,6 +95,7 @@ private:
 
   Body* m_camTarget;
   size_t m_camTargetIdx;
+  std::string m_camTargetName[NUM_SHIPS+1];
 
   MassiveBody m_earthBody;
 
@@ -198,9 +202,8 @@ private:
     Trail m_trail;
   };
   
-  enum { NUM_SHIPS = 2 };
   Ship m_ships[NUM_SHIPS];
-
+  
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
   enum {NUM_COLS = 5};

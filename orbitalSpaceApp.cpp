@@ -44,6 +44,10 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_colG[3] = Vector3d(151,168,136)/255;
   m_colG[4] = Vector3d(198,222,172)/255;
 
+  m_camTargetName[0] = "Earth";
+  m_camTargetName[1] = "Orbital Enforcer";
+  m_camTargetName[2] = "Suspect";
+
   for (int i = 0; i < NUM_COLS; ++i)
   {
     m_colR[i] = Vector3d(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
@@ -199,7 +203,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::Tab)
     {
       m_camTargetIdx++;
-      if (m_camTargetIdx > NUM_SHIPS) {
+      if (m_camTargetIdx >= NUM_BODIES + NUM_SHIPS) {
         m_camTargetIdx = 0;
         m_camTarget = &m_earthBody;
       } else {
@@ -332,7 +336,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       // Apply thrust
     
-      double const thrustAccel = 1.0; // meters per second squared - TODO what is a realistic value?
+      double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
       double const thrustDV = thrustAccel * dt;
       
       Vector3d thrustVec(0.0,0.0,0.0);
@@ -526,6 +530,7 @@ void OrbitalSpaceApp::RenderState()
     str.flags(std::ios::right + std::ios::fixed);
         
     str << "Time Scale: " << m_timeScale << "\n";
+    str << "Cam Target: " << m_camTargetName[m_camTargetIdx] << "\n";
     str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
