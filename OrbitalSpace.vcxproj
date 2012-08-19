@@ -63,7 +63,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;NOMINMAX;_DEBUG;_USE_MATH_DEFINES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Coding\SFML-2.0-rc\include;D:\Coding\eigen-3.0.5\unsupported;D:\Coding\eigen-3.0.5;D:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Coding\SFML-2.0-rc\include;F:\Coding\eigen-3.0.5\unsupported;F:\Coding\eigen-3.0.5;F:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -76,7 +76,7 @@
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>sfml-system-s-d.lib;sfml-window-s-d.lib;sfml-audio-s-d.lib;sfml-graphics-s-d.lib;opengl32.lib;glu32.lib;dxguid.lib;dinput8.lib;Winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>50000000</StackReserveSize>
-      <AdditionalLibraryDirectories>D:\Coding\SFML-2.0-rc\lib;$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\Coding\SFML-2.0-rc\lib;$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -86,7 +86,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;NOMINMAX;NDEBUG;_USE_MATH_DEFINES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Coding\SFML-2.0-rc\include;D:\Coding\eigen-3.0.5\unsupported;D:\Coding\eigen-3.0.5;D:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Coding\SFML-2.0-rc\include;F:\Coding\eigen-3.0.5\unsupported;F:\Coding\eigen-3.0.5;F:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>Cdecl</CallingConvention>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -99,7 +99,7 @@
       </EntryPointSymbol>
       <AdditionalDependencies>sfml-system-s.lib;sfml-window-s.lib;sfml-audio-s.lib;sfml-graphics-s.lib;opengl32.lib;glu32.lib;dxguid.lib;dinput8.lib;Winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
-      <AdditionalLibraryDirectories>D:\Coding\SFML-2.0-rc\lib;$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\Coding\SFML-2.0-rc\lib;$(DXSDK_DIR)Lib\x86</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
