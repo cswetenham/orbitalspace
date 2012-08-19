@@ -90,11 +90,13 @@ OrbitalSpaceApp::~OrbitalSpaceApp()
 
 void OrbitalSpaceApp::Run()
 {
+  // Test FMod
   double const a = Util::FMod(3.0, 2.0);
   if ( a != 1.0 ) {
     __debugbreak();
   }
 
+  // Test Wrap
   double const b = Util::Wrap(3.5, 1.0, 2.0);
   if (b != 1.5) {
     __debugbreak();
@@ -162,6 +164,13 @@ void OrbitalSpaceApp::InitRender()
   m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
   
   m_window->setMouseCursorVisible(false);
+#ifdef _WIN32
+  sf::WindowHandle hwnd = m_window->getSystemHandle();
+  ::SetForegroundWindow(hwnd);
+  ::SetActiveWindow(hwnd);
+  ::SetFocus(hwnd);
+  m_hasFocus = true;
+#endif
 }
 
 void OrbitalSpaceApp::ShutdownRender()
