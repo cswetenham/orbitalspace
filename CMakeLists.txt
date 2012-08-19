@@ -1,0 +1,6 @@
+cmake_minimum_required (VERSION 2.6)
+project (OrbitalSpace)
+include_directories("../SFML-2.0-rc/include")
+include_directories("/usr/include/eigen3")
+include_directories("/usr/include/eigen3/unsupported")
+add_executable(OrbitalSpace app.cpp orbitalSpaceApp.cpp perftimer.cpp timer.cpp util.cpp main.cpp)

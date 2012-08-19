@@ -18,3 +18,5 @@
 *.manifest
 *.lastbuildstate
 *.unsuccessfulbuild
+CMakeCache.txt
+*/CMakeFiles/*
