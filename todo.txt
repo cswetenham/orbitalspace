@@ -1,6 +1,15 @@
 DONE - Kepler orbits
+DONE - Real units/constants
 
-Real units/constants
+TODO - Use Bullet physics or some other physics engine?
+
+TODO - refactor into a proper engine
+
+TODO - namespaces
+
+TODO - task queues, something work-stealing with ideas from fJobQueue and the bitsquid job queues
+
+TODO - tests!!
 
 Camera - targeted, switching between targets (tab?) or free-roaming. 
 - two aspects: camera position, camera direction

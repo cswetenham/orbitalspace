@@ -121,6 +121,22 @@ public:
     }
   }
   
+  // TODO template better
+  void gen_uint32( int const _n, uint32_t * const __restrict _out )
+  {
+    assert((_n & 1) == 0);
+    for (int i = 0; i < _n; i += 2)
+    {
+      m_state = Next(m_state);
+
+      // Generate sample based on state
+      uint64_t const r = UInt64FromState(m_state);
+
+      _out[i]   = uint32_t(r);
+      _out[i+1] = uint32_t(r >> 32);
+    }
+  }
+
 private:
   State m_state;
 };
@@ -178,7 +194,11 @@ private:
   Config m_config;
 };
 
-class UniformDistribution
+// TODO int version
+template <typename T> class UniformDistribution;
+
+template <>
+class UniformDistribution<float>
 {
 public:
   struct Config
@@ -214,6 +234,47 @@ public:
     else
     {
       return 0;
+    }
+  }
+
+private:
+  Config m_config;
+};
+
+// TODO template better
+template <>
+class UniformDistribution<uint32_t>
+{
+public:
+  struct Config
+  {
+    Config(uint32_t const _min, uint32_t const _max) : min(_min), max(_max) {}
+    uint32_t min;
+    uint32_t max;
+  };
+  
+  UniformDistribution() : m_config(0, UINT32_MAX) {}
+  UniformDistribution(uint32_t const _min, uint32_t const _max) : m_config(_min, _max) {}
+  
+  void Generate(Rnd64* _r, int const _n, uint32_t* const _out) const
+  {
+    int const paddedCount = Util::PadSize(_n, 2);
+    uint32_t* const temp = (uint32_t*)alloca(paddedCount * sizeof(uint32_t));
+    
+    _r->gen_uint32(paddedCount, temp);
+    
+    for (int i = 0; i < _n; ++i) {
+      _out[i] = temp[i] % (m_config.max - m_config.min) + m_config.min;
+    }
+  }
+  
+  // TODO Evaluate many?
+  float Evaluate(uint32_t const _in) const
+  {
+    if (m_config.min <= _in && _in <= m_config.max) {
+      return 1.f / (m_config.max - m_config.min);
+    } else {
+      return 0.f;
     }
   }
 

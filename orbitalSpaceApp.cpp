@@ -1,6 +1,7 @@
 #include "orbitalSpaceApp.h"
 
 #include "perftimer.h"
+#include "task.h"
 
 #include <string>
 #include <sstream>
@@ -63,7 +64,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_earthBody.m_radius = EARTH_RADIUS; // m
   
   float rnds[6 * NUM_SHIPS];
-  UniformDistribution dist(-1, +1);
+  UniformDistribution<float> dist(-1, +1);
   dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
   for (int i = 0; i < NUM_SHIPS; ++i)
   {
@@ -527,13 +528,12 @@ void OrbitalSpaceApp::RenderState()
     sf::Font font(sf::Font::getDefaultFont());
     Eigen::Matrix<sf::Uint8, 3, 1> ct = (m_colG[4] * 255).cast<sf::Uint8>();
     
-    std::ostringstream str;
-
     uint32_t const fontSize = 14;
     sf::Text text(sf::String("Hello, World!"), font, fontSize);
     text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
     text.setPosition(8, 8);
 
+    std::ostringstream str;
     str.precision(3);
     str.width(7);
     str.flags(std::ios::right + std::ios::fixed);

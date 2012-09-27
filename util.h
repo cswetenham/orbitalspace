@@ -12,6 +12,8 @@ Logging and verification utility macros and functions
 #include <stdlib.h>
 #include <assert.h>
 
+#include <stdarg.h>
+
 #include <Eigen/Eigen>
 EIGEN_USING_MATRIX_TYPEDEFS;
 
@@ -23,11 +25,32 @@ EIGEN_USING_MATRIX_TYPEDEFS;
 # define ENTRY_FN
 #endif
 
+#ifdef _WIN32
+# define NORETURN __declspec(noreturn)
+#else
+# define NORETURN /* TODO: GCC, etc */
+#endif
+
+#ifdef _WIN32
+  extern "C" __declspec(dllimport) void __stdcall DebugBreak(void);
+# define DEBUGBREAK do { DebugBreak(); } while (0)
+#else
+# define DEBUGBREAK /* TODO: GCC, etc */
+#endif
+
+#ifdef _WIN32
+  extern "C" __declspec(dllimport) void __stdcall FatalExit(int);
+# define FATAL do { FatalExit(3); } while (0)
+#else
+# define FATAL /* TODO: GCC, etc */
+#endif
+
 /******************************** Structures *********************************/
 
 #define M_TAU      6.28318530717958647693
 #define M_TAU_F    6.28318530717958647693f
 
+// TODO namespace
 class Util
 {
 public:
@@ -118,6 +141,36 @@ private:
 #define kErr( _FMT, ... ) do { fprintf(stderr, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
 
 #define allocat( _T, _S ) (_T*)alloca(_S * sizeof(_T))
+
+// TODO portable implementations
+
+NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line) {
+  if (!_cond) {
+    printf("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
+    DEBUGBREAK;
+    FATAL;
+  }
+}
+
+NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line, char const* _msg, ...) {
+  if (!_cond) {
+    printf("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
+    printf("%s(%d): ", _file, _line);
+    va_list vargs;
+    va_start(vargs, _msg);
+    vprintf(_msg, vargs);
+    va_end(vargs);
+    DEBUGBREAK;
+    FATAL;
+  }
+}
+
+// TODO set up CONFIG_DEBUG, CONFIG_PROFILE 
+#ifdef _DEBUG
+# define ensure(_cond, ...) ensure_impl(_cond, #_cond, __FILE__, __LINE__, __VA_ARGS__)
+#else
+# define ensure(...)
+#endif
 
 #endif // UTIL_H
 
