@@ -17,8 +17,8 @@
     <ClInclude Include="boost_end.h" />
     <ClInclude Include="geom.h" />
     <ClInclude Include="perftimer.h" />
-    <ClInclude Include="problemProcessor.h" />
-    <ClInclude Include="processorLockFreeQueue.h" />
+    <ClInclude Include="taskScheduler.h" />
+    <ClInclude Include="taskSchedulerWorkStealing.h" />
     <ClInclude Include="rnd.h" />
     <ClInclude Include="orbitalSpaceApp.h" />
     <ClInclude Include="task.h" />
@@ -34,7 +34,7 @@
     <ClCompile Include="perftimer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="orbitalSpaceApp.cpp" />
-    <ClCompile Include="processorLockFreeQueue.cpp" />
+    <ClCompile Include="taskSchedulerWorkStealing.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
