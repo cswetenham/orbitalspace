@@ -44,9 +44,6 @@ Logging and verification utility macros and functions
   
 /******************************** Structures *********************************/
 
-#define M_TAU      6.28318530717958647693
-#define M_TAU_F    6.28318530717958647693f
-
 // TODO namespace
 class Util
 {
@@ -131,11 +128,11 @@ private:
 
 /******************************** Macros *********************************/
  
-// kLog()
-#define kLog( _FMT, ... ) do { fprintf(stdout, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
+// orLog()
+#define orLog( _FMT, ... ) do { fprintf(stdout, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
 
-// kErr()
-#define kErr( _FMT, ... ) do { fprintf(stderr, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
+// orErr()
+#define orErr( _FMT, ... ) do { fprintf(stderr, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
 
 #define allocat( _T, _S ) (_T*)alloca(_S * sizeof(_T))
 

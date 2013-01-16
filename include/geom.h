@@ -125,7 +125,7 @@ struct CircleTestResult
 
 inline void TestCircleSegment(Circle2D const& _circle, Segment2D const& _segment, CircleTestResult* const o_result)
 {
-  // HACK: assuming infinite walls (lines) instead of segments
+  // TODO HACK: assuming infinite walls (lines) instead of segments
   // TODO: check whether closest point falls within segment; if not,
   // check distance to each end of the segment (or just the end the closest point is on the side of)
 

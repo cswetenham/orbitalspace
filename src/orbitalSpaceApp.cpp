@@ -36,6 +36,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camPhi(0.0),
   m_camTarget(&m_earthBody),
   m_camTargetIdx(0),
+  m_camMode(CameraMode_ThirdPerson),
   m_earthBody(),
   m_light(1, 1, 0),
   m_thrusters(0),
@@ -159,8 +160,8 @@ void OrbitalSpaceApp::InitRender()
   App::InitRender();
 
   // TODO
-  m_config.width = 800;
-  m_config.height = 600;
+  m_config.width = 1280;
+  m_config.height = 768;
   
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
@@ -217,12 +218,23 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::Tab)
     {
       m_camTargetIdx++;
+      // TODO add more bodies. Moon? That would be interesting, could then do sphere of influence code.
+      // Could render sphere of influence for each body...
+      // Also want some other camera views, e.g. first person; maybe use F1, F2 etc for camera mode independent of camera target?
       if (m_camTargetIdx >= NUM_BODIES + NUM_SHIPS) {
         m_camTargetIdx = 0;
         m_camTarget = &m_earthBody;
       } else {
         m_camTarget = &m_ships[m_camTargetIdx - 1].m_physics;
       }
+    }
+
+    if (_event.key.code == sf::Keyboard::F1) {
+      m_camMode = CameraMode_FirstPerson;
+    }
+
+    if (_event.key.code == sf::Keyboard::F2) {
+      m_camMode = CameraMode_ThirdPerson;
     }
 
     if (_event.key.code == sf::Keyboard::R)
@@ -582,17 +594,25 @@ void OrbitalSpaceApp::RenderState()
   assert(m_camTarget);
   Vector3d const camTarget = m_camTarget->m_pos;
 
-  Vector3d camPos = Vector3d(0.0, 0.0, m_camDist);
+  Vector3d camPos;
+  
+  if (m_camMode == CameraMode_FirstPerson) {
+    camPos = m_ships[0].m_physics.m_pos;
+  } else if (m_camMode == CameraMode_ThirdPerson) {
+    camPos = Vector3d(0.0, 0.0, m_camDist);
 
-  Eigen::AngleAxisd thetaRot(m_camTheta, Vector3d(0.0, 1.0, 0.0));
-  Eigen::AngleAxisd phiRot(m_camPhi, Vector3d(1.0, 0.0, 0.0));
+    Eigen::AngleAxisd thetaRot(m_camTheta, Vector3d(0.0, 1.0, 0.0));
+    Eigen::AngleAxisd phiRot(m_camPhi, Vector3d(1.0, 0.0, 0.0));
 
-  Eigen::Affine3d camMat1;
-  camMat1.setIdentity();
-  camMat1.rotate(thetaRot).rotate(phiRot);
+    Eigen::Affine3d camMat1;
+    camMat1.setIdentity();
+    camMat1.rotate(thetaRot).rotate(phiRot);
 
-  camPos = camMat1 * camPos;
-  camPos += camTarget;
+    camPos = camMat1 * camPos;
+    camPos += camTarget;
+  } else {
+    assert(false);
+  }
 
   // TODO remove the gluLookAt? Or just have it off by default for now?
   if (m_camOrig) {

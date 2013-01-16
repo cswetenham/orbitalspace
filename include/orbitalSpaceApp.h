@@ -97,6 +97,12 @@ private:
   size_t m_camTargetIdx;
   std::string m_camTargetName[NUM_SHIPS+1];
 
+  enum CameraMode {
+    CameraMode_FirstPerson = 0,
+    CameraMode_ThirdPerson = 1
+  };
+  CameraMode m_camMode;
+
   MassiveBody m_earthBody;
 
   enum Thrusters
@@ -179,7 +185,6 @@ private:
     }
 
     // TODO this stores a fixed number of frames, not the best approach
-    // On the other hand the break in the ellipse is a good way of seeing ship location for now
     enum { NUM_TRAIL_PTS = 1000 };
     double m_duration;
     double m_timeSinceUpdate;

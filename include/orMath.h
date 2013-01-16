@@ -12,5 +12,8 @@
 # include <Eigen/Eigen>
 EIGEN_USING_MATRIX_TYPEDEFS;
 
+#define M_TAU      6.28318530717958647693
+#define M_TAU_F    6.28318530717958647693f
+
 #endif	/* ORMATH_H */
 
