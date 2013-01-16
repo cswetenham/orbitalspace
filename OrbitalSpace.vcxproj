@@ -11,32 +11,35 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="app.h" />
-    <ClInclude Include="atomic.h" />
-    <ClInclude Include="boost_begin.h" />
-    <ClInclude Include="boost_end.h" />
-    <ClInclude Include="geom.h" />
-    <ClInclude Include="perftimer.h" />
-    <ClInclude Include="taskScheduler.h" />
-    <ClInclude Include="taskSchedulerWorkStealing.h" />
-    <ClInclude Include="rnd.h" />
-    <ClInclude Include="orbitalSpaceApp.h" />
-    <ClInclude Include="task.h" />
-    <ClInclude Include="terminationBarrier.h" />
-    <ClInclude Include="timer.h" />
-    <ClInclude Include="util.h" />
-    <ClInclude Include="util2.h" />
-    <ClInclude Include="victimPicker.h" />
-    <ClInclude Include="workStealingQueue.h" />
+    <ClCompile Include="src\app.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\orbitalSpaceApp.cpp" />
+    <ClCompile Include="src\perftimer.cpp" />
+    <ClCompile Include="src\taskSchedulerWorkStealing.cpp" />
+    <ClCompile Include="src\timer.cpp" />
+    <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="app.cpp" />
-    <ClCompile Include="perftimer.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="orbitalSpaceApp.cpp" />
-    <ClCompile Include="taskSchedulerWorkStealing.cpp" />
-    <ClCompile Include="timer.cpp" />
-    <ClCompile Include="util.cpp" />
+    <ClInclude Include="include\app.h" />
+    <ClInclude Include="include\atomic.h" />
+    <ClInclude Include="include\boost_begin.h" />
+    <ClInclude Include="include\boost_end.h" />
+    <ClInclude Include="include\geom.h" />
+    <ClInclude Include="include\orbitalSpaceApp.h" />
+    <ClInclude Include="include\orGfx.h" />
+    <ClInclude Include="include\orMath.h" />
+    <ClInclude Include="include\orStd.h" />
+    <ClInclude Include="include\perftimer.h" />
+    <ClInclude Include="include\rnd.h" />
+    <ClInclude Include="include\task.h" />
+    <ClInclude Include="include\taskScheduler.h" />
+    <ClInclude Include="include\taskSchedulerWorkStealing.h" />
+    <ClInclude Include="include\terminationBarrier.h" />
+    <ClInclude Include="include\timer.h" />
+    <ClInclude Include="include\util.h" />
+    <ClInclude Include="include\util2.h" />
+    <ClInclude Include="include\victimPicker.h" />
+    <ClInclude Include="include\workStealingQueue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59A0CC2B-696D-47ED-9176-E8C5AC78EEEF}</ProjectGuid>
@@ -74,7 +77,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;NOMINMAX;_DEBUG;_USE_MATH_DEFINES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\Coding\boost_1_51_0;F:\Coding\SFML-2.0-rc\include;F:\Coding\eigen-3.0.5\unsupported;F:\Coding\eigen-3.0.5;F:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;F:\Coding\boost_1_51_0;F:\Coding\SFML-2.0-rc\include;F:\Coding\eigen-3.0.5\unsupported;F:\Coding\eigen-3.0.5;F:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -97,7 +100,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_MBCS;SFML_STATIC;NOMINMAX;NDEBUG;_USE_MATH_DEFINES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\Coding\boost_1_51_0;F:\Coding\SFML-2.0-rc\include;F:\Coding\eigen-3.0.5\unsupported;F:\Coding\eigen-3.0.5;F:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;F:\Coding\boost_1_51_0;F:\Coding\SFML-2.0-rc\include;F:\Coding\eigen-3.0.5\unsupported;F:\Coding\eigen-3.0.5;F:\Coding\glew-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CallingConvention>Cdecl</CallingConvention>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
