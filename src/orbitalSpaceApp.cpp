@@ -38,6 +38,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camTargetIdx(0),
   m_camMode(CameraMode_ThirdPerson),
   m_earthBody(),
+  m_integrationMethod(IntegrationMethod_ImplicitEuler),
   m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
@@ -220,7 +221,6 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
       m_camTargetIdx++;
       // TODO add more bodies. Moon? That would be interesting, could then do sphere of influence code.
       // Could render sphere of influence for each body...
-      // Also want some other camera views, e.g. first person; maybe use F1, F2 etc for camera mode independent of camera target?
       if (m_camTargetIdx >= NUM_BODIES + NUM_SHIPS) {
         m_camTargetIdx = 0;
         m_camTarget = &m_earthBody;
@@ -237,6 +237,10 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
       m_camMode = CameraMode_ThirdPerson;
     }
 
+    if (_event.key.code == sf::Keyboard::PageDown) {
+      m_integrationMethod = IntegrationMethod((m_integrationMethod + 1) % IntegrationMethod_Count);
+    }
+    
     if (_event.key.code == sf::Keyboard::R)
     {
       m_camOrig = !m_camOrig;
@@ -322,6 +326,48 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
+// TODO not data-oriented etc
+Vector3d OrbitalSpaceApp::CalcAccel(int i, Vector3d p, Vector3d v)
+{
+  double const G = GRAV_CONSTANT;
+  double const M = m_earthBody.m_mass;
+  Vector3d origin = m_earthBody.m_pos;
+    
+  double const mu = M * G;
+
+  // Calc acceleration due to gravity
+  Vector3d const r = (origin - p);
+  double const r_mag = r.norm();
+
+  Vector3d const r_dir = r / r_mag;
+      
+  Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
+
+  // Calc acceleration due to thrust
+  double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
+      
+  Vector3d thrustVec(0.0,0.0,0.0);
+
+  if (i == 0) // TODO HAX, selecting first ship as controllable one
+  {
+    Vector3d const fwd = v / v.norm(); // Prograde
+    Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
+    Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
+
+    if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
+    if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
+    if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
+    if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
+    if (m_thrusters & ThrustLeft)  { thrustVec += left; }
+    if (m_thrusters & ThrustRight) { thrustVec -= left; }
+  }
+
+  Vector3d a_thrust = thrustAccel * thrustVec;
+
+  Vector3d a = a_grav + a_thrust;
+  return a;
+}
+
 void OrbitalSpaceApp::UpdateState(double const _dt)
 {
   if (!m_paused)
@@ -330,64 +376,103 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
     
-    double const G = GRAV_CONSTANT;
-    double const M = m_earthBody.m_mass;
-    Vector3d origin = m_earthBody.m_pos;
+    // Explicit Euler:
+    // p[t + 1] = p[t] + v[t] * dt
+    // v[t + 1] = v[t] + a[t] * dt
+    // a[t + 1] = calc_accel(p[t + 1], v[t + 1])
     
-    double const mu = M * G;
+    // Implicit Euler (what we're currently using) (rearranged):
+    // After rearranging the .5 factor is obviously missing in the position update...
+    // "Time Adjusted" Verlet, rearranged (messing with position without touching velocity not guaranteed to work after rearranging) (From Physics for Flash Games)
+    // Looks equivalent to Implicit Euler! And .5 factor is obviously missing
+    // v[t + 1] = v[t] + a[t] * dt
+    // p[t + 1] = p[t] + v[t] * dt + a[t] * dt * dt
+    // a[t + 1] = calc_accel(p[t + 1], v[t + 1])
+
+    // "Improved" (Midpoint?) Euler (From Physics for Flash Games)
+    // v_temp = v[t] + a[t] * dt
+    // p_temp = p[t] + v[t] * dt
+    // a_temp = calc_accel(p_temp, v_temp)
+    // p[t + 1] = p[t] + .5 * (v[t] + v_temp) * dt
+    // v[t + 1] = v[t] + .5 * (a[t] + a_temp) * dt
+
+    // lol.zoy.org - don't know what this is called, claims to be velocity verlet; assuming a[t] rather than a[t + 1] because we can't calc a[t + 1] early enough; article used constant a.
+    // Rearranged, looks more sensible now...and obviously gives exactly correct results (numerical accuracy issues aside) regardless of timestep size in cases of constant acceleration.
+    // v[t + 1] = v[t] + a[t] * dt
+    // p[t + 1] = p[t] + v[t] * dt + .5 * a[t] * dt * dt
+    // a[t + 1] = calc_accel(p[t + 1], v[t + 1])
     
+    // Wikipedia - Velocity Verlet:
+    // Assumes that a[t + 1] depends only on position p[t + 1], and not on velocity v[t + 1]. I can use this but I'll have to base thrust on outdated velocity info...
+    // p[t + 1] = p[t] + v[t] * dt + .5 * a[t] * dt * dt
+    // a[t + 1] = calc_accel(p[t + 1])
+    // v[t + 1] = v[t] + .5 * (a[t] + a[t + 1]) * dt
+        
     for (int i = 0; i < NUM_SHIPS; ++i)
     {
       // Define directions
       PhysicsBody& pb = m_ships[i].m_physics;
 
-      Vector3d v = pb.m_vel;
+      Vector3d const v0 = pb.m_vel;
+      Vector3d const p0 = pb.m_pos;
 
-      Vector3d r = (origin - pb.m_pos);
-      double const r_mag = r.norm();
+      switch (m_integrationMethod) {
+        case IntegrationMethod_ExplicitEuler: { // Comically bad
+          Vector3d const a0 = CalcAccel(i, p0, v0);
+          Vector3d const p1 = p0 + v0 * dt;
+          Vector3d const v1 = v0 + a0 * dt;
+          
+          pb.m_pos = p1;
+          pb.m_vel = v1;
+          break;
+        }
+        case IntegrationMethod_ImplicitEuler: { // Visible creep
+          Vector3d const a0 = CalcAccel(i, p0, v0);
+          Vector3d const v1 = v0 + a0 * dt;
+          Vector3d const p1 = p0 + v1 * dt;
 
-      Vector3d r_dir = r/r_mag;
+          pb.m_pos = p1;
+          pb.m_vel = v1;
+          break;
+        }
+        case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
+          Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
+          Vector3d const vt = v0 + a0 * dt;
+          Vector3d const pt = p0 + v0 * dt;
+          Vector3d const at = CalcAccel(i, pt, vt);
+          Vector3d const p1 = p0 + .5f * (v0 + vt) * dt;
+          Vector3d const v1 = v0 + .5f * (a0 + at) * dt;
 
-      double const vr_mag = r_dir.dot(v);
-      Vector3d vr = r_dir * vr_mag; // radial velocity
-      Vector3d vt = v - vr; // tangent velocity
-      double const vt_mag = vt.norm();
-      Vector3d t_dir = vt/vt_mag;
+          pb.m_pos = p1;
+          pb.m_vel = v1;
+          break;
+        }
+        case IntegrationMethod_WeirdVerlet: { // Pretty bad - surprised that this is worse than implicit euler rather than better!
+          Vector3d const a0 = CalcAccel(i, p0, v0);
+          Vector3d const v1 = v0 + a0 * dt;
+          Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
 
-      // Apply gravity
-      Vector3d dv = dt * r_dir * mu / (r_mag * r_mag);
+          pb.m_pos = p1;
+          pb.m_vel = v1;
+          break;
+        }
+        case IntegrationMethod_VelocityVerlet: { // Looks perfect at low speeds. Breaks down at 32k x speed... is there drift at slightly lower speeds? Was less obvious than with IntegrationMethod_ImprovedEuler.
+          Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
+          Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
+          Vector3d const a1 = CalcAccel(i, p1, v0); // TODO this is wrong, using thrust dir from old frame...
+          Vector3d const v1 = v0 + .5f * (a0 + a1) * dt;
 
-      // Vector3d dv = dt * HAX_SCALE_FACTOR * d * (G * M) / r;
-      v += dv;
-
-      // Apply thrust
-    
-      double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
-      double const thrustDV = thrustAccel * dt;
-      
-      Vector3d thrustVec(0.0,0.0,0.0);
-
-      Vector3d fwd = pb.m_vel / pb.m_vel.norm(); // Prograde
-      Vector3d left = fwd.cross(r_dir); // name? (and is the order right?)
-      Vector3d dwn = left.cross(fwd); // name? (and is the order right?)
-
-      if (i == 0) // TODO HAX, selecting first ship as controllable one
-      {
-        if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
-        if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
-        if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
-        if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
-        if (m_thrusters & ThrustLeft)  { thrustVec += left; }
-        if (m_thrusters & ThrustRight) { thrustVec -= left; }
+          pb.m_pos = p1;
+          pb.m_vel = v1;
+          break;
+        }
+        default: {
+          orErr("Unknown Integration Method!");
+          break;
+        }
       }
 
-      v += thrustDV * thrustVec;
-
-      pb.m_vel = v;
-
-      // Update position
-      pb.m_pos += pb.m_vel * dt;
-
+      // Update orbit
       ComputeKeplerParams(m_ships[i].m_physics, m_ships[i].m_orbit);
       
       // Update trail
@@ -561,6 +646,7 @@ void OrbitalSpaceApp::RenderState()
     str << "Cam Phi:" << m_camPhi << "\n";
     double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
     str << "Intership Distance:" << shipDist << "\n";
+    str << "Integration Method: " << m_integrationMethod << "\n";
 
     // TODO: better double value text formatting
     // TODO: small visualisations for the angle etc values
@@ -707,11 +793,13 @@ void OrbitalSpaceApp::RenderState()
     }
 
     // Draw trail
+#if 0
     if (s == 0) {
       m_ships[s].m_trail.Render(m_colB[0], m_colB[4]);
     } else {
       m_ships[s].m_trail.Render(m_colR[0], m_colR[4]);
     }
+#endif
   }
   
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);

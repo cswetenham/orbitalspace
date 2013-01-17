@@ -38,7 +38,7 @@ protected:
 
   virtual void HandleEvent(sf::Event const& _event);
   virtual void UpdateState(double const _dt);
-  
+    
   virtual void RenderState();
 
 private:
@@ -46,6 +46,8 @@ private:
   struct OrbitParams;
   void ComputeKeplerParams(PhysicsBody const& body, OrbitParams& o_params);
   void LookAt(Vector3d pos, Vector3d target, Vector3d up);
+
+  Vector3d CalcAccel(int i, Vector3d p, Vector3d v);
 
   void DrawCircle(double const radius, int const steps);
   void DrawWireSphere(double const radius, int const slices, int const stacks);
@@ -205,6 +207,16 @@ private:
   };
   
   Ship m_ships[NUM_SHIPS];
+
+  enum IntegrationMethod {
+    IntegrationMethod_ExplicitEuler = 0,
+    IntegrationMethod_ImplicitEuler,
+    IntegrationMethod_ImprovedEuler,
+    IntegrationMethod_WeirdVerlet,
+    IntegrationMethod_VelocityVerlet,
+    IntegrationMethod_Count
+  };
+  IntegrationMethod m_integrationMethod;
   
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.

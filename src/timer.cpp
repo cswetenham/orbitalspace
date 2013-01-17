@@ -20,6 +20,11 @@ static struct MagicInit
   MagicInit() { x_baseTime = Timer::GetPerfTime(); }
 } x_magicInit;
 
+Timer::PerfTime Timer::UptimePerfTime()
+{
+  return GetPerfTime() - x_baseTime;
+}
+
 #ifdef _WIN32
 Timer::PerfTime Timer::GetPerfTime()
 {
@@ -52,10 +57,5 @@ Timer::PerfTime Timer::GetPerfTime()
 float Timer::PerfTimeToMillis( PerfTime const _t )
 {
   return _t / 1000.0f;
-}
-
-Timer::PerfTime Timer::UptimePerfTime()
-{
-  return GetPerfTime() - x_baseTime;
 }
 #endif // !def _WIN32
