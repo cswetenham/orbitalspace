@@ -37,6 +37,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camTarget(&m_earthBody),
   m_camTargetIdx(0),
   m_camMode(CameraMode_ThirdPerson),
+  m_inputMode(InputMode_Default),
   m_earthBody(),
   m_integrationMethod(IntegrationMethod_ImplicitEuler),
   m_light(1, 1, 0),
@@ -120,14 +121,16 @@ void OrbitalSpaceApp::Run()
 
     if (m_hasFocus) {
       // Input handling
-      sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
-      sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
-      sf::Mouse::setPosition(centerPos, *m_window);
+      if (m_inputMode == InputMode_RotateCamera) {
+        sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+        sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
+        sf::Mouse::setPosition(centerPos, *m_window);
     
-      m_camTheta += mouseDelta.x * M_TAU / 300.0;
-      m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
-      m_camPhi += mouseDelta.y * M_TAU / 300.0;
-      m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
+        m_camTheta += mouseDelta.x * M_TAU / 300.0;
+        m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
+        m_camPhi += mouseDelta.y * M_TAU / 300.0;
+        m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
+      }
     }
 
     {
@@ -170,7 +173,6 @@ void OrbitalSpaceApp::InitRender()
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
   m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
   
-  m_window->setMouseCursorVisible(false);
 #ifdef _WIN32
   sf::WindowHandle hwnd = m_window->getSystemHandle();
   ::SetForegroundWindow(hwnd);
@@ -203,6 +205,28 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     glViewport(0, 0, _event.size.width, _event.size.height);
   }
   */
+
+  if (_event.type == sf::Event::MouseButtonPressed) {
+    if (_event.mouseButton.button == sf::Mouse::Right) {
+      m_inputMode = InputMode_RotateCamera;
+      
+      // When rotating the camera, hide the mouse cursor and center it. We'll then track how far it's moved off center each frame.
+      sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+      m_savedMousePos = sf::Mouse::getPosition(*m_window);
+      m_window->setMouseCursorVisible(false);
+      sf::Mouse::setPosition(centerPos, *m_window);
+      
+    }
+  }
+  
+  if (_event.type == sf::Event::MouseButtonReleased) {
+    if (_event.mouseButton.button == sf::Mouse::Right) {
+      // Restore the old position of the cursor.
+      m_inputMode = InputMode_Default;
+      sf::Mouse::setPosition(m_savedMousePos, *m_window);
+      m_window->setMouseCursorVisible(true);
+    }
+  }
 
   if (_event.type == sf::Event::MouseWheelMoved)
   {
@@ -348,8 +372,7 @@ Vector3d OrbitalSpaceApp::CalcAccel(int i, Vector3d p, Vector3d v)
       
   Vector3d thrustVec(0.0,0.0,0.0);
 
-  if (i == 0) // TODO HAX, selecting first ship as controllable one
-  {
+  if (i == 0) { // TODO HAX, selecting first ship as controllable one
     Vector3d const fwd = v / v.norm(); // Prograde
     Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
     Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
@@ -370,8 +393,7 @@ Vector3d OrbitalSpaceApp::CalcAccel(int i, Vector3d p, Vector3d v)
 
 void OrbitalSpaceApp::UpdateState(double const _dt)
 {
-  if (!m_paused)
-  {
+  if (!m_paused) {
     m_simTime += _dt;
 
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
@@ -407,9 +429,10 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     // p[t + 1] = p[t] + v[t] * dt + .5 * a[t] * dt * dt
     // a[t + 1] = calc_accel(p[t + 1])
     // v[t + 1] = v[t] + .5 * (a[t] + a[t + 1]) * dt
-        
-    for (int i = 0; i < NUM_SHIPS; ++i)
-    {
+    
+    // TODO try these with floats instead of double
+
+    for (int i = 0; i < NUM_SHIPS; ++i) {
       // Define directions
       PhysicsBody& pb = m_ships[i].m_physics;
 
@@ -541,15 +564,13 @@ void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int 
     double const stackInc = M_TAU / (2*stacks);
     
     /* Draw a line loop for each stack */
-    for (curStack = 1; curStack < stacks; curStack++)
-    {
+    for (curStack = 1; curStack < stacks; curStack++) {
         y = cos( curStack * stackInc );
         r = sin( curStack * stackInc );
 
         glBegin(GL_LINE_LOOP);
 
-            for(curSlice = 0; curSlice <= slices; curSlice++)
-            {
+            for(curSlice = 0; curSlice <= slices; curSlice++) {
                 x = cos( curSlice * sliceInc );
                 z = sin( curSlice * sliceInc );
 
@@ -561,12 +582,10 @@ void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int 
     }
 
     /* Draw a line loop for each slice */
-    for (curSlice = 0; curSlice < slices; curSlice++)
-    {
+    for (curSlice = 0; curSlice < slices; curSlice++) {
         glBegin(GL_LINE_STRIP);
 
-            for (curStack = 1; curStack < stacks; curStack++)
-            {
+            for (curStack = 1; curStack < stacks; curStack++) {
                 x = cos( curSlice * sliceInc ) * sin( curStack * stackInc );
                 z = sin( curSlice * sliceInc ) * sin( curStack * stackInc );
                 y = cos( curStack * stackInc );
@@ -589,8 +608,7 @@ void OrbitalSpaceApp::DrawCircle(double const radius, int const steps)
     
     /* Draw a line loop for each stack */
     glBegin(GL_LINE_LOOP);
-    for (int curStep = 0; curStep < steps; curStep++)
-    {
+    for (int curStep = 0; curStep < steps; curStep++) {
         x = cos( curStep * stepInc );
         y = sin( curStep * stepInc );
 
@@ -718,12 +736,9 @@ void OrbitalSpaceApp::RenderState()
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // TODO clean up
-  if (m_wireframe)
-  {
+  if (m_wireframe) {
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  }
-  else
-  {
+  } else {
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
@@ -735,8 +750,7 @@ void OrbitalSpaceApp::RenderState()
 
   // TODO collision detection
 
-  for (int s = 0; s < NUM_SHIPS; ++s)
-  {
+  for (int s = 0; s < NUM_SHIPS; ++s) {
     // Draw ship
     glPointSize(10.0);
     glBegin(GL_POINTS);
@@ -779,8 +793,7 @@ void OrbitalSpaceApp::RenderState()
       } else {
         Util::SetDrawColour(m_colR[2]);
       }
-      for (int i = 0; i <= steps; ++i)
-      {
+      for (int i = 0; i <= steps; ++i) {
           double const ct = Util::Lerp(mint, maxt, (double)i / steps);
           double const cr = orbit.p / (1 + orbit.e * cos(ct));
 

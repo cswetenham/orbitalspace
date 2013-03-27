@@ -105,6 +105,14 @@ private:
   };
   CameraMode m_camMode;
 
+  enum InputMode {
+    InputMode_Default = 0,
+    InputMode_RotateCamera = 1
+  };
+  InputMode m_inputMode;
+
+  sf::Vector2i m_savedMousePos;
+
   MassiveBody m_earthBody;
 
   enum Thrusters
