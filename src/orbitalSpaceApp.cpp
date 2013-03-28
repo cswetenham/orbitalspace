@@ -52,7 +52,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
-  m_integrationMethod(IntegrationMethod_ExplicitEuler),
+  m_integrationMethod(IntegrationMethod_RK4),
   m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
@@ -81,6 +81,26 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   // TODO real-time date/time + time scale factor display
 
+  // For now, give the moon a circular orbit
+
+  double const muEarthMoon = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
+  double const angularSpeed = MOON_PERIOD / M_TAU;
+
+  double const earthMoonOrbitRadius = pow(muEarthMoon * angularSpeed * angularSpeed, 1.0/3.0); // meters
+
+  // Distances from COM of Earth-Moon system
+  double const earthOrbitRadius = earthMoonOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
+  double const moonOrbitRadius = earthMoonOrbitRadius - earthOrbitRadius;
+  
+  Vector3d const earthPos = Vector3d(0.0, 0.0, -earthOrbitRadius);
+  Vector3d const moonPos = Vector3d(0.0, 0.0, moonOrbitRadius);
+    
+  double const earthSpeed = earthOrbitRadius / angularSpeed;
+  double const moonSpeed = moonOrbitRadius / angularSpeed;
+    
+  Vector3d const earthVel = Vector3d(-earthSpeed, 0.0, 0.0);
+  Vector3d const moonVel = Vector3d(moonSpeed, 0.0, 0.0);
+
   // Create Earth
   
   m_camTargetNames.push_back("Earth"); // TODO how to implement camera now - point to all planets, then moons, then ships?
@@ -92,8 +112,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   earthGravBody.m_mass = EARTH_MASS;
   earthGravBody.m_radius = EARTH_RADIUS;
 
-  earthGravBody.m_pos = Vector3d(0.0, 0.0, 0.0);
-  earthGravBody.m_vel = Vector3d(0.0, 0.0, 0.0);
+  earthGravBody.m_pos = earthPos;
+  earthGravBody.m_vel = earthVel;
 
   RenderableSphere& earthSphere = getSphere(earthPlanet.m_sphereIdx = makeSphere());
   earthSphere.m_radius = earthGravBody.m_radius;
@@ -109,19 +129,6 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   MoonEntity& moonMoon = getMoon(m_moonMoonId = makeMoon());
   
   GravBody& moonGravBody = getGravBody(moonMoon.m_gravBodyIdx = makeGravBody());
-
-  // For now, give the moon a circular orbit
-
-  double const muEarthMoon = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
-
-  double const moonOrbitRadius = pow(muEarthMoon * (MOON_PERIOD / M_TAU) * (MOON_PERIOD / M_TAU), 1.0/3.0); // meters
-
-  Vector3d const moonPos = Vector3d(0.0, 0.0, moonOrbitRadius);
-  
-  // NOTE computing from constants rather than using the radius - is it better or worse this way?
-  double const moonSpeed = pow(muEarthMoon * (M_TAU / MOON_PERIOD), 1.0/3.0); // meters per second
-  
-  Vector3d const moonVel = Vector3d(moonSpeed, 0.0, 0.0);
 
   moonGravBody.m_mass = MOON_MASS;
   moonGravBody.m_radius = MOON_RADIUS;
@@ -585,52 +592,11 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 {
   if (!m_paused) {
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
-    m_simTime += dt;
-    
-    // Explicit Euler:
-    // p[t + 1] = p[t] + v[t] * dt
-    // v[t + 1] = v[t] + a[t] * dt
-    // a[t + 1] = calc_accel(p[t + 1], v[t + 1])
-    
-    // Implicit Euler (what we're currently using) (rearranged):
-    // After rearranging the .5 factor is obviously missing in the position update...
-    // "Time Adjusted" Verlet, rearranged (messing with position without touching velocity not guaranteed to work after rearranging) (From Physics for Flash Games)
-    // Looks equivalent to Implicit Euler! And .5 factor is obviously missing
-    // v[t + 1] = v[t] + a[t] * dt
-    // p[t + 1] = p[t] + v[t] * dt + a[t] * dt * dt
-    // a[t + 1] = calc_accel(p[t + 1], v[t + 1])
-
-    // "Improved" (Midpoint?) Euler (From Physics for Flash Games)
-    // v_temp = v[t] + a[t] * dt
-    // p_temp = p[t] + v[t] * dt
-    // a_temp = calc_accel(p_temp, v_temp)
-    // p[t + 1] = p[t] + .5 * (v[t] + v_temp) * dt
-    // v[t + 1] = v[t] + .5 * (a[t] + a_temp) * dt
-
-    // lol.zoy.org - don't know what this is called, claims to be velocity verlet; assuming a[t] rather than a[t + 1] because we can't calc a[t + 1] early enough; article used constant a.
-    // Rearranged, looks more sensible now...and obviously gives exactly correct results (numerical accuracy issues aside) regardless of timestep size in cases of constant acceleration.
-    // v[t + 1] = v[t] + a[t] * dt
-    // p[t + 1] = p[t] + v[t] * dt + .5 * a[t] * dt * dt
-    // a[t + 1] = calc_accel(p[t + 1], v[t + 1])
-    
-    // Wikipedia - Velocity Verlet:
-    // Assumes that a[t + 1] depends only on position p[t + 1], and not on velocity v[t + 1]. I can use this but I'll have to base thrust on outdated velocity info...
-    // p[t + 1] = p[t] + v[t] * dt + .5 * a[t] * dt * dt
-    // a[t + 1] = calc_accel(p[t + 1])
-    // v[t + 1] = v[t] + .5 * (a[t] + a[t + 1]) * dt
-    
-    // TODO try these with floats instead of double
-
-    // TODO have the physics update work with multiple buffers?
-    // Needs to calculate all accelerations from an arbitrary world state
-
-    // Load Particle body data
+        
+    // TODO try these with floats instead of double?
 
     int numParticles = (int)m_particleBodies.size();
     int numGravs = (int)m_gravBodies.size();
-
-    // For now, just combining the particle+grav state.
-    // TODO combine positions + velocities to make first-order system: t, x, dxdt
     int stateSize = numParticles + numGravs;
 
     // State:
@@ -638,30 +604,30 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     // numGravs * grav body positions
     // numParticles * particle velocities
     // numGravs * grav body velocities
-    Eigen::Array3Xd x0(3, 2*stateSize);
-    Eigen::Array3Xd x1;
+    Eigen::Array3Xd x_0(3, 2*stateSize);
+    Eigen::Array3Xd x_1;
 
     // Load world state into state array
 
     int curIdx = 0;
     for (int i = 0; i < numParticles; ++i, ++curIdx) {
       Body& body = m_particleBodies[i];
-      x0.col(curIdx) = body.m_pos;
+      x_0.col(curIdx) = body.m_pos;
     }
 
     for (int i = 0; i < numGravs; ++i, ++curIdx) {
       Body& body = m_gravBodies[i];
-      x0.col(curIdx) = body.m_pos;
+      x_0.col(curIdx) = body.m_pos;
     }
     
     for (int i = 0; i < numParticles; ++i, ++curIdx) {
       Body& body = m_particleBodies[i];
-      x0.col(curIdx) = body.m_vel;
+      x_0.col(curIdx) = body.m_vel;
     }
 
     for (int i = 0; i < numGravs; ++i, ++curIdx) {
       Body& body = m_gravBodies[i];
-      x0.col(curIdx) = body.m_vel;
+      x_0.col(curIdx) = body.m_vel;
     }
 
     Eigen::VectorXd mgravs(numGravs);
@@ -679,10 +645,10 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         // Vector3d const p1 = p0 + v0 * dt;
         // Vector3d const v1 = v0 + a0 * dt;
                 
-        Eigen::Array3Xd dxdt0(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x0, dxdt0);
+        Eigen::Array3Xd dxdt_0(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, dxdt_0);
         
-        x1 = x0 + dxdt0 * dt;
+        x_1 = x_0 + dxdt_0 * dt;
                 
         break;
       }
@@ -709,8 +675,10 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         break;
       }
 #endif
-#if 0
       case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
+        
+        // TODO is this just the simplest version of RK?
+
         // Previous code, for reference:
 
         // Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
@@ -720,32 +688,20 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         // Vector3d const p1 = p0 + .5f * (v0 + vt) * dt;
         // Vector3d const v1 = v0 + .5f * (a0 + at) * dt;
 
-        Eigen::Array3Xd a0particles(3, numParticles);
-        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
+        Eigen::Array3Xd dxdt_0(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, dxdt_0);
         
-        Eigen::Array3Xd a0gravs(3, numGravs);
-        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
+        x_1 = x_0 + dxdt_0 * dt;
 
-        Eigen::Array3Xd ptparticles = p0particles + v0particles * dt;
-        Eigen::Array3Xd vtparticles = v0particles + a0particles * dt;
+        Eigen::Array3Xd x_t = x_0 + dxdt_0 * dt;
         
-        Eigen::Array3Xd ptgravs = p0gravs + v0gravs * dt;
-        Eigen::Array3Xd vtgravs = v0gravs + a0gravs * dt;
+        Eigen::Array3Xd dxdt_t(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + dt, x_t, dxdt_t);
         
-        Eigen::Array3Xd atparticles(3, numParticles);
-        CalcParticleAccel(numParticles, ptparticles, vtparticles, numGravs, ptgravs, mgravs, atparticles);
-        
-        Eigen::Array3Xd atgravs(3, numGravs);
-        CalcGravAccel(numGravs, ptgravs, vtgravs, mgravs, atgravs);
-
-        p1particles = p0particles + .5f * (v0particles + vtparticles) * dt;
-        v1particles = v0particles + .5f * (a0particles + atparticles) * dt;
-
-        p1gravs = p0gravs + .5f * (v0gravs + vtgravs) * dt;
-        v1gravs = v0gravs + .5f * (a0gravs + atgravs) * dt;
-
+        x_1 = x_0 + .5 * (dxdt_0 + dxdt_t) * dt;
         break;
       }
+#if 0
       case IntegrationMethod_WeirdVerlet: { // Pretty bad - surprised that this is worse than implicit euler rather than better!
         // Previous code, for reference:
         
@@ -760,22 +716,38 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
 
         v1particles = v0particles + a0particles * dt;
-        p1particles = p0particles + v0particles * dt + .5f * a0particles * dt * dt;
+        p1particles = p0particles + v0particles * dt + .5 * a0particles * dt * dt;
         
         v1gravs = v0gravs + a0gravs * dt;
-        p1gravs = p0gravs + v0gravs * dt + .5f * a0gravs * dt * dt;
+        p1gravs = p0gravs + v0gravs * dt + .5 * a0gravs * dt * dt;
 
         break;
       }
+#endif
+#if 0
       case IntegrationMethod_VelocityVerlet: { // Looks perfect at low speeds. Breaks down at 32k x speed... is there drift at slightly lower speeds? Was less obvious than with IntegrationMethod_ImprovedEuler.
         Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
         Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
         Vector3d const a1 = CalcAccel(i, p1, v0); // TODO this is wrong, using thrust dir from old frame...
         Vector3d const v1 = v0 + .5f * (a0 + a1) * dt;
-
         break;
       }
 #endif
+      case IntegrationMethod_RK4: {
+
+        Eigen::Array3Xd k_1(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, k_1);
+        Eigen::Array3Xd k_2(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + .5 * dt, x_0 + k_1 * .5 * dt, k_2);
+        Eigen::Array3Xd k_3(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + .5 * dt, x_0 + k_2 * .5 * dt, k_3);
+        Eigen::Array3Xd k_4(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + dt, x_0 + k_3 * dt, k_4);
+
+        x_1 = x_0 + ((k_1 + 2.0 * k_2 + 2.0 * k_3 + k_4) / 6.0) * dt;
+
+        break;
+      }
       default: {
         orErr("Unknown Integration Method!");
         break;
@@ -787,22 +759,22 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     curIdx = 0;
     for (int i = 0; i < numParticles; ++i, ++curIdx) {
       Body& body = m_particleBodies[i];
-      body.m_pos = x1.col(curIdx);
+      body.m_pos = x_1.col(curIdx);
     }
 
     for (int i = 0; i < numGravs; ++i, ++curIdx) {
       Body& body = m_gravBodies[i];
-      body.m_pos = x1.col(curIdx);
+      body.m_pos = x_1.col(curIdx);
     }
     
     for (int i = 0; i < numParticles; ++i, ++curIdx) {
       Body& body = m_particleBodies[i];
-      body.m_vel = x1.col(curIdx);
+      body.m_vel = x_1.col(curIdx);
     }
 
     for (int i = 0; i < numGravs; ++i, ++curIdx) {
       Body& body = m_gravBodies[i];
-      body.m_vel = x1.col(curIdx);
+      body.m_vel = x_1.col(curIdx);
     }
 
     // Update Planets
@@ -846,6 +818,8 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       RenderablePoint& point = getPoint(ship.m_pointIdx);
       point.m_pos = body.m_pos;
     }
+
+    m_simTime += dt;
   }
 
   if (m_singleStep)

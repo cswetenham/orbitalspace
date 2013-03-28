@@ -261,8 +261,9 @@ private:
     IntegrationMethod_ExplicitEuler = 0,
     // IntegrationMethod_ImplicitEuler,
     IntegrationMethod_ImprovedEuler,
-    IntegrationMethod_WeirdVerlet,
-    IntegrationMethod_VelocityVerlet,
+    // IntegrationMethod_WeirdVerlet,
+    // IntegrationMethod_VelocityVerlet,
+    IntegrationMethod_RK4,
     IntegrationMethod_Count
   };
   IntegrationMethod m_integrationMethod;
