@@ -471,7 +471,23 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a)
+void OrbitalSpaceApp::CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, double m_simTime, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0)
+{
+  // State: positions, velocities
+  // DStateDt: velocities, accelerations
+  dxdt0.block(0, 0, 3, numParticles + numGravBodies) = x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies);
+  CalcAccel(numParticles, numGravBodies, x0.block(0, 0, 3, numParticles + numGravBodies), x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies), mgravs, dxdt0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies));
+}
+
+template< class P, class V, class OA >
+void OrbitalSpaceApp::CalcAccel(int numParticles, int numGravBodies, P const& p, V const& v, Eigen::VectorXd const& mgravs, OA& o_a)
+{
+  CalcParticleAccel(numParticles, p.block(0, 0, 3, numParticles), v.block(0, 0, 3, numParticles), numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, 0, 3, numParticles));
+  CalcGravAccel(numGravBodies, p.block(0, numParticles, 3, numGravBodies), v.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, numParticles, 3, numGravBodies));
+}
+
+template< class PP, class VP, class PG, class OA >
+void OrbitalSpaceApp::CalcParticleAccel(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a)
 {
   CalcParticleGrav(numParticles, pp, vp, numGravBodies, pg, mg, o_a);
   o_a.col(m_playerShipId) += CalcThrust(pp.col(m_playerShipId), vp.col(m_playerShipId)).array();
@@ -479,7 +495,8 @@ void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Eigen::Array3Xd const&
 
 // TODO not data-oriented etc
 // Calculates acceleration on first body by second body
-void OrbitalSpaceApp::CalcParticleGrav(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a)
+template< class PP, class VP, class PG, class OA >
+void OrbitalSpaceApp::CalcParticleGrav(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a)
 {
   double const G = GRAV_CONSTANT;
 
@@ -507,7 +524,8 @@ void OrbitalSpaceApp::CalcParticleGrav(int numParticles, Eigen::Array3Xd const& 
   }
 }
 
-void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, Eigen::Array3Xd const& pg, Eigen::Array3Xd const& vg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a)
+template< class PG, class VG, class OA >
+void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA& o_a)
 {
   double const G = GRAV_CONSTANT;
   
@@ -566,9 +584,8 @@ Vector3d OrbitalSpaceApp::CalcThrust(Vector3d p, Vector3d v)
 void OrbitalSpaceApp::UpdateState(double const _dt)
 {
   if (!m_paused) {
-    m_simTime += _dt;
-
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
+    m_simTime += dt;
     
     // Explicit Euler:
     // p[t + 1] = p[t] + v[t] * dt
@@ -610,34 +627,47 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     // Load Particle body data
 
     int numParticles = (int)m_particleBodies.size();
-                
-    Eigen::Array3Xd p0particles(3, numParticles);
-    Eigen::Array3Xd v0particles(3, numParticles);
-    
-    Eigen::Array3Xd p1particles;
-    Eigen::Array3Xd v1particles;
-
-    for (int i = 0; i < numParticles; ++i) {
-      Body& body = m_particleBodies[i];
-      p0particles.col(i) = body.m_pos;
-      v0particles.col(i) = body.m_vel;
-    }
-
-    // Load Grav body data
-
     int numGravs = (int)m_gravBodies.size();
 
-    Eigen::Array3Xd p0gravs(3, numGravs);
-    Eigen::Array3Xd v0gravs(3, numGravs);
+    // For now, just combining the particle+grav state.
+    // TODO combine positions + velocities to make first-order system: t, x, dxdt
+    int stateSize = numParticles + numGravs;
+
+    // State:
+    // numParticles * particle positions
+    // numGravs * grav body positions
+    // numParticles * particle velocities
+    // numGravs * grav body velocities
+    Eigen::Array3Xd x0(3, 2*stateSize);
+    Eigen::Array3Xd x1;
+
+    // Load world state into state array
+
+    int curIdx = 0;
+    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+      Body& body = m_particleBodies[i];
+      x0.col(curIdx) = body.m_pos;
+    }
+
+    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+      Body& body = m_gravBodies[i];
+      x0.col(curIdx) = body.m_pos;
+    }
+    
+    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+      Body& body = m_particleBodies[i];
+      x0.col(curIdx) = body.m_vel;
+    }
+
+    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+      Body& body = m_gravBodies[i];
+      x0.col(curIdx) = body.m_vel;
+    }
+
     Eigen::VectorXd mgravs(numGravs);
     
-    Eigen::Array3Xd p1gravs;
-    Eigen::Array3Xd v1gravs;
-
-    for (int i = 0; i < numGravs; ++i) {
+    for (int i = 0; i < numGravs; ++i, ++curIdx) {
       GravBody& body = m_gravBodies[i];
-      p0gravs.col(i) = body.m_pos;
-      v0gravs.col(i) = body.m_vel;
       mgravs[i] = body.m_mass;
     }
 
@@ -649,17 +679,10 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         // Vector3d const p1 = p0 + v0 * dt;
         // Vector3d const v1 = v0 + a0 * dt;
                 
-        Eigen::Array3Xd a0particles(3, numParticles);
-        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
+        Eigen::Array3Xd dxdt0(3, 2*stateSize);
+        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x0, dxdt0);
         
-        Eigen::Array3Xd a0gravs(3, numGravs);
-        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
-
-        p1particles = p0particles + v0particles * dt;
-        v1particles = v0particles + a0particles * dt;
-        
-        p1gravs = p0gravs + v0gravs * dt;
-        v1gravs = v0gravs + a0gravs * dt;
+        x1 = x0 + dxdt0 * dt;
                 
         break;
       }
@@ -685,6 +708,8 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
         break;
       }
+#endif
+#if 0
       case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
         // Previous code, for reference:
 
@@ -756,21 +781,28 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         break;
       }
     }
-
-    // Store Particle body data
-
-    for (int i = 0; i < numParticles; ++i) {
+    
+    // Store world state from array
+    
+    curIdx = 0;
+    for (int i = 0; i < numParticles; ++i, ++curIdx) {
       Body& body = m_particleBodies[i];
-      body.m_pos = p1particles.col(i);
-      body.m_vel = v1particles.col(i);
+      body.m_pos = x1.col(curIdx);
     }
 
-    // Store Grav body data
-
-    for (int i = 0; i < numGravs; ++i) {
+    for (int i = 0; i < numGravs; ++i, ++curIdx) {
       Body& body = m_gravBodies[i];
-      body.m_pos = p1gravs.col(i);
-      body.m_vel = v1gravs.col(i);
+      body.m_pos = x1.col(curIdx);
+    }
+    
+    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+      Body& body = m_particleBodies[i];
+      body.m_vel = x1.col(curIdx);
+    }
+
+    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+      Body& body = m_gravBodies[i];
+      body.m_vel = x1.col(curIdx);
     }
 
     // Update Planets

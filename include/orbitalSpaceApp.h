@@ -47,16 +47,17 @@ private:
   void UpdateOrbit(Body const& body, RenderableOrbit& o_params);
   void LookAt(Vector3d pos, Vector3d target, Vector3d up);
 
-  // Vector3d CalcAccel(int i, Vector3d p, Vector3d v);
+  void CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, double m_simTime, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0);
+  template< class P, class V, class OA >
+  void CalcAccel(int numParticles, int numGravBodies, P const& p, V const& v, Eigen::VectorXd const& mgravs, OA& o_a);
+  template< class PP, class VP, class PG, class OA >
+  void CalcParticleAccel(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a);
+  template< class PP, class VP, class PG, class OA >
+  void CalcParticleGrav(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a);
   
-  // TODO will need updating when grav bodies have gravity applied too...
-  // Since currently it implicity uses current grav body positions.
-  void CalcParticleAccel(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a);
-  
-  void CalcParticleGrav(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a);
+  template< class PG, class VG, class OA >
+  void CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA& o_a);
 
-  void CalcGravAccel(int numGravBodies, Eigen::Array3Xd const& pg, Eigen::Array3Xd const& vg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a);
-  
   Vector3d CalcThrust(Vector3d p, Vector3d v);
 
   void DrawCircle(double const radius, int const steps);
@@ -258,7 +259,7 @@ private:
 
   enum IntegrationMethod {
     IntegrationMethod_ExplicitEuler = 0,
-    IntegrationMethod_ImplicitEuler,
+    // IntegrationMethod_ImplicitEuler,
     IntegrationMethod_ImprovedEuler,
     IntegrationMethod_WeirdVerlet,
     IntegrationMethod_VelocityVerlet,
