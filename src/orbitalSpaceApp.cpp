@@ -52,7 +52,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
-  m_integrationMethod(IntegrationMethod_ImprovedEuler),
+  m_integrationMethod(IntegrationMethod_ExplicitEuler),
   m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
@@ -663,6 +663,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
                 
         break;
       }
+#if 0
       case IntegrationMethod_ImplicitEuler: { // Visible creep
         // Previous code, for reference:
 
@@ -720,11 +721,24 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
         break;
       }
-#if 0
       case IntegrationMethod_WeirdVerlet: { // Pretty bad - surprised that this is worse than implicit euler rather than better!
-        Vector3d const a0 = CalcAccel(i, p0, v0);
-        Vector3d const v1 = v0 + a0 * dt;
-        Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
+        // Previous code, for reference:
+        
+        // Vector3d const a0 = CalcAccel(i, p0, v0);
+        // Vector3d const v1 = v0 + a0 * dt;
+        // Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
+
+        Eigen::Array3Xd a0particles(3, numParticles);
+        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
+
+        Eigen::Array3Xd a0gravs(3, numGravs);
+        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
+
+        v1particles = v0particles + a0particles * dt;
+        p1particles = p0particles + v0particles * dt + .5f * a0particles * dt * dt;
+        
+        v1gravs = v0gravs + a0gravs * dt;
+        p1gravs = p0gravs + v0gravs * dt + .5f * a0gravs * dt * dt;
 
         break;
       }
