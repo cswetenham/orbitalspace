@@ -36,6 +36,10 @@ Logging and verification utility macros and functions
 # define FATAL /* TODO: GCC, etc */
 #endif
 
+#ifdef CDECL
+#  undef CDECL
+#endif
+
 #ifdef _WIN32
   #define CDECL __cdecl
 #else

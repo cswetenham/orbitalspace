@@ -42,20 +42,26 @@ protected:
   virtual void RenderState();
 
 private:
-  struct PhysicsBody;
-  struct OrbitParams;
-  void ComputeKeplerParams(PhysicsBody const& body, OrbitParams& o_params);
+  struct Body;
+  struct RenderableOrbit;
+  void UpdateOrbit(Body const& body, RenderableOrbit& o_params);
   void LookAt(Vector3d pos, Vector3d target, Vector3d up);
 
-  Vector3d CalcAccel(int i, Vector3d p, Vector3d v);
+  // Vector3d CalcAccel(int i, Vector3d p, Vector3d v);
+  
+  // TODO will need updating when grav bodies have gravity applied too...
+  // Since currently it implicity uses current grav body positions.
+  void CalcParticleAccel(int numParticles, Vector3d const* p, Vector3d const* v, Vector3d* o_a);
+
+  Vector3d CalcGravGrav(int grav1Id, int grav2Id);
+  Vector3d CalcParticleGrav(Vector3d p, int gravId);
+
+  Vector3d CalcThrust(Vector3d p, Vector3d v);
 
   void DrawCircle(double const radius, int const steps);
-  void DrawWireSphere(double const radius, int const slices, int const stacks);
+  void DrawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks);
 
 private:
-  enum { NUM_BODIES = 1 };
-  enum { NUM_SHIPS = 2 };
-
   Rnd64 m_rnd;
   
   double m_simTime;
@@ -78,26 +84,149 @@ private:
   double m_camDist;
   double m_camTheta;
   double m_camPhi;
-   
+  
+  //// Physics ////
+
+  double m_timeScale;
+
   struct Body
   {
     Vector3d m_pos;
+    Vector3d m_vel;
   };
 
-  struct MassiveBody : public Body
+  struct ParticleBody : public Body
+  {
+  };
+  std::vector<ParticleBody> m_particleBodies;
+
+  int makeParticleBody() { m_particleBodies.push_back(ParticleBody()); return m_particleBodies.size() - 1; }
+  ParticleBody& getParticleBody(int i) { return m_particleBodies[i]; }
+
+  struct GravBody : public Body
   {
     double m_radius;
     double m_mass;
   };
+  std::vector<GravBody> m_gravBodies;
 
-  struct PhysicsBody : public Body
-  {
-    Vector3d m_vel;
+  int makeGravBody() { m_gravBodies.push_back(GravBody()); return m_gravBodies.size() - 1; }
+  GravBody& getGravBody(int i) { return m_gravBodies[i]; }
+
+  // TODO?
+  class PhysicsWorld {};
+  PhysicsWorld m_physicsWorld;
+
+  //// Rendering ////
+
+  struct RenderablePoint {
+    Vector3d m_pos;
+
+    Vector3f m_col;
   };
+  std::vector<RenderablePoint> m_renderablePoints;
+
+  int makePoint() { m_renderablePoints.push_back(RenderablePoint()); return m_renderablePoints.size() - 1; }
+  RenderablePoint& getPoint(int i) { return m_renderablePoints[i]; }
+
+  struct RenderableSphere {
+    double m_radius;
+    Vector3d m_pos;
+
+    Vector3f m_col;
+  };
+  std::vector<RenderableSphere> m_renderableSpheres;
+
+  int makeSphere() { m_renderableSpheres.push_back(RenderableSphere()); return m_renderableSpheres.size() - 1; }
+  RenderableSphere& getSphere(int i) { return m_renderableSpheres[i]; }
+
+  struct RenderableOrbit
+  {
+    double p;
+    double e;
+    double theta;
+    Vector3d x_dir;
+    Vector3d y_dir;
+
+    Vector3f m_col;
+  };
+  std::vector<RenderableOrbit> m_renderableOrbits;
+
+  int makeOrbit() { m_renderableOrbits.push_back(RenderableOrbit()); return m_renderableOrbits.size() - 1; }
+  RenderableOrbit& getOrbit(int i) { return m_renderableOrbits[i]; }
+
+  struct RenderableTrail
+  {
+    // TODO make into method on app instead
+    RenderableTrail(double const _duration);
+    void Update(double const _dt, Vector3d _pos);
+    void Render(Vector3d const& _col0, Vector3d const& _col1);
+
+    // TODO this stores a fixed number of frames, not the best approach
+    enum { NUM_TRAIL_PTS = 1000 };
+    double m_duration;
+    double m_timeSinceUpdate;
+
+    int m_headIdx;
+    int m_tailIdx;
+    Vector3d m_trailPts[NUM_TRAIL_PTS];
+    double m_trailDuration[NUM_TRAIL_PTS];
+
+    Vector3f m_colOld;
+    Vector3f m_colNew;
+  };
+  std::vector<RenderableTrail> m_renderableTrails;
+
+  int makeTrail() { m_renderableTrails.push_back(RenderableTrail(3.0)); return m_renderableTrails.size() - 1; }
+  RenderableTrail& getTrail(int i) { return m_renderableTrails[i]; }
+
+  //// Entities ////
+
+  struct ShipEntity {
+    int m_particleBodyIdx;
+    int m_pointIdx;
+    int m_trailIdx;
+    int m_orbitIdx;
+  };
+  std::vector<ShipEntity> m_shipEntities;
+
+  int makeShip() { m_shipEntities.push_back(ShipEntity()); return m_shipEntities.size() - 1; }
+  ShipEntity& getShip(int i) { return m_shipEntities[i]; }
+
+  int m_playerShipId;
+  int m_suspectShipId;
+
+  // Right now the moon orbits the planet, can get rid of distinction later
+
+  struct PlanetEntity {
+    int m_gravBodyIdx;
+    int m_sphereIdx;
+  };
+  std::vector<PlanetEntity> m_planetEntities;
+
+  int makePlanet() { m_planetEntities.push_back(PlanetEntity()); return m_planetEntities.size() - 1; }
+  PlanetEntity& getPlanet(int i) { return m_planetEntities[i]; }
+    
+  int m_earthPlanetId;
+
+  struct MoonEntity {
+    int m_gravBodyIdx;
+    int m_sphereIdx;
+    int m_orbitIdx;
+    int m_trailIdx;
+  };
+  std::vector<MoonEntity> m_moonEntities;
+
+  int makeMoon() { m_moonEntities.push_back(MoonEntity()); return m_moonEntities.size() - 1; }
+  MoonEntity& getMoon(int i) { return m_moonEntities[i]; }
+
+  int m_moonMoonId;
+
+  // Camera
 
   Body* m_camTarget;
   size_t m_camTargetIdx;
-  std::string m_camTargetName[NUM_SHIPS+1];
+  std::vector<std::string> m_camTargetNames;
 
   enum CameraMode {
     CameraMode_FirstPerson = 0,
@@ -112,9 +241,7 @@ private:
   InputMode m_inputMode;
 
   sf::Vector2i m_savedMousePos;
-
-  MassiveBody m_earthBody;
-
+  
   enum Thrusters
   {
     ThrustFwd = 1 << 0,
@@ -126,95 +253,6 @@ private:
   };
 
   uint32_t m_thrusters;
-
-  struct OrbitParams
-  {
-    double p;
-    double e;
-    double theta;
-    Vector3d x_dir;
-    Vector3d y_dir;
-  };
-
-  struct Trail
-  {
-    Trail(double const _duration) :
-      m_duration(_duration), // TODO make sure this works as a value!
-      m_timeSinceUpdate(0.f),    
-      m_headIdx(0),
-      m_tailIdx(0)
-    {
-      for (int i = 0; i < NUM_TRAIL_PTS; ++i)
-      {
-        m_trailPts[i] = Vector3d::Zero();
-      }
-    }
-
-    void Update(double const _dt, Vector3d _pos)
-    {
-      // TODO can have a list of past points and their durations, and cut up trail linearly
-
-      // A -- 50ms -- B -- 10 ms -- C
-
-      // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
-
-      m_timeSinceUpdate += _dt;
-      
-      if (false) { // m_timeSinceUpdate < TODO) { // duration / NUM_TRAIL_PTS? Idea is to ensure queue always has space. This means we are ensuring a minimum time duration for each segment.
-        // Not enough time elapsed. To avoid filling up trail, update the head point instead of adding a new one
-        // m_trailPts[m_headIdx] = _pos;
-        // m_trailDuration[m_headIdx] = 0.f;
-      }
-      
-      m_headIdx++;
-      if (m_headIdx >= NUM_TRAIL_PTS) { m_headIdx = 0; }
-      m_trailPts[m_headIdx] = _pos;
-      if (m_tailIdx == m_headIdx) { m_tailIdx++; }
-      
-      // assert(m_headIdx != m_tailIdx);
-    }
-
-    void Render(Vector3d const& _col0, Vector3d const& _col1)
-    {
-      glBegin(GL_LINE_STRIP);
-      // TODO render only to m_tailIdx
-      for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
-      {
-        int idx = m_headIdx + i - Trail::NUM_TRAIL_PTS + 1;
-        if (idx < 0) { idx += Trail::NUM_TRAIL_PTS; }
-        Vector3d v = m_trailPts[idx];
-
-        double const l = (double)i / Trail::NUM_TRAIL_PTS;
-        Vector3d cd = Util::Lerp(_col0, _col1, l);
-        Vector3f c = cd.cast<float>();
-        Util::SetDrawColour(c);
-
-        glVertex3d(v.x(),v.y(),v.z());
-      }
-      glEnd();
-    }
-
-    // TODO this stores a fixed number of frames, not the best approach
-    enum { NUM_TRAIL_PTS = 1000 };
-    double m_duration;
-    double m_timeSinceUpdate;
-
-    int m_headIdx;
-    int m_tailIdx;
-    Vector3d m_trailPts[NUM_TRAIL_PTS];
-    double m_trailDuration[NUM_TRAIL_PTS];
-  };
-
-  struct Ship
-  {
-    Ship();
-
-    PhysicsBody m_physics;
-    OrbitParams m_orbit;
-    Trail m_trail;
-  };
-  
-  Ship m_ships[NUM_SHIPS];
 
   enum IntegrationMethod {
     IntegrationMethod_ExplicitEuler = 0,
@@ -228,18 +266,16 @@ private:
   
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
-  enum {NUM_COLS = 5};
-  Vector3d m_colG[NUM_COLS];
-  Vector3d m_colR[NUM_COLS];
-  Vector3d m_colB[NUM_COLS];
+  enum {PALETTE_SIZE = 5};
+  Vector3f m_colG[PALETTE_SIZE];
+  Vector3f m_colR[PALETTE_SIZE];
+  Vector3f m_colB[PALETTE_SIZE];
   
   Vector3d m_light;
 
   bool m_hasFocus;
 
   sf::Music m_music;
-
-  double m_timeScale;
 };
 
 #endif	/* ORBITALSPACEAPP_H */

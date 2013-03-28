@@ -16,12 +16,25 @@
 
 // TODO #include <boost/posix_time.hpp>
 
+// m^3 kg^-1 s^-2
+#define GRAV_CONSTANT 6.6738480e-11
+
 // meters
 #define EARTH_RADIUS 6.371e6
+#define MOON_RADIUS  1.737e6
+
 // kg
 #define EARTH_MASS 5.9742e24
-// ??
-#define GRAV_CONSTANT 6.6738480e-11
+#define MOON_MASS  7.3477e22
+
+// meters
+// #define MOON_APOGEE   3.6257e8
+// #define MOON_PERIGEE  4.0541e8
+// degrees
+// #define MOON_INCLINATION 5.145
+
+// seconds
+#define MOON_PERIOD 2.3606e6
 
 OrbitalSpaceApp::OrbitalSpaceApp():
   App(),
@@ -34,70 +47,172 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camDist(-3.1855e7),
   m_camTheta(0.0),
   m_camPhi(0.0),
-  m_camTarget(&m_earthBody),
+  m_camTarget(NULL),
   m_camTargetIdx(0),
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
-  m_earthBody(),
-  m_integrationMethod(IntegrationMethod_ImplicitEuler),
+  m_playerShipId(0),
+  // m_integrationMethod(IntegrationMethod_ImplicitEuler),
+  // TODO TEMP
+  m_integrationMethod(IntegrationMethod_ExplicitEuler),
   m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
   m_music(),
   m_timeScale(1.0)
 {
-  m_colG[0] = Vector3d(41,42,34)/255;
-  m_colG[1] = Vector3d(77,82,50)/255;
-  m_colG[2] = Vector3d(99,115,76)/255;
-  m_colG[3] = Vector3d(151,168,136)/255;
-  m_colG[4] = Vector3d(198,222,172)/255;
+  // Create palette
+  m_colG[0] = Vector3f(41,42,34)/255;
+  m_colG[1] = Vector3f(77,82,50)/255;
+  m_colG[2] = Vector3f(99,115,76)/255;
+  m_colG[3] = Vector3f(151,168,136)/255;
+  m_colG[4] = Vector3f(198,222,172)/255;
 
-  m_camTargetName[0] = "Earth";
-  m_camTargetName[1] = "Orbital Enforcer";
-  m_camTargetName[2] = "Suspect";
-
-  for (int i = 0; i < NUM_COLS; ++i)
+  for (int i = 0; i < PALETTE_SIZE; ++i)
   {
-    m_colR[i] = Vector3d(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
-    m_colB[i] = Vector3d(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
+    m_colR[i] = Vector3f(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
+    m_colB[i] = Vector3f(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
   }
   
   m_light /= m_light.norm();
 
+  // TODO
+  // m_camTargetName[0] = "Earth";
+  // m_camTargetName[1] = "Orbital Enforcer";
+  // m_camTargetName[2] = "Suspect";
+
   // TODO real-time date/time + time scale factor display
 
-  m_earthBody.m_pos = Vector3d(0.0, 0.0, 0.0);
-  m_earthBody.m_mass = EARTH_MASS; // kg
-  m_earthBody.m_radius = EARTH_RADIUS; // m
+  // Create Earth
   
-  float rnds[6 * NUM_SHIPS];
+  m_camTargetNames.push_back("Earth"); // TODO how to implement camera now - point to all planets, then moons, then ships?
+
+  PlanetEntity& earthPlanet = getPlanet(m_earthPlanetId = makePlanet());
+  
+  GravBody& earthGravBody = getGravBody(earthPlanet.m_gravBodyIdx = makeGravBody());
+
+  earthGravBody.m_mass = EARTH_MASS;
+  earthGravBody.m_radius = EARTH_RADIUS;
+
+  earthGravBody.m_pos = Vector3d(0.0, 0.0, 0.0);
+  earthGravBody.m_vel = Vector3d(0.0, 0.0, 0.0);
+
+  RenderableSphere& earthSphere = getSphere(earthPlanet.m_sphereIdx = makeSphere());
+  earthSphere.m_radius = earthGravBody.m_radius;
+  earthSphere.m_pos = earthGravBody.m_pos;
+  earthSphere.m_col = m_colG[1];
+  
+  m_camTarget = &earthGravBody;
+  
+  // Create Moon
+
+  m_camTargetNames.push_back("Moon");
+
+  MoonEntity& moonMoon = getMoon(m_moonMoonId = makeMoon());
+  
+  GravBody& moonGravBody = getGravBody(moonMoon.m_gravBodyIdx = makeGravBody());
+
+  // For now, give the moon a circular orbit
+
+  double const muEarthMoon = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
+
+  double const moonOrbitRadius = pow(muEarthMoon * (MOON_PERIOD / M_TAU) * (MOON_PERIOD / M_TAU), 1.0/3.0); // meters
+
+  Vector3d const moonPos = Vector3d(0.0, 0.0, moonOrbitRadius);
+  
+  // NOTE computing from constants rather than using the radius - is it better or worse this way?
+  double const moonSpeed = pow(muEarthMoon * (M_TAU / MOON_PERIOD), 1.0/3.0); // meters per second
+  
+  Vector3d const moonVel = Vector3d(moonSpeed, 0.0, 0.0);
+
+  moonGravBody.m_mass = MOON_MASS;
+  moonGravBody.m_radius = MOON_RADIUS;
+
+  moonGravBody.m_pos = moonPos;
+  moonGravBody.m_vel = moonVel;
+
+  RenderableSphere& moonSphere = getSphere(moonMoon.m_sphereIdx = makeSphere());
+  moonSphere.m_radius = moonGravBody.m_radius;
+  moonSphere.m_pos = moonGravBody.m_pos;
+  moonSphere.m_col = m_colG[1];
+
+  RenderableOrbit& moonOrbit = getOrbit(moonMoon.m_orbitIdx = makeOrbit());
+  moonOrbit.m_col = m_colG[1];
+  
+  RenderableTrail& moonTrail = getTrail(moonMoon.m_trailIdx = makeTrail());
+  moonTrail.m_colOld = m_colG[0];
+  moonTrail.m_colNew = m_colG[4];
+  
+  // Create ships
+
+  m_camTargetNames.push_back("Player");
+  
+  ShipEntity& playerShip = getShip(m_playerShipId = makeShip());
+
+  ParticleBody& playerBody = getParticleBody(playerShip.m_particleBodyIdx = makeParticleBody());
+  
+  playerBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
+  playerBody.m_vel = Vector3d(5e3, 0.0, 0.0);
+  
+  RenderableOrbit& playerOrbit = getOrbit(playerShip.m_orbitIdx = makeOrbit());
+  playerOrbit.m_col = m_colB[2];
+  // TODO init?
+  
+  RenderableTrail& playerTrail = getTrail(playerShip.m_trailIdx = makeTrail());
+  playerTrail.m_colOld = m_colB[0];
+  playerTrail.m_colNew = m_colB[4];
+  // TODO init?
+
+  RenderablePoint& playerPoint = getPoint(playerShip.m_pointIdx = makePoint());
+  playerPoint.m_pos = playerBody.m_pos;
+  playerPoint.m_col = m_colB[4];
+  
+  m_camTargetNames.push_back("Suspect");
+
+  ShipEntity& suspectShip = getShip(m_suspectShipId = makeShip());
+
+  ParticleBody& suspectBody = getParticleBody(suspectShip.m_particleBodyIdx = makeParticleBody());
+  
+  suspectBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
+  suspectBody.m_vel = Vector3d(5e3, 0.0, 0.0);
+  
+  RenderableOrbit& suspectOrbit = getOrbit(suspectShip.m_orbitIdx = makeOrbit());
+  suspectOrbit.m_col = m_colR[2];
+  // TODO init?
+  
+  RenderableTrail& suspectTrail = getTrail(suspectShip.m_trailIdx = makeTrail());
+  suspectTrail.m_colOld = m_colR[0];
+  suspectTrail.m_colNew = m_colR[4];
+  // TODO init?
+
+  RenderablePoint& suspectPoint = getPoint(suspectShip.m_pointIdx = makePoint());
+  suspectPoint.m_pos = suspectBody.m_pos;
+  suspectPoint.m_col = m_colR[4];
+
+  // Perturb all the ship orbits
+  float* rnds = new float[6 * m_shipEntities.size()];
   UniformDistribution<float> dist(-1, +1);
-  dist.Generate(&m_rnd, 6 * NUM_SHIPS, &rnds[0]);
-  for (int i = 0; i < NUM_SHIPS; ++i)
+  dist.Generate(&m_rnd, 6 * m_shipEntities.size(), &rnds[0]);
+  for (int i = 0; i < (int)m_shipEntities.size(); ++i)
   {
-    m_ships[i].m_physics.m_pos = Vector3d(0.0, 0.0, 1.3e7);
-    m_ships[i].m_physics.m_vel = Vector3d(5e3, 0.0, 0.0);
-    m_ships[i].m_physics.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e4;
-    m_ships[i].m_physics.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
+    ParticleBody& shipBody = getParticleBody(m_shipEntities[i].m_particleBodyIdx);
+    shipBody.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e4;
+    shipBody.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
   }
+  delete[] rnds;
+  
 
   m_music.openFromFile("spacething3_mastered_fullq.ogg");
   m_music.setLoop(true);
   m_music.play();
 }
 
-OrbitalSpaceApp::Ship::Ship() :
-  m_physics(),
-  m_trail(3.0)
-{
-}
-
 OrbitalSpaceApp::~OrbitalSpaceApp()
 {
 }
 
-void OrbitalSpaceApp::Run()
-{
+// TODO put elsewhere
+void runTests() {
   // Test FMod
   double const a = Util::FMod(3.0, 2.0);
   if ( a != 1.0 ) {
@@ -109,6 +224,11 @@ void OrbitalSpaceApp::Run()
   if (b != 1.5) {
     DEBUGBREAK;
   }
+}
+
+void OrbitalSpaceApp::Run()
+{
+  runTests();
 
   while (m_running)
   {
@@ -243,13 +363,14 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::Tab)
     {
       m_camTargetIdx++;
-      // TODO add more bodies. Moon? That would be interesting, could then do sphere of influence code.
-      // Could render sphere of influence for each body...
-      if (m_camTargetIdx >= NUM_BODIES + NUM_SHIPS) {
-        m_camTargetIdx = 0;
-        m_camTarget = &m_earthBody;
+      // TODO maybe should point at renderables instead, but eh...
+      if (m_camTargetIdx < m_gravBodies.size()) {
+        m_camTarget = &getGravBody(m_camTargetIdx);
+      } else if (m_camTargetIdx < m_gravBodies.size() + m_particleBodies.size()) {
+        m_camTarget = &getParticleBody(m_camTargetIdx - m_gravBodies.size());
       } else {
-        m_camTarget = &m_ships[m_camTargetIdx - 1].m_physics;
+        m_camTargetIdx = 0;
+        m_camTarget = &getGravBody(0);
       }
     }
 
@@ -350,45 +471,95 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-// TODO not data-oriented etc
-Vector3d OrbitalSpaceApp::CalcAccel(int i, Vector3d p, Vector3d v)
+void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Vector3d const* p, Vector3d const* v, Vector3d* o_a)
 {
+  int numGravBodies = (int)m_gravBodies.size();
+  for (int pi = 0; pi < numParticles; ++pi) {
+    Vector3d a(0.0, 0.0, 0.0);
+    for (int gi = 0; gi < numGravBodies; ++gi) {
+      a += CalcParticleGrav(p[pi], gi);
+    }
+    if (pi == m_playerShipId) {
+      a += CalcThrust(p[pi], v[pi]);
+    }
+    o_a[pi] = a;
+  }
+}
+
+// TODO not data-oriented etc
+// Calculates acceleration on first body by second body
+Vector3d OrbitalSpaceApp::CalcGravGrav(int grav1Id, int grav2Id)
+{
+  GravBody& grav1 = getGravBody(grav1Id);
+  GravBody& grav2 = getGravBody(grav2Id);
+  
   double const G = GRAV_CONSTANT;
-  double const M = m_earthBody.m_mass;
-  Vector3d origin = m_earthBody.m_pos;
-    
+  double const M = grav1.m_mass + grav2.m_mass;
+  
   double const mu = M * G;
 
   // Calc acceleration due to gravity
-  Vector3d const r = (origin - p);
+  Vector3d const r = (grav2.m_pos - grav1.m_pos);
   double const r_mag = r.norm();
 
   Vector3d const r_dir = r / r_mag;
       
   Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
 
+  return a_grav;
+}
+
+// TODO not data-oriented etc
+// Calculates acceleration on first body by second body
+Vector3d OrbitalSpaceApp::CalcParticleGrav(Vector3d p, int gravId)
+{
+  GravBody& grav = getGravBody(gravId);
+  
+  double const G = GRAV_CONSTANT;
+  double const M = grav.m_mass;
+  
+  double const mu = M * G;
+
+  // Calc acceleration due to gravity
+  Vector3d const r = (grav.m_pos - p);
+  double const r_mag = r.norm();
+
+  Vector3d const r_dir = r / r_mag;
+      
+  Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
+
+  return a_grav;
+}
+
+Vector3d OrbitalSpaceApp::CalcThrust(Vector3d p, Vector3d v)
+{
+  Vector3d origin = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyIdx).m_pos;
+   
+  // Calc acceleration due to gravity
+  Vector3d const r = (origin - p);
+  double const r_mag = r.norm();
+
+  Vector3d const r_dir = r / r_mag;
+
   // Calc acceleration due to thrust
   double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
       
   Vector3d thrustVec(0.0,0.0,0.0);
+    
+  Vector3d const fwd = v / v.norm(); // Prograde
+  Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
+  Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
 
-  if (i == 0) { // TODO HAX, selecting first ship as controllable one
-    Vector3d const fwd = v / v.norm(); // Prograde
-    Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
-    Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
-
-    if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
-    if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
-    if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
-    if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
-    if (m_thrusters & ThrustLeft)  { thrustVec += left; }
-    if (m_thrusters & ThrustRight) { thrustVec -= left; }
-  }
+  if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
+  if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
+  if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
+  if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
+  if (m_thrusters & ThrustLeft)  { thrustVec += left; }
+  if (m_thrusters & ThrustRight) { thrustVec -= left; }
 
   Vector3d a_thrust = thrustAccel * thrustVec;
 
-  Vector3d a = a_grav + a_thrust;
-  return a;
+  return a_thrust;
 }
 
 void OrbitalSpaceApp::UpdateState(double const _dt)
@@ -432,74 +603,147 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     
     // TODO try these with floats instead of double
 
-    for (int i = 0; i < NUM_SHIPS; ++i) {
-      // Define directions
-      PhysicsBody& pb = m_ships[i].m_physics;
+    // TODO have the physics update work with multiple buffers?
+    // Needs to calculate all accelerations from an arbitrary world state
 
-      Vector3d const v0 = pb.m_vel;
-      Vector3d const p0 = pb.m_pos;
-
-      switch (m_integrationMethod) {
-        case IntegrationMethod_ExplicitEuler: { // Comically bad
-          Vector3d const a0 = CalcAccel(i, p0, v0);
-          Vector3d const p1 = p0 + v0 * dt;
-          Vector3d const v1 = v0 + a0 * dt;
+    switch (m_integrationMethod) {
+      case IntegrationMethod_ExplicitEuler: { // Comically bad
+        // Vector3d const a0 = CalcAccel(i, p0, v0);
+        // Vector3d const p1 = p0 + v0 * dt;
+        // Vector3d const v1 = v0 + a0 * dt;
           
-          pb.m_pos = p1;
-          pb.m_vel = v1;
-          break;
-        }
-        case IntegrationMethod_ImplicitEuler: { // Visible creep
-          Vector3d const a0 = CalcAccel(i, p0, v0);
-          Vector3d const v1 = v0 + a0 * dt;
-          Vector3d const p1 = p0 + v1 * dt;
+        // pb.m_pos = p1;
+        // pb.m_vel = v1;
 
-          pb.m_pos = p1;
-          pb.m_vel = v1;
-          break;
-        }
-        case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
-          Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
-          Vector3d const vt = v0 + a0 * dt;
-          Vector3d const pt = p0 + v0 * dt;
-          Vector3d const at = CalcAccel(i, pt, vt);
-          Vector3d const p1 = p0 + .5f * (v0 + vt) * dt;
-          Vector3d const v1 = v0 + .5f * (a0 + at) * dt;
+        // Only updates particles for now, but enough to test with!
 
-          pb.m_pos = p1;
-          pb.m_vel = v1;
-          break;
+        int numParticles = (int)m_particleBodies.size();
+        Vector3d* p0particles = new Vector3d[numParticles];
+        Vector3d* v0particles = new Vector3d[numParticles];
+        
+        for (int i = 0; i < numParticles; ++i) {
+          ParticleBody& particleBody = m_particleBodies[i];
+          p0particles[i] = particleBody.m_pos;
+          v0particles[i] = particleBody.m_vel;
         }
-        case IntegrationMethod_WeirdVerlet: { // Pretty bad - surprised that this is worse than implicit euler rather than better!
-          Vector3d const a0 = CalcAccel(i, p0, v0);
-          Vector3d const v1 = v0 + a0 * dt;
-          Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
 
-          pb.m_pos = p1;
-          pb.m_vel = v1;
-          break;
-        }
-        case IntegrationMethod_VelocityVerlet: { // Looks perfect at low speeds. Breaks down at 32k x speed... is there drift at slightly lower speeds? Was less obvious than with IntegrationMethod_ImprovedEuler.
-          Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
-          Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
-          Vector3d const a1 = CalcAccel(i, p1, v0); // TODO this is wrong, using thrust dir from old frame...
-          Vector3d const v1 = v0 + .5f * (a0 + a1) * dt;
+        Vector3d* a0particles = new Vector3d[numParticles];
+        CalcParticleAccel(numParticles, p0particles, v0particles, a0particles);
+        
+        Vector3d* p1particles = new Vector3d[numParticles];
+        Vector3d* v1particles = new Vector3d[numParticles];
 
-          pb.m_pos = p1;
-          pb.m_vel = v1;
-          break;
+        // TODO use Eigen vectors for this? Does that even work
+        // Or unroll loop, prefetch, SIMD fused multiply-add!!
+        for (int i = 0; i < numParticles; ++i) {
+          p1particles[i] = p0particles[i] + v0particles[i] * dt;
         }
-        default: {
-          orErr("Unknown Integration Method!");
-          break;
+
+        for (int i = 0; i < numParticles; ++i) {
+          v1particles[i] = v0particles[i] + a0particles[i] * dt;
         }
+        
+        for (int i = 0; i < numParticles; ++i) {
+          ParticleBody& particleBody = m_particleBodies[i];
+          particleBody.m_pos = p1particles[i];
+          particleBody.m_vel = v1particles[i];
+        }
+
+        delete[] a0particles;
+        delete[] p0particles;
+        delete[] v0particles;
+        delete[] p1particles;
+        delete[] v1particles;
+        break;
       }
+#if 0
+      case IntegrationMethod_ImplicitEuler: { // Visible creep
+        Vector3d const a0 = CalcAccel(i, p0, v0);
+        Vector3d const v1 = v0 + a0 * dt;
+        Vector3d const p1 = p0 + v1 * dt;
 
-      // Update orbit
-      ComputeKeplerParams(m_ships[i].m_physics, m_ships[i].m_orbit);
+        pb.m_pos = p1;
+        pb.m_vel = v1;
+        break;
+      }
+      case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
+        Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
+        Vector3d const vt = v0 + a0 * dt;
+        Vector3d const pt = p0 + v0 * dt;
+        Vector3d const at = CalcAccel(i, pt, vt);
+        Vector3d const p1 = p0 + .5f * (v0 + vt) * dt;
+        Vector3d const v1 = v0 + .5f * (a0 + at) * dt;
+
+        pb.m_pos = p1;
+        pb.m_vel = v1;
+        break;
+      }
+      case IntegrationMethod_WeirdVerlet: { // Pretty bad - surprised that this is worse than implicit euler rather than better!
+        Vector3d const a0 = CalcAccel(i, p0, v0);
+        Vector3d const v1 = v0 + a0 * dt;
+        Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
+
+        pb.m_pos = p1;
+        pb.m_vel = v1;
+        break;
+      }
+      case IntegrationMethod_VelocityVerlet: { // Looks perfect at low speeds. Breaks down at 32k x speed... is there drift at slightly lower speeds? Was less obvious than with IntegrationMethod_ImprovedEuler.
+        Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
+        Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
+        Vector3d const a1 = CalcAccel(i, p1, v0); // TODO this is wrong, using thrust dir from old frame...
+        Vector3d const v1 = v0 + .5f * (a0 + a1) * dt;
+
+        pb.m_pos = p1;
+        pb.m_vel = v1;
+        break;
+      }
+#endif
+      default: {
+        orErr("Unknown Integration Method!");
+        break;
+      }
+    }
+
+    // Update Planets
+    for (int i = 0; i < (int)m_planetEntities.size(); ++i) {
+      PlanetEntity& planet = getPlanet(i);
+
+      Body& body = getGravBody(planet.m_gravBodyIdx);
       
-      // Update trail
-      m_ships[i].m_trail.Update(_dt, pb.m_pos);
+      RenderableSphere& sphere = getSphere(planet.m_sphereIdx);
+      sphere.m_pos = body.m_pos;
+    }
+
+    // Update Moon
+    for (int i = 0; i < (int)m_moonEntities.size(); ++i) {
+      MoonEntity& moon = getMoon(i);
+
+      Body& body = getGravBody(moon.m_gravBodyIdx);
+
+      RenderableOrbit& orbit = getOrbit(moon.m_orbitIdx);
+      UpdateOrbit(body, orbit);
+
+      RenderableTrail& trail = getTrail(moon.m_trailIdx);
+      trail.Update(_dt, body.m_pos);
+
+      RenderableSphere& sphere = getSphere(moon.m_sphereIdx);
+      sphere.m_pos = body.m_pos;
+    }
+
+    // Update ships
+    for (int i = 0; i < (int)m_shipEntities.size(); ++i) {
+      ShipEntity& ship = getShip(i);
+
+      Body& body = getParticleBody(ship.m_particleBodyIdx);
+     
+      RenderableOrbit& orbit = getOrbit(ship.m_orbitIdx);
+      UpdateOrbit(body, orbit);
+
+      RenderableTrail& trail = getTrail(ship.m_trailIdx);
+      trail.Update(_dt, body.m_pos);
+
+      RenderablePoint& point = getPoint(ship.m_pointIdx);
+      point.m_pos = body.m_pos;
     }
   }
 
@@ -510,11 +754,16 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
   }
 }
 
-void OrbitalSpaceApp::ComputeKeplerParams(PhysicsBody const& body, OrbitParams& o_params) {
+void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderableOrbit& o_params) {
+  // TODO will want to just forward-project instead, this is broken with >1 body
+
   // Compute Kepler orbit
+
+  GravBody const& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyIdx);
+
   double const G = GRAV_CONSTANT;
-  double const M = m_earthBody.m_mass;
-  Vector3d origin = m_earthBody.m_pos;
+  double const M = earthBody.m_mass;
+  Vector3d origin = earthBody.m_pos;
     
   double const mu = M * G;
 
@@ -551,7 +800,7 @@ void OrbitalSpaceApp::ComputeKeplerParams(PhysicsBody const& body, OrbitParams& 
   o_params.y_dir = y_dir;
 }
 
-void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int const stacks)
+void OrbitalSpaceApp::DrawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks)
 {
     int curStack, curSlice;
 
@@ -575,7 +824,7 @@ void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int 
                 z = sin( curSlice * sliceInc );
 
                 glNormal3d(x,y,z);
-                glVertex3d(x*r*radius,y*radius,z*r*radius);
+                glVertex3d(x*r*radius + pos.x(), y*radius + pos.y(), z*r*radius + pos.z());
             }
 
         glEnd();
@@ -591,7 +840,7 @@ void OrbitalSpaceApp::DrawWireSphere(double const radius, int const slices, int 
                 y = cos( curStack * stackInc );
 
                 glNormal3d(x,y,z);
-                glVertex3d(x*radius,y*radius,z*radius);
+                glVertex3d(x*radius + pos.x(), y*radius + pos.y(), z*radius + pos.z());
             }
 
         glEnd();
@@ -643,6 +892,7 @@ void OrbitalSpaceApp::RenderState()
 {
   m_window->resetGLStates();
   
+  // Render debug text
   {
     sf::Font font(sf::Font::getDefaultFont());
     Eigen::Matrix<sf::Uint8, 3, 1> ct = (m_colG[4] * 255).cast<sf::Uint8>();
@@ -658,12 +908,13 @@ void OrbitalSpaceApp::RenderState()
     str.flags(std::ios::right | std::ios::fixed);
         
     str << "Time Scale: " << m_timeScale << "\n";
-    str << "Cam Target: " << m_camTargetName[m_camTargetIdx] << "\n";
+    str << "Cam Target: " << m_camTargetNames[m_camTargetIdx] << "\n";
     str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
-    double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
-    str << "Intership Distance:" << shipDist << "\n";
+    // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
+    // str << "Intership Distance:" << shipDist << "\n";
+    str << "Intership Distance: TODO\n";
     str << "Integration Method: " << m_integrationMethod << "\n";
 
     // TODO: better double value text formatting
@@ -677,7 +928,7 @@ void OrbitalSpaceApp::RenderState()
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  Vector3d c = m_colG[0];
+  Vector3f c = m_colG[0];
   glClearColor(c.x(), c.y(), c.z(), 0);
   glClearDepth(1.0);
 
@@ -695,13 +946,15 @@ void OrbitalSpaceApp::RenderState()
   glLoadIdentity();
   Vector3d up(0.0, 1.0, 0.0);
 
+  // Set camera
+  
   assert(m_camTarget);
   Vector3d const camTarget = m_camTarget->m_pos;
 
   Vector3d camPos;
   
   if (m_camMode == CameraMode_FirstPerson) {
-    camPos = m_ships[0].m_physics.m_pos;
+    camPos = getParticleBody(getShip(m_playerShipId).m_particleBodyIdx).m_pos;
   } else if (m_camMode == CameraMode_ThirdPerson) {
     camPos = Vector3d(0.0, 0.0, m_camDist);
 
@@ -742,79 +995,123 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
-  {
-    Vector3f c = m_colG[1].cast<float>();
-    Util::SetDrawColour(c);
+  for (int si = 0; si < (int)m_renderableSpheres.size(); ++si) {
+    RenderableSphere const& sphere = getSphere(si);
+    Util::SetDrawColour(sphere.m_col);
+
+    DrawWireSphere(sphere.m_pos, sphere.m_radius, 32, 32);
   }
-  DrawWireSphere(m_earthBody.m_radius, 32, 32);
-
-  // TODO collision detection
-
-  for (int s = 0; s < NUM_SHIPS; ++s) {
-    // Draw ship
+  
+  for (int pi = 0; pi < (int)m_renderablePoints.size(); ++pi) {
+    RenderablePoint const& point = getPoint(pi);
+    Util::SetDrawColour(point.m_col);
+    
     glPointSize(10.0);
     glBegin(GL_POINTS);
-    Vector3d p = m_ships[s].m_physics.m_pos;
-    if (s == 0) {
-      Util::SetDrawColour(m_colB[4]);
-    } else {
-      Util::SetDrawColour(m_colR[4]);
-    }
+    Vector3d p = point.m_pos;
     glVertex3d(p.x(), p.y(), p.z());
     glEnd();
     glPointSize(1.0);
+  }
 
-    // Draw orbit
-    {
-      OrbitParams const& orbit = m_ships[s].m_orbit;
-      
-      int const steps = 10000;
-      // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
-      // restrict the range of theta?
-      double const delta = .0001;
-      double const HAX_RANGE = .9; // limit range to stay out of very large values
-      // TODO want to instead limit the range based on... some viewing area?
-      // might be two visible segments, one from +ve and one from -ve theta, with
-      // different visible ranges. Could determine 
-      // TODO and want to take steps of fixed length/distance
-      double range;
-      if (orbit.e < 1 - delta) { // ellipse
-          range = .5 * M_TAU;
-      } else if (orbit.e < 1 + delta) { // parabola
-          range = .5 * M_TAU * HAX_RANGE;
-      } else { // hyperbola
-          range = acos(-1/orbit.e) * HAX_RANGE;
-      }
-      double const mint = -range;
-      double const maxt = range;
-      glBegin(GL_LINE_STRIP);
-      if (s == 0) {
-        Util::SetDrawColour(m_colB[2]);
-      } else {
-        Util::SetDrawColour(m_colR[2]);
-      }
-      for (int i = 0; i <= steps; ++i) {
-          double const ct = Util::Lerp(mint, maxt, (double)i / steps);
-          double const cr = orbit.p / (1 + orbit.e * cos(ct));
+  for (int oi = 0; oi < (int)m_renderableOrbits.size(); ++oi) {
+    RenderableOrbit const& orbit = getOrbit(oi);
+    Util::SetDrawColour(orbit.m_col);
 
-          double const x_len = cr * -cos(ct);
-          double const y_len = cr * -sin(ct);
-          Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
-          glVertex3d(pos.x(), pos.y(), pos.z());
-      }
-      glEnd();
+    int const steps = 10000;
+    // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
+    // restrict the range of theta?
+    double const delta = .0001;
+    double const HAX_RANGE = .9; // limit range to stay out of very large values
+    // TODO want to instead limit the range based on... some viewing area?
+    // might be two visible segments, one from +ve and one from -ve theta, with
+    // different visible ranges. Could determine 
+    // TODO and want to take steps of fixed length/distance
+    double range;
+    if (orbit.e < 1 - delta) { // ellipse
+        range = .5 * M_TAU;
+    } else if (orbit.e < 1 + delta) { // parabola
+        range = .5 * M_TAU * HAX_RANGE;
+    } else { // hyperbola
+        range = acos(-1/orbit.e) * HAX_RANGE;
     }
+    double const mint = -range;
+    double const maxt = range;
+    glBegin(GL_LINE_STRIP);
+    for (int i = 0; i <= steps; ++i) {
+        double const ct = Util::Lerp(mint, maxt, (double)i / steps);
+        double const cr = orbit.p / (1 + orbit.e * cos(ct));
 
-    // Draw trail
+        double const x_len = cr * -cos(ct);
+        double const y_len = cr * -sin(ct);
+        Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
+        glVertex3d(pos.x(), pos.y(), pos.z());
+    }
+    glEnd();
+  }
+
+  for (int ti = 0; ti < (int)m_renderableTrails.size(); ++ti) {
+    RenderableTrail const& trail = getTrail(ti);
 #if 0
-    if (s == 0) {
-      m_ships[s].m_trail.Render(m_colB[0], m_colB[4]);
-    } else {
-      m_ships[s].m_trail.Render(m_colR[0], m_colR[4]);
-    }
+    trail.Render(trail.m_colOld, trail.m_colNew);
 #endif
   }
   
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
 
+OrbitalSpaceApp::RenderableTrail::RenderableTrail(double const _duration) :
+  m_duration(_duration), // TODO make sure this works as a value! // TODO what does this mean
+  m_timeSinceUpdate(0.f),    
+  m_headIdx(0),
+  m_tailIdx(0)
+{
+  for (int i = 0; i < NUM_TRAIL_PTS; ++i)
+  {
+    m_trailPts[i] = Vector3d::Zero();
+  }
+}
+
+void OrbitalSpaceApp::RenderableTrail::Update(double const _dt, Vector3d _pos)
+{
+  // TODO can have a list of past points and their durations, and cut up trail linearly
+
+  // A -- 50ms -- B -- 10 ms -- C
+
+  // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
+
+  m_timeSinceUpdate += _dt;
+      
+  if (false) { // m_timeSinceUpdate < TODO) { // duration / NUM_TRAIL_PTS? Idea is to ensure queue always has space. This means we are ensuring a minimum time duration for each segment.
+    // Not enough time elapsed. To avoid filling up trail, update the head point instead of adding a new one
+    // m_trailPts[m_headIdx] = _pos;
+    // m_trailDuration[m_headIdx] = 0.f;
+  }
+      
+  m_headIdx++;
+  if (m_headIdx >= NUM_TRAIL_PTS) { m_headIdx = 0; }
+  m_trailPts[m_headIdx] = _pos;
+  if (m_tailIdx == m_headIdx) { m_tailIdx++; }
+      
+  // assert(m_headIdx != m_tailIdx);
+}
+
+void OrbitalSpaceApp::RenderableTrail::Render(Vector3d const& _col0, Vector3d const& _col1)
+{
+  glBegin(GL_LINE_STRIP);
+  // TODO render only to m_tailIdx // TODO what does this mean
+  for (int i = 0; i < RenderableTrail::NUM_TRAIL_PTS; ++i)
+  {
+    int idx = m_headIdx + i - RenderableTrail::NUM_TRAIL_PTS + 1;
+    if (idx < 0) { idx += RenderableTrail::NUM_TRAIL_PTS; }
+    Vector3d v = m_trailPts[idx];
+
+    double const l = (double)i / RenderableTrail::NUM_TRAIL_PTS;
+    Vector3d cd = Util::Lerp(_col0, _col1, l);
+    Vector3f c = cd.cast<float>();
+    Util::SetDrawColour(c);
+
+    glVertex3d(v.x(),v.y(),v.z());
+  }
+  glEnd();
+}
