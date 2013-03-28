@@ -471,18 +471,18 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Vector3d const* p, Vector3d const* v, Vector3d* o_a)
+void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Eigen::Array3Xd const& p, Eigen::Array3Xd const& v, Eigen::Array3Xd& o_a)
 {
   int numGravBodies = (int)m_gravBodies.size();
   for (int pi = 0; pi < numParticles; ++pi) {
     Vector3d a(0.0, 0.0, 0.0);
     for (int gi = 0; gi < numGravBodies; ++gi) {
-      a += CalcParticleGrav(p[pi], gi);
+      a += CalcParticleGrav(p.col(pi), gi);
     }
     if (pi == m_playerShipId) {
-      a += CalcThrust(p[pi], v[pi]);
+      a += CalcThrust(p.col(pi), v.col(pi));
     }
-    o_a[pi] = a;
+    o_a.col(pi) = a;
   }
 }
 
@@ -608,6 +608,8 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
     switch (m_integrationMethod) {
       case IntegrationMethod_ExplicitEuler: { // Comically bad
+        // Previous code, for reference:
+        
         // Vector3d const a0 = CalcAccel(i, p0, v0);
         // Vector3d const p1 = p0 + v0 * dt;
         // Vector3d const v1 = v0 + a0 * dt;
@@ -618,42 +620,28 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         // Only updates particles for now, but enough to test with!
 
         int numParticles = (int)m_particleBodies.size();
-        Vector3d* p0particles = new Vector3d[numParticles];
-        Vector3d* v0particles = new Vector3d[numParticles];
         
+        Eigen::Array3Xd p0particles(3, numParticles);
+        Eigen::Array3Xd v0particles(3, numParticles);
+                
         for (int i = 0; i < numParticles; ++i) {
           ParticleBody& particleBody = m_particleBodies[i];
-          p0particles[i] = particleBody.m_pos;
-          v0particles[i] = particleBody.m_vel;
+          p0particles.col(i) = particleBody.m_pos;
+          v0particles.col(i) = particleBody.m_vel;
         }
 
-        Vector3d* a0particles = new Vector3d[numParticles];
+        Eigen::Array3Xd a0particles(3, numParticles);
         CalcParticleAccel(numParticles, p0particles, v0particles, a0particles);
         
-        Vector3d* p1particles = new Vector3d[numParticles];
-        Vector3d* v1particles = new Vector3d[numParticles];
-
-        // TODO use Eigen vectors for this? Does that even work
-        // Or unroll loop, prefetch, SIMD fused multiply-add!!
-        for (int i = 0; i < numParticles; ++i) {
-          p1particles[i] = p0particles[i] + v0particles[i] * dt;
-        }
-
-        for (int i = 0; i < numParticles; ++i) {
-          v1particles[i] = v0particles[i] + a0particles[i] * dt;
-        }
+        Eigen::Array3Xd p1particles = p0particles + v0particles * dt;
+        Eigen::Array3Xd v1particles = v0particles + a0particles * dt;
         
         for (int i = 0; i < numParticles; ++i) {
           ParticleBody& particleBody = m_particleBodies[i];
-          particleBody.m_pos = p1particles[i];
-          particleBody.m_vel = v1particles[i];
+          particleBody.m_pos = p1particles.col(i);
+          particleBody.m_vel = v1particles.col(i);
         }
 
-        delete[] a0particles;
-        delete[] p0particles;
-        delete[] v0particles;
-        delete[] p1particles;
-        delete[] v1particles;
         break;
       }
 #if 0

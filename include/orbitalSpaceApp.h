@@ -51,7 +51,7 @@ private:
   
   // TODO will need updating when grav bodies have gravity applied too...
   // Since currently it implicity uses current grav body positions.
-  void CalcParticleAccel(int numParticles, Vector3d const* p, Vector3d const* v, Vector3d* o_a);
+  void CalcParticleAccel(int numParticles, Eigen::Array3Xd const& p, Eigen::Array3Xd const& v, Eigen::Array3Xd& o_a);
 
   Vector3d CalcGravGrav(int grav1Id, int grav2Id);
   Vector3d CalcParticleGrav(Vector3d p, int gravId);
