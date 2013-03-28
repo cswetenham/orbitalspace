@@ -138,6 +138,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   RenderableOrbit& moonOrbit = getOrbit(moonMoon.m_orbitIdx = makeOrbit());
   moonOrbit.m_col = m_colG[1];
+  moonOrbit.m_pos = earthGravBody.m_pos;
   
   RenderableTrail& moonTrail = getTrail(moonMoon.m_trailIdx = makeTrail());
   moonTrail.m_colOld = m_colG[0];
@@ -156,12 +157,11 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   RenderableOrbit& playerOrbit = getOrbit(playerShip.m_orbitIdx = makeOrbit());
   playerOrbit.m_col = m_colB[2];
-  // TODO init?
-  
+  playerOrbit.m_pos = earthGravBody.m_pos;
+    
   RenderableTrail& playerTrail = getTrail(playerShip.m_trailIdx = makeTrail());
   playerTrail.m_colOld = m_colB[0];
   playerTrail.m_colNew = m_colB[4];
-  // TODO init?
 
   RenderablePoint& playerPoint = getPoint(playerShip.m_pointIdx = makePoint());
   playerPoint.m_pos = playerBody.m_pos;
@@ -178,13 +178,12 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   RenderableOrbit& suspectOrbit = getOrbit(suspectShip.m_orbitIdx = makeOrbit());
   suspectOrbit.m_col = m_colR[2];
-  // TODO init?
+  suspectOrbit.m_pos = earthGravBody.m_pos;
   
   RenderableTrail& suspectTrail = getTrail(suspectShip.m_trailIdx = makeTrail());
   suspectTrail.m_colOld = m_colR[0];
   suspectTrail.m_colNew = m_colR[4];
-  // TODO init?
-
+  
   RenderablePoint& suspectPoint = getPoint(suspectShip.m_pointIdx = makePoint());
   suspectPoint.m_pos = suspectBody.m_pos;
   suspectPoint.m_col = m_colR[4];
@@ -471,64 +470,65 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Eigen::Array3Xd const& p, Eigen::Array3Xd const& v, Eigen::Array3Xd& o_a)
+void OrbitalSpaceApp::CalcParticleAccel(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a)
 {
-  int numGravBodies = (int)m_gravBodies.size();
+  CalcParticleGrav(numParticles, pp, vp, numGravBodies, pg, mg, o_a);
+  o_a.col(m_playerShipId) += CalcThrust(pp.col(m_playerShipId), vp.col(m_playerShipId)).array();
+}
+
+// TODO not data-oriented etc
+// Calculates acceleration on first body by second body
+void OrbitalSpaceApp::CalcParticleGrav(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a)
+{
+  double const G = GRAV_CONSTANT;
+
   for (int pi = 0; pi < numParticles; ++pi) {
     Vector3d a(0.0, 0.0, 0.0);
     for (int gi = 0; gi < numGravBodies; ++gi) {
-      a += CalcParticleGrav(p.col(pi), gi);
+      
+      double const M = mg[gi];
+   
+      double const mu = M * G;
+
+      // Calc acceleration due to gravity
+      Vector3d const r = (pg.col(gi) - pp.col(pi));
+      double const r_mag = r.norm();
+
+      Vector3d const r_dir = r / r_mag;
+      
+      Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
+      a += a_grav;
     }
     if (pi == m_playerShipId) {
-      a += CalcThrust(p.col(pi), v.col(pi));
+      a += CalcThrust(pp.col(pi), vp.col(pi));
     }
     o_a.col(pi) = a;
   }
 }
 
-// TODO not data-oriented etc
-// Calculates acceleration on first body by second body
-Vector3d OrbitalSpaceApp::CalcGravGrav(int grav1Id, int grav2Id)
+void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, Eigen::Array3Xd const& pg, Eigen::Array3Xd const& vg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a)
 {
-  GravBody& grav1 = getGravBody(grav1Id);
-  GravBody& grav2 = getGravBody(grav2Id);
-  
   double const G = GRAV_CONSTANT;
-  double const M = grav1.m_mass + grav2.m_mass;
   
-  double const mu = M * G;
+  for (int g1i = 0; g1i < numGravBodies; ++g1i) {
+    for (int g2i = 0; g2i < numGravBodies; ++g2i) {
+      if (g1i == g2i) { continue; }
 
-  // Calc acceleration due to gravity
-  Vector3d const r = (grav2.m_pos - grav1.m_pos);
-  double const r_mag = r.norm();
+      double const M = mg[g1i] + mg[g2i];
+  
+      double const mu = M * G;
 
-  Vector3d const r_dir = r / r_mag;
+      // Calc acceleration due to gravity
+      Vector3d const r = (pg.col(g1i) - pg.col(g2i));
+      double const r_mag = r.norm();
+
+      Vector3d const r_dir = r / r_mag;
       
-  Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
+      Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
 
-  return a_grav;
-}
-
-// TODO not data-oriented etc
-// Calculates acceleration on first body by second body
-Vector3d OrbitalSpaceApp::CalcParticleGrav(Vector3d p, int gravId)
-{
-  GravBody& grav = getGravBody(gravId);
-  
-  double const G = GRAV_CONSTANT;
-  double const M = grav.m_mass;
-  
-  double const mu = M * G;
-
-  // Calc acceleration due to gravity
-  Vector3d const r = (grav.m_pos - p);
-  double const r_mag = r.norm();
-
-  Vector3d const r_dir = r / r_mag;
-      
-  Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
-
-  return a_grav;
+      o_a.col(g1i) = a_grav;
+    }
+  }
 }
 
 Vector3d OrbitalSpaceApp::CalcThrust(Vector3d p, Vector3d v)
@@ -617,30 +617,63 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         // pb.m_pos = p1;
         // pb.m_vel = v1;
 
-        // Only updates particles for now, but enough to test with!
+        // Load Particle body data
 
         int numParticles = (int)m_particleBodies.size();
-        
+                
         Eigen::Array3Xd p0particles(3, numParticles);
         Eigen::Array3Xd v0particles(3, numParticles);
-                
+
         for (int i = 0; i < numParticles; ++i) {
-          ParticleBody& particleBody = m_particleBodies[i];
-          p0particles.col(i) = particleBody.m_pos;
-          v0particles.col(i) = particleBody.m_vel;
+          Body& body = m_particleBodies[i];
+          p0particles.col(i) = body.m_pos;
+          v0particles.col(i) = body.m_vel;
         }
 
+        // Load Grav body data
+
+        int numGravs = (int)m_gravBodies.size();
+
+        Eigen::Array3Xd p0gravs(3, numGravs);
+        Eigen::Array3Xd v0gravs(3, numGravs);
+        Eigen::VectorXd mgravs(numGravs);
+
+        for (int i = 0; i < numGravs; ++i) {
+          GravBody& body = m_gravBodies[i];
+          p0gravs.col(i) = body.m_pos;
+          v0gravs.col(i) = body.m_vel;
+          mgravs[i] = body.m_mass;
+        }
+
+
         Eigen::Array3Xd a0particles(3, numParticles);
-        CalcParticleAccel(numParticles, p0particles, v0particles, a0particles);
+        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
         
+        Eigen::Array3Xd a0gravs(3, numGravs);
+        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
+
         Eigen::Array3Xd p1particles = p0particles + v0particles * dt;
         Eigen::Array3Xd v1particles = v0particles + a0particles * dt;
         
+        Eigen::Array3Xd p1gravs = p0gravs + v0gravs * dt;
+        Eigen::Array3Xd v1gravs = v0gravs + a0gravs * dt;
+
+        // Store Particle body data
+
         for (int i = 0; i < numParticles; ++i) {
-          ParticleBody& particleBody = m_particleBodies[i];
-          particleBody.m_pos = p1particles.col(i);
-          particleBody.m_vel = v1particles.col(i);
+          Body& body = m_particleBodies[i];
+          body.m_pos = p1particles.col(i);
+          body.m_vel = v1particles.col(i);
         }
+
+        // Store Grav body data
+
+        for (int i = 0; i < numGravs; ++i) {
+          Body& body = m_gravBodies[i];
+          body.m_pos = p1gravs.col(i);
+          body.m_vel = v1gravs.col(i);
+        }
+        
 
         break;
       }
@@ -786,6 +819,7 @@ void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderableOrbit& o_params) {
   o_params.theta = theta;
   o_params.x_dir = x_dir;
   o_params.y_dir = y_dir;
+  o_params.m_pos = earthBody.m_pos;
 }
 
 void OrbitalSpaceApp::DrawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks)
@@ -1032,7 +1066,7 @@ void OrbitalSpaceApp::RenderState()
 
         double const x_len = cr * -cos(ct);
         double const y_len = cr * -sin(ct);
-        Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len);
+        Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len) + orbit.m_pos;
         glVertex3d(pos.x(), pos.y(), pos.z());
     }
     glEnd();
@@ -1040,9 +1074,7 @@ void OrbitalSpaceApp::RenderState()
 
   for (int ti = 0; ti < (int)m_renderableTrails.size(); ++ti) {
     RenderableTrail const& trail = getTrail(ti);
-#if 0
-    trail.Render(trail.m_colOld, trail.m_colNew);
-#endif
+    trail.Render();
   }
   
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
@@ -1084,7 +1116,7 @@ void OrbitalSpaceApp::RenderableTrail::Update(double const _dt, Vector3d _pos)
   // assert(m_headIdx != m_tailIdx);
 }
 
-void OrbitalSpaceApp::RenderableTrail::Render(Vector3d const& _col0, Vector3d const& _col1)
+void OrbitalSpaceApp::RenderableTrail::Render() const
 {
   glBegin(GL_LINE_STRIP);
   // TODO render only to m_tailIdx // TODO what does this mean
@@ -1094,9 +1126,8 @@ void OrbitalSpaceApp::RenderableTrail::Render(Vector3d const& _col0, Vector3d co
     if (idx < 0) { idx += RenderableTrail::NUM_TRAIL_PTS; }
     Vector3d v = m_trailPts[idx];
 
-    double const l = (double)i / RenderableTrail::NUM_TRAIL_PTS;
-    Vector3d cd = Util::Lerp(_col0, _col1, l);
-    Vector3f c = cd.cast<float>();
+    float const l = (float)i / RenderableTrail::NUM_TRAIL_PTS;
+    Vector3f c = Util::Lerp(m_colOld, m_colNew, l);
     Util::SetDrawColour(c);
 
     glVertex3d(v.x(),v.y(),v.z());

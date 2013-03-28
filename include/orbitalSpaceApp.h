@@ -51,11 +51,12 @@ private:
   
   // TODO will need updating when grav bodies have gravity applied too...
   // Since currently it implicity uses current grav body positions.
-  void CalcParticleAccel(int numParticles, Eigen::Array3Xd const& p, Eigen::Array3Xd const& v, Eigen::Array3Xd& o_a);
+  void CalcParticleAccel(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a);
+  
+  void CalcParticleGrav(int numParticles, Eigen::Array3Xd const& pp, Eigen::Array3Xd const& vp, int numGravBodies, Eigen::Array3Xd const& pg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a);
 
-  Vector3d CalcGravGrav(int grav1Id, int grav2Id);
-  Vector3d CalcParticleGrav(Vector3d p, int gravId);
-
+  void CalcGravAccel(int numGravBodies, Eigen::Array3Xd const& pg, Eigen::Array3Xd const& vg, Eigen::VectorXd const& mg, Eigen::Array3Xd& o_a);
+  
   Vector3d CalcThrust(Vector3d p, Vector3d v);
 
   void DrawCircle(double const radius, int const steps);
@@ -147,6 +148,7 @@ private:
     double theta;
     Vector3d x_dir;
     Vector3d y_dir;
+    Vector3d m_pos;
 
     Vector3f m_col;
   };
@@ -160,7 +162,7 @@ private:
     // TODO make into method on app instead
     RenderableTrail(double const _duration);
     void Update(double const _dt, Vector3d _pos);
-    void Render(Vector3d const& _col0, Vector3d const& _col1);
+    void Render() const;
 
     // TODO this stores a fixed number of frames, not the best approach
     enum { NUM_TRAIL_PTS = 1000 };
