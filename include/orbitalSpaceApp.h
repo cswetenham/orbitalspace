@@ -128,6 +128,8 @@ private:
   };
   std::vector<RenderablePoint> m_renderablePoints;
 
+  int m_comPointIdx;
+
   int makePoint() { m_renderablePoints.push_back(RenderablePoint()); return m_renderablePoints.size() - 1; }
   RenderablePoint& getPoint(int i) { return m_renderablePoints[i]; }
 

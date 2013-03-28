@@ -149,6 +149,12 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
   
+  // Create Earth-Moon COM
+
+  RenderablePoint& comPoint = getPoint(m_comPointIdx = makePoint());
+  comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
+  comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
+  
   // Create ships
 
   m_camTargetNames.push_back("Player");
@@ -259,7 +265,7 @@ void OrbitalSpaceApp::Run()
 
     {
       PERFTIMER("UpdateState");
-      enum { UPDATES_PER_FRAME_HACK = 1024 };
+      enum { UPDATES_PER_FRAME_HACK = 1 };
       for (int i = 0; i < UPDATES_PER_FRAME_HACK; ++i) {
         UpdateState(Timer::PerfTimeToMillis(m_lastFrameDuration));
       }
@@ -540,17 +546,16 @@ void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, PG const& pg, VG const& v
     for (int g2i = 0; g2i < numGravBodies; ++g2i) {
       if (g1i == g2i) { continue; }
 
-      double const M = mg[g1i] + mg[g2i];
+      double const M = mg[g2i];
   
-      double const mu = M * G;
-
       // Calc acceleration due to gravity
       Vector3d const r = (pg.col(g2i) - pg.col(g1i));
       double const r_mag = r.norm();
 
       Vector3d const r_dir = r / r_mag;
       
-      Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
+      double const a_mag = (M * G) / (r_mag * r_mag);
+      Vector3d const a_grav = a_mag * r_dir;
 
       o_a.col(g1i) = a_grav;
     }
@@ -787,7 +792,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       sphere.m_pos = body.m_pos;
     }
 
-    // Update Moon
+    // Update Moons
     for (int i = 0; i < (int)m_moonEntities.size(); ++i) {
       MoonEntity& moon = getMoon(i);
 
@@ -802,6 +807,13 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       RenderableSphere& sphere = getSphere(moon.m_sphereIdx);
       sphere.m_pos = body.m_pos;
     }
+
+    // Update the earth-moon COM
+    RenderablePoint& com = getPoint(m_comPointIdx);
+    GravBody& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyIdx);
+    GravBody& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyIdx);
+    double const totalMass = earthBody.m_mass + moonBody.m_mass;
+    com.m_pos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
 
     // Update ships
     for (int i = 0; i < (int)m_shipEntities.size(); ++i) {
