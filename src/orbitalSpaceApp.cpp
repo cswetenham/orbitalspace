@@ -52,9 +52,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
-  // m_integrationMethod(IntegrationMethod_ImplicitEuler),
-  // TODO TEMP
-  m_integrationMethod(IntegrationMethod_ExplicitEuler),
+  m_integrationMethod(IntegrationMethod_ImplicitEuler), // TODO make another one default
   m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
@@ -519,7 +517,7 @@ void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, Eigen::Array3Xd const& pg
       double const mu = M * G;
 
       // Calc acceleration due to gravity
-      Vector3d const r = (pg.col(g1i) - pg.col(g2i));
+      Vector3d const r = (pg.col(g2i) - pg.col(g1i));
       double const r_mag = r.norm();
 
       Vector3d const r_dir = r / r_mag;
@@ -674,19 +672,78 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
           body.m_vel = v1gravs.col(i);
         }
         
+        break;
+      }
+      case IntegrationMethod_ImplicitEuler: { // Visible creep
+        // Previous code, for reference:
+
+        // Vector3d const a0 = CalcAccel(i, p0, v0);
+        // Vector3d const v1 = v0 + a0 * dt;
+        // Vector3d const p1 = p0 + v1 * dt;
+
+        // pb.m_pos = p1;
+        // pb.m_vel = v1;
+
+          // Load Particle body data
+
+        int numParticles = (int)m_particleBodies.size();
+                
+        Eigen::Array3Xd p0particles(3, numParticles);
+        Eigen::Array3Xd v0particles(3, numParticles);
+
+        for (int i = 0; i < numParticles; ++i) {
+          Body& body = m_particleBodies[i];
+          p0particles.col(i) = body.m_pos;
+          v0particles.col(i) = body.m_vel;
+        }
+
+        // Load Grav body data
+
+        int numGravs = (int)m_gravBodies.size();
+
+        Eigen::Array3Xd p0gravs(3, numGravs);
+        Eigen::Array3Xd v0gravs(3, numGravs);
+        Eigen::VectorXd mgravs(numGravs);
+
+        for (int i = 0; i < numGravs; ++i) {
+          GravBody& body = m_gravBodies[i];
+          p0gravs.col(i) = body.m_pos;
+          v0gravs.col(i) = body.m_vel;
+          mgravs[i] = body.m_mass;
+        }
+
+
+        Eigen::Array3Xd a0particles(3, numParticles);
+        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
+        
+        Eigen::Array3Xd a0gravs(3, numGravs);
+        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
+
+        Eigen::Array3Xd v1particles = v0particles + a0particles * dt;
+        Eigen::Array3Xd p1particles = p0particles + v1particles * dt;
+        
+        Eigen::Array3Xd v1gravs = v0gravs + a0gravs * dt;
+        Eigen::Array3Xd p1gravs = p0gravs + v1gravs * dt;
+
+        // Store Particle body data
+
+        for (int i = 0; i < numParticles; ++i) {
+          Body& body = m_particleBodies[i];
+          body.m_pos = p1particles.col(i);
+          body.m_vel = v1particles.col(i);
+        }
+
+        // Store Grav body data
+
+        for (int i = 0; i < numGravs; ++i) {
+          Body& body = m_gravBodies[i];
+          body.m_pos = p1gravs.col(i);
+          body.m_vel = v1gravs.col(i);
+        }
 
         break;
       }
 #if 0
-      case IntegrationMethod_ImplicitEuler: { // Visible creep
-        Vector3d const a0 = CalcAccel(i, p0, v0);
-        Vector3d const v1 = v0 + a0 * dt;
-        Vector3d const p1 = p0 + v1 * dt;
-
-        pb.m_pos = p1;
-        pb.m_vel = v1;
-        break;
-      }
       case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
         Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
         Vector3d const vt = v0 + a0 * dt;
