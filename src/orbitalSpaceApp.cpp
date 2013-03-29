@@ -154,6 +154,11 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   RenderablePoint& comPoint = getPoint(m_comPointId = makePoint());
   comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
   comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
+
+  for (int i = 0; i < 5; ++i) {
+    RenderablePoint& comPoint = getPoint(m_lagrangePointIds[i] = makePoint());
+    comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
+  }
   
   // Create ships
 
@@ -212,7 +217,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   delete[] rnds;
   
 
-  m_music.openFromFile("spacething3_mastered_fullq.ogg");
+  m_music.openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music.setLoop(true);
   m_music.play();
 }
@@ -814,6 +819,22 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     GravBody& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
     com.m_pos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
+
+    // Update the earth-moon Lagrange points
+    Vector3d const earthMoonVector = moonBody.m_pos - earthBody.m_pos;
+    double const earthMoonOrbitRadius = earthMoonVector.norm();
+    double const massRatio = MOON_MASS / EARTH_MASS;
+    double const r1 = earthMoonOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
+    double const r3 = earthMoonOrbitRadius * 7.0 / 12.0 * massRatio;
+    getPoint(m_lagrangePointIds[0]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius - r1) / earthMoonOrbitRadius);
+    getPoint(m_lagrangePointIds[1]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius + r1) / earthMoonOrbitRadius);
+    getPoint(m_lagrangePointIds[2]).m_pos = -earthMoonVector * ((earthMoonOrbitRadius + r3) / earthMoonOrbitRadius);
+    
+    // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
+    Vector3d orbitAxis = moonBody.m_vel.normalized().cross(earthMoonVector.normalized());
+    Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
+    getPoint(m_lagrangePointIds[3]).m_pos = rotation           * earthMoonVector;
+    getPoint(m_lagrangePointIds[4]).m_pos = rotation.inverse() * earthMoonVector;
 
     // Update ships
     for (int i = 0; i < (int)m_shipEntities.size(); ++i) {

@@ -193,13 +193,8 @@ private:
   RenderSystem m_renderSystem;
 
   int m_comPointId;
-  // TODO Lagrange Points
-  int m_L1PointId;
-  int m_L2PointId;
-  int m_L3PointId;
-  int m_L4PointId;
-  int m_L5PointId;
-
+  int m_lagrangePointIds[5];
+  
   //// Entities ////
 
   struct ShipEntity {
