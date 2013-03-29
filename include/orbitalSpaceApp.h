@@ -18,6 +18,9 @@
 
 #include <SFML/Audio/Music.hpp>
 
+// TODO Renderables, etc should go into their own systems.
+// Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
+
 class OrbitalSpaceApp :
   public App
 {
@@ -43,7 +46,9 @@ protected:
 
 private:
   struct Body;
+  struct GravBody;  
   struct RenderableOrbit;
+  GravBody const& FindSOIGravBody(Vector3d const& p);
   void UpdateOrbit(Body const& body, RenderableOrbit& o_params);
   void LookAt(Vector3d pos, Vector3d target, Vector3d up);
 
@@ -115,9 +120,9 @@ private:
   int makeGravBody() { m_gravBodies.push_back(GravBody()); return m_gravBodies.size() - 1; }
   GravBody& getGravBody(int i) { return m_gravBodies[i]; }
 
-  // TODO?
-  class PhysicsWorld {};
-  PhysicsWorld m_physicsWorld;
+  // TODO
+  class PhysicsSystem {};
+  PhysicsSystem m_physicsSystem;
 
   //// Rendering ////
 
@@ -127,8 +132,6 @@ private:
     Vector3f m_col;
   };
   std::vector<RenderablePoint> m_renderablePoints;
-
-  int m_comPointIdx;
 
   int makePoint() { m_renderablePoints.push_back(RenderablePoint()); return m_renderablePoints.size() - 1; }
   RenderablePoint& getPoint(int i) { return m_renderablePoints[i]; }
@@ -172,8 +175,8 @@ private:
     double m_duration;
     double m_timeSinceUpdate;
 
-    int m_headIdx;
-    int m_tailIdx;
+    int m_headId;
+    int m_tailId;
     Vector3d m_trailPts[NUM_TRAIL_PTS];
     double m_trailDuration[NUM_TRAIL_PTS];
 
@@ -185,13 +188,25 @@ private:
   int makeTrail() { m_renderableTrails.push_back(RenderableTrail(3.0)); return m_renderableTrails.size() - 1; }
   RenderableTrail& getTrail(int i) { return m_renderableTrails[i]; }
 
+  // TODO
+  class RenderSystem {};
+  RenderSystem m_renderSystem;
+
+  int m_comPointId;
+  // TODO Lagrange Points
+  int m_L1PointId;
+  int m_L2PointId;
+  int m_L3PointId;
+  int m_L4PointId;
+  int m_L5PointId;
+
   //// Entities ////
 
   struct ShipEntity {
-    int m_particleBodyIdx;
-    int m_pointIdx;
-    int m_trailIdx;
-    int m_orbitIdx;
+    int m_particleBodyId;
+    int m_pointId;
+    int m_trailId;
+    int m_orbitId;
   };
   std::vector<ShipEntity> m_shipEntities;
 
@@ -204,33 +219,35 @@ private:
   // Right now the moon orbits the planet, can get rid of distinction later
 
   struct PlanetEntity {
-    int m_gravBodyIdx;
-    int m_sphereIdx;
+    int m_gravBodyId;
+    int m_sphereId;
   };
   std::vector<PlanetEntity> m_planetEntities;
 
   int makePlanet() { m_planetEntities.push_back(PlanetEntity()); return m_planetEntities.size() - 1; }
   PlanetEntity& getPlanet(int i) { return m_planetEntities[i]; }
     
-  int m_earthPlanetId;
-
   struct MoonEntity {
-    int m_gravBodyIdx;
-    int m_sphereIdx;
-    int m_orbitIdx;
-    int m_trailIdx;
+    int m_gravBodyId;
+    int m_sphereId;
+    int m_orbitId;
+    int m_trailId;
   };
   std::vector<MoonEntity> m_moonEntities;
 
   int makeMoon() { m_moonEntities.push_back(MoonEntity()); return m_moonEntities.size() - 1; }
   MoonEntity& getMoon(int i) { return m_moonEntities[i]; }
 
+  class EntitySystem {};
+  EntitySystem m_entitySystem;
+
+  int m_earthPlanetId;
   int m_moonMoonId;
 
   // Camera
 
   Body* m_camTarget;
-  size_t m_camTargetIdx;
+  size_t m_camTargetId;
   std::vector<std::string> m_camTargetNames;
 
   enum CameraMode {

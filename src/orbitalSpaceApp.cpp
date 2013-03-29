@@ -48,7 +48,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camTheta(0.0),
   m_camPhi(0.0),
   m_camTarget(NULL),
-  m_camTargetIdx(0),
+  m_camTargetId(0),
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
@@ -107,7 +107,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   PlanetEntity& earthPlanet = getPlanet(m_earthPlanetId = makePlanet());
   
-  GravBody& earthGravBody = getGravBody(earthPlanet.m_gravBodyIdx = makeGravBody());
+  GravBody& earthGravBody = getGravBody(earthPlanet.m_gravBodyId = makeGravBody());
 
   earthGravBody.m_mass = EARTH_MASS;
   earthGravBody.m_radius = EARTH_RADIUS;
@@ -115,7 +115,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   earthGravBody.m_pos = earthPos;
   earthGravBody.m_vel = earthVel;
 
-  RenderableSphere& earthSphere = getSphere(earthPlanet.m_sphereIdx = makeSphere());
+  RenderableSphere& earthSphere = getSphere(earthPlanet.m_sphereId = makeSphere());
   earthSphere.m_radius = earthGravBody.m_radius;
   earthSphere.m_pos = earthGravBody.m_pos;
   earthSphere.m_col = m_colG[1];
@@ -128,7 +128,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   MoonEntity& moonMoon = getMoon(m_moonMoonId = makeMoon());
   
-  GravBody& moonGravBody = getGravBody(moonMoon.m_gravBodyIdx = makeGravBody());
+  GravBody& moonGravBody = getGravBody(moonMoon.m_gravBodyId = makeGravBody());
 
   moonGravBody.m_mass = MOON_MASS;
   moonGravBody.m_radius = MOON_RADIUS;
@@ -136,22 +136,22 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   moonGravBody.m_pos = moonPos;
   moonGravBody.m_vel = moonVel;
 
-  RenderableSphere& moonSphere = getSphere(moonMoon.m_sphereIdx = makeSphere());
+  RenderableSphere& moonSphere = getSphere(moonMoon.m_sphereId = makeSphere());
   moonSphere.m_radius = moonGravBody.m_radius;
   moonSphere.m_pos = moonGravBody.m_pos;
   moonSphere.m_col = m_colG[1];
 
-  RenderableOrbit& moonOrbit = getOrbit(moonMoon.m_orbitIdx = makeOrbit());
+  RenderableOrbit& moonOrbit = getOrbit(moonMoon.m_orbitId = makeOrbit());
   moonOrbit.m_col = m_colG[1];
   moonOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderableTrail& moonTrail = getTrail(moonMoon.m_trailIdx = makeTrail());
+  RenderableTrail& moonTrail = getTrail(moonMoon.m_trailId = makeTrail());
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
   
   // Create Earth-Moon COM
 
-  RenderablePoint& comPoint = getPoint(m_comPointIdx = makePoint());
+  RenderablePoint& comPoint = getPoint(m_comPointId = makePoint());
   comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
   comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
   
@@ -161,20 +161,20 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   ShipEntity& playerShip = getShip(m_playerShipId = makeShip());
 
-  ParticleBody& playerBody = getParticleBody(playerShip.m_particleBodyIdx = makeParticleBody());
+  ParticleBody& playerBody = getParticleBody(playerShip.m_particleBodyId = makeParticleBody());
   
   playerBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   playerBody.m_vel = Vector3d(5e3, 0.0, 0.0);
   
-  RenderableOrbit& playerOrbit = getOrbit(playerShip.m_orbitIdx = makeOrbit());
+  RenderableOrbit& playerOrbit = getOrbit(playerShip.m_orbitId = makeOrbit());
   playerOrbit.m_col = m_colB[2];
   playerOrbit.m_pos = earthGravBody.m_pos;
     
-  RenderableTrail& playerTrail = getTrail(playerShip.m_trailIdx = makeTrail());
+  RenderableTrail& playerTrail = getTrail(playerShip.m_trailId = makeTrail());
   playerTrail.m_colOld = m_colB[0];
   playerTrail.m_colNew = m_colB[4];
 
-  RenderablePoint& playerPoint = getPoint(playerShip.m_pointIdx = makePoint());
+  RenderablePoint& playerPoint = getPoint(playerShip.m_pointId = makePoint());
   playerPoint.m_pos = playerBody.m_pos;
   playerPoint.m_col = m_colB[4];
   
@@ -182,20 +182,20 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   ShipEntity& suspectShip = getShip(m_suspectShipId = makeShip());
 
-  ParticleBody& suspectBody = getParticleBody(suspectShip.m_particleBodyIdx = makeParticleBody());
+  ParticleBody& suspectBody = getParticleBody(suspectShip.m_particleBodyId = makeParticleBody());
   
   suspectBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   suspectBody.m_vel = Vector3d(5e3, 0.0, 0.0);
   
-  RenderableOrbit& suspectOrbit = getOrbit(suspectShip.m_orbitIdx = makeOrbit());
+  RenderableOrbit& suspectOrbit = getOrbit(suspectShip.m_orbitId = makeOrbit());
   suspectOrbit.m_col = m_colR[2];
   suspectOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderableTrail& suspectTrail = getTrail(suspectShip.m_trailIdx = makeTrail());
+  RenderableTrail& suspectTrail = getTrail(suspectShip.m_trailId = makeTrail());
   suspectTrail.m_colOld = m_colR[0];
   suspectTrail.m_colNew = m_colR[4];
   
-  RenderablePoint& suspectPoint = getPoint(suspectShip.m_pointIdx = makePoint());
+  RenderablePoint& suspectPoint = getPoint(suspectShip.m_pointId = makePoint());
   suspectPoint.m_pos = suspectBody.m_pos;
   suspectPoint.m_col = m_colR[4];
 
@@ -205,7 +205,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   dist.Generate(&m_rnd, 6 * m_shipEntities.size(), &rnds[0]);
   for (int i = 0; i < (int)m_shipEntities.size(); ++i)
   {
-    ParticleBody& shipBody = getParticleBody(m_shipEntities[i].m_particleBodyIdx);
+    ParticleBody& shipBody = getParticleBody(m_shipEntities[i].m_particleBodyId);
     shipBody.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e4;
     shipBody.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
   }
@@ -375,14 +375,14 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 
     if (_event.key.code == sf::Keyboard::Tab)
     {
-      m_camTargetIdx++;
+      m_camTargetId++;
       // TODO maybe should point at renderables instead, but eh...
-      if (m_camTargetIdx < m_gravBodies.size()) {
-        m_camTarget = &getGravBody(m_camTargetIdx);
-      } else if (m_camTargetIdx < m_gravBodies.size() + m_particleBodies.size()) {
-        m_camTarget = &getParticleBody(m_camTargetIdx - m_gravBodies.size());
+      if (m_camTargetId < m_gravBodies.size()) {
+        m_camTarget = &getGravBody(m_camTargetId);
+      } else if (m_camTargetId < m_gravBodies.size() + m_particleBodies.size()) {
+        m_camTarget = &getParticleBody(m_camTargetId - m_gravBodies.size());
       } else {
-        m_camTargetIdx = 0;
+        m_camTargetId = 0;
         m_camTarget = &getGravBody(0);
       }
     }
@@ -564,7 +564,7 @@ void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, PG const& pg, VG const& v
 
 Vector3d OrbitalSpaceApp::CalcThrust(Vector3d p, Vector3d v)
 {
-  Vector3d origin = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyIdx).m_pos;
+  Vector3d origin = FindSOIGravBody(p).m_pos;
    
   // Calc acceleration due to gravity
   Vector3d const r = (origin - p);
@@ -614,30 +614,30 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
     // Load world state into state array
 
-    int curIdx = 0;
-    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+    int curId = 0;
+    for (int i = 0; i < numParticles; ++i, ++curId) {
       Body& body = m_particleBodies[i];
-      x_0.col(curIdx) = body.m_pos;
+      x_0.col(curId) = body.m_pos;
     }
 
-    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+    for (int i = 0; i < numGravs; ++i, ++curId) {
       Body& body = m_gravBodies[i];
-      x_0.col(curIdx) = body.m_pos;
+      x_0.col(curId) = body.m_pos;
     }
     
-    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+    for (int i = 0; i < numParticles; ++i, ++curId) {
       Body& body = m_particleBodies[i];
-      x_0.col(curIdx) = body.m_vel;
+      x_0.col(curId) = body.m_vel;
     }
 
-    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+    for (int i = 0; i < numGravs; ++i, ++curId) {
       Body& body = m_gravBodies[i];
-      x_0.col(curIdx) = body.m_vel;
+      x_0.col(curId) = body.m_vel;
     }
 
     Eigen::VectorXd mgravs(numGravs);
     
-    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+    for (int i = 0; i < numGravs; ++i, ++curId) {
       GravBody& body = m_gravBodies[i];
       mgravs[i] = body.m_mass;
     }
@@ -738,7 +738,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
         break;
       }
 #endif
-      case IntegrationMethod_RK4: {
+      case IntegrationMethod_RK4: { // Stable up to around 65535x...
 
         Eigen::Array3Xd k_1(3, 2*stateSize);
         CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, k_1);
@@ -761,34 +761,34 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     
     // Store world state from array
     
-    curIdx = 0;
-    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+    curId = 0;
+    for (int i = 0; i < numParticles; ++i, ++curId) {
       Body& body = m_particleBodies[i];
-      body.m_pos = x_1.col(curIdx);
+      body.m_pos = x_1.col(curId);
     }
 
-    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+    for (int i = 0; i < numGravs; ++i, ++curId) {
       Body& body = m_gravBodies[i];
-      body.m_pos = x_1.col(curIdx);
+      body.m_pos = x_1.col(curId);
     }
     
-    for (int i = 0; i < numParticles; ++i, ++curIdx) {
+    for (int i = 0; i < numParticles; ++i, ++curId) {
       Body& body = m_particleBodies[i];
-      body.m_vel = x_1.col(curIdx);
+      body.m_vel = x_1.col(curId);
     }
 
-    for (int i = 0; i < numGravs; ++i, ++curIdx) {
+    for (int i = 0; i < numGravs; ++i, ++curId) {
       Body& body = m_gravBodies[i];
-      body.m_vel = x_1.col(curIdx);
+      body.m_vel = x_1.col(curId);
     }
 
     // Update Planets
     for (int i = 0; i < (int)m_planetEntities.size(); ++i) {
       PlanetEntity& planet = getPlanet(i);
 
-      Body& body = getGravBody(planet.m_gravBodyIdx);
+      Body& body = getGravBody(planet.m_gravBodyId);
       
-      RenderableSphere& sphere = getSphere(planet.m_sphereIdx);
+      RenderableSphere& sphere = getSphere(planet.m_sphereId);
       sphere.m_pos = body.m_pos;
     }
 
@@ -796,22 +796,22 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     for (int i = 0; i < (int)m_moonEntities.size(); ++i) {
       MoonEntity& moon = getMoon(i);
 
-      Body& body = getGravBody(moon.m_gravBodyIdx);
+      Body& body = getGravBody(moon.m_gravBodyId);
 
-      RenderableOrbit& orbit = getOrbit(moon.m_orbitIdx);
+      RenderableOrbit& orbit = getOrbit(moon.m_orbitId);
       UpdateOrbit(body, orbit);
 
-      RenderableTrail& trail = getTrail(moon.m_trailIdx);
+      RenderableTrail& trail = getTrail(moon.m_trailId);
       trail.Update(_dt, body.m_pos);
 
-      RenderableSphere& sphere = getSphere(moon.m_sphereIdx);
+      RenderableSphere& sphere = getSphere(moon.m_sphereId);
       sphere.m_pos = body.m_pos;
     }
 
     // Update the earth-moon COM
-    RenderablePoint& com = getPoint(m_comPointIdx);
-    GravBody& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyIdx);
-    GravBody& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyIdx);
+    RenderablePoint& com = getPoint(m_comPointId);
+    GravBody& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
+    GravBody& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
     com.m_pos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
 
@@ -819,15 +819,15 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     for (int i = 0; i < (int)m_shipEntities.size(); ++i) {
       ShipEntity& ship = getShip(i);
 
-      Body& body = getParticleBody(ship.m_particleBodyIdx);
+      Body& body = getParticleBody(ship.m_particleBodyId);
      
-      RenderableOrbit& orbit = getOrbit(ship.m_orbitIdx);
+      RenderableOrbit& orbit = getOrbit(ship.m_orbitId);
       UpdateOrbit(body, orbit);
 
-      RenderableTrail& trail = getTrail(ship.m_trailIdx);
+      RenderableTrail& trail = getTrail(ship.m_trailId);
       trail.Update(_dt, body.m_pos);
 
-      RenderablePoint& point = getPoint(ship.m_pointIdx);
+      RenderablePoint& point = getPoint(ship.m_pointId);
       point.m_pos = body.m_pos;
     }
 
@@ -841,22 +841,55 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
   }
 }
 
+OrbitalSpaceApp::GravBody const& OrbitalSpaceApp::FindSOIGravBody(Vector3d const& p) {
+  // TODO HACK
+  // SOI really requires each body to have a "parent body" for the SOI computation.
+  // For now will hack the earth-moon one.
+  
+  // TODO Id -> Id
+
+  GravBody const& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
+  GravBody const& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
+
+  double const earthMoonOrbitRadius = (earthBody.m_pos - moonBody.m_pos).norm();
+
+  // Distances from COM of Earth-Moon system
+  double const earthOrbitRadius = earthMoonOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
+  double const moonOrbitRadius = earthMoonOrbitRadius - earthOrbitRadius;
+
+  double const moonSOI = moonOrbitRadius * pow(MOON_MASS / EARTH_MASS, 2.0/5.0);
+
+  double const moonDistance = (p - moonBody.m_pos).norm();
+
+  if (moonDistance < moonSOI) {
+    return moonBody;
+  } else {
+    return earthBody;
+  }
+}
+
 void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderableOrbit& o_params) {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
+  // Find body whose sphere of influence we are in
+  // This is the one with the smallest sphere of influence
+
   // Compute Kepler orbit
 
-  GravBody const& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyIdx);
-
+  // HACK
+  GravBody const& parentBody =
+    (&body == (Body const*)&getGravBody(getMoon(m_moonMoonId).m_gravBodyId))
+      ? getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId)
+      : FindSOIGravBody(body.m_pos);
+  
   double const G = GRAV_CONSTANT;
-  double const M = earthBody.m_mass;
-  Vector3d origin = earthBody.m_pos;
+  double const M = parentBody.m_mass;
     
   double const mu = M * G;
 
-  Vector3d v = body.m_vel;
+  Vector3d v = body.m_vel - parentBody.m_vel;
 
-  Vector3d r = (origin - body.m_pos);
+  Vector3d r = parentBody.m_pos - body.m_pos;
   double const r_mag = r.norm();
 
   Vector3d r_dir = r/r_mag;
@@ -885,7 +918,7 @@ void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderableOrbit& o_params) {
   o_params.theta = theta;
   o_params.x_dir = x_dir;
   o_params.y_dir = y_dir;
-  o_params.m_pos = earthBody.m_pos;
+  o_params.m_pos = parentBody.m_pos;
 }
 
 void OrbitalSpaceApp::DrawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks)
@@ -996,7 +1029,7 @@ void OrbitalSpaceApp::RenderState()
     str.flags(std::ios::right | std::ios::fixed);
         
     str << "Time Scale: " << m_timeScale << "\n";
-    str << "Cam Target: " << m_camTargetNames[m_camTargetIdx] << "\n";
+    str << "Cam Target: " << m_camTargetNames[m_camTargetId] << "\n";
     str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
@@ -1042,7 +1075,7 @@ void OrbitalSpaceApp::RenderState()
   Vector3d camPos;
   
   if (m_camMode == CameraMode_FirstPerson) {
-    camPos = getParticleBody(getShip(m_playerShipId).m_particleBodyIdx).m_pos;
+    camPos = getParticleBody(getShip(m_playerShipId).m_particleBodyId).m_pos;
   } else if (m_camMode == CameraMode_ThirdPerson) {
     camPos = Vector3d(0.0, 0.0, m_camDist);
 
@@ -1149,8 +1182,8 @@ void OrbitalSpaceApp::RenderState()
 OrbitalSpaceApp::RenderableTrail::RenderableTrail(double const _duration) :
   m_duration(_duration), // TODO make sure this works as a value! // TODO what does this mean
   m_timeSinceUpdate(0.f),    
-  m_headIdx(0),
-  m_tailIdx(0)
+  m_headId(0),
+  m_tailId(0)
 {
   for (int i = 0; i < NUM_TRAIL_PTS; ++i)
   {
@@ -1170,25 +1203,25 @@ void OrbitalSpaceApp::RenderableTrail::Update(double const _dt, Vector3d _pos)
       
   if (false) { // m_timeSinceUpdate < TODO) { // duration / NUM_TRAIL_PTS? Idea is to ensure queue always has space. This means we are ensuring a minimum time duration for each segment.
     // Not enough time elapsed. To avoid filling up trail, update the head point instead of adding a new one
-    // m_trailPts[m_headIdx] = _pos;
-    // m_trailDuration[m_headIdx] = 0.f;
+    // m_trailPts[m_headId] = _pos;
+    // m_trailDuration[m_headId] = 0.f;
   }
       
-  m_headIdx++;
-  if (m_headIdx >= NUM_TRAIL_PTS) { m_headIdx = 0; }
-  m_trailPts[m_headIdx] = _pos;
-  if (m_tailIdx == m_headIdx) { m_tailIdx++; }
+  m_headId++;
+  if (m_headId >= NUM_TRAIL_PTS) { m_headId = 0; }
+  m_trailPts[m_headId] = _pos;
+  if (m_tailId == m_headId) { m_tailId++; }
       
-  // assert(m_headIdx != m_tailIdx);
+  // assert(m_headId != m_tailId);
 }
 
 void OrbitalSpaceApp::RenderableTrail::Render() const
 {
   glBegin(GL_LINE_STRIP);
-  // TODO render only to m_tailIdx // TODO what does this mean
+  // TODO render only to m_tailId // TODO what does this mean
   for (int i = 0; i < RenderableTrail::NUM_TRAIL_PTS; ++i)
   {
-    int idx = m_headIdx + i - RenderableTrail::NUM_TRAIL_PTS + 1;
+    int idx = m_headId + i - RenderableTrail::NUM_TRAIL_PTS + 1;
     if (idx < 0) { idx += RenderableTrail::NUM_TRAIL_PTS; }
     Vector3d v = m_trailPts[idx];
 
