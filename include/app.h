@@ -10,10 +10,6 @@
 
 #include "timer.h"
 
-#ifdef _WIN32
-# include <Windows.h>
-#endif
-
 #include "orStd.h"
 #include "orMath.h"
 #include "orGfx.h"

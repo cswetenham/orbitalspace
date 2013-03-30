@@ -115,7 +115,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   earthGravBody.m_pos = earthPos;
   earthGravBody.m_vel = earthVel;
 
-  RenderableSphere& earthSphere = getSphere(earthPlanet.m_sphereId = makeSphere());
+  RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthPlanet.m_sphereId = m_renderSystem.makeSphere());
   earthSphere.m_radius = earthGravBody.m_radius;
   earthSphere.m_pos = earthGravBody.m_pos;
   earthSphere.m_col = m_colG[1];
@@ -136,27 +136,27 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   moonGravBody.m_pos = moonPos;
   moonGravBody.m_vel = moonVel;
 
-  RenderableSphere& moonSphere = getSphere(moonMoon.m_sphereId = makeSphere());
+  RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonMoon.m_sphereId = m_renderSystem.makeSphere());
   moonSphere.m_radius = moonGravBody.m_radius;
   moonSphere.m_pos = moonGravBody.m_pos;
   moonSphere.m_col = m_colG[1];
 
-  RenderableOrbit& moonOrbit = getOrbit(moonMoon.m_orbitId = makeOrbit());
+  RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonMoon.m_orbitId = m_renderSystem.makeOrbit());
   moonOrbit.m_col = m_colG[1];
   moonOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderableTrail& moonTrail = getTrail(moonMoon.m_trailId = makeTrail());
+  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail());
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
   
   // Create Earth-Moon COM
 
-  RenderablePoint& comPoint = getPoint(m_comPointId = makePoint());
+  RenderSystem::Point& comPoint = m_renderSystem.getPoint(m_comPointId = m_renderSystem.makePoint());
   comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
   comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
 
   for (int i = 0; i < 5; ++i) {
-    RenderablePoint& comPoint = getPoint(m_lagrangePointIds[i] = makePoint());
+    RenderSystem::Point& comPoint = m_renderSystem.getPoint(m_lagrangePointIds[i] = m_renderSystem.makePoint());
     comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
   }
   
@@ -171,15 +171,15 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   playerBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   playerBody.m_vel = Vector3d(5e3, 0.0, 0.0);
   
-  RenderableOrbit& playerOrbit = getOrbit(playerShip.m_orbitId = makeOrbit());
+  RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
   playerOrbit.m_col = m_colB[2];
   playerOrbit.m_pos = earthGravBody.m_pos;
     
-  RenderableTrail& playerTrail = getTrail(playerShip.m_trailId = makeTrail());
+  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail());
   playerTrail.m_colOld = m_colB[0];
   playerTrail.m_colNew = m_colB[4];
 
-  RenderablePoint& playerPoint = getPoint(playerShip.m_pointId = makePoint());
+  RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
   playerPoint.m_pos = playerBody.m_pos;
   playerPoint.m_col = m_colB[4];
   
@@ -192,15 +192,15 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   suspectBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   suspectBody.m_vel = Vector3d(5e3, 0.0, 0.0);
   
-  RenderableOrbit& suspectOrbit = getOrbit(suspectShip.m_orbitId = makeOrbit());
+  RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
   suspectOrbit.m_col = m_colR[2];
   suspectOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderableTrail& suspectTrail = getTrail(suspectShip.m_trailId = makeTrail());
+  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail());
   suspectTrail.m_colOld = m_colR[0];
   suspectTrail.m_colNew = m_colR[4];
   
-  RenderablePoint& suspectPoint = getPoint(suspectShip.m_pointId = makePoint());
+  RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
   suspectPoint.m_pos = suspectBody.m_pos;
   suspectPoint.m_col = m_colR[4];
 
@@ -793,7 +793,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       Body& body = getGravBody(planet.m_gravBodyId);
       
-      RenderableSphere& sphere = getSphere(planet.m_sphereId);
+      RenderSystem::Sphere& sphere = m_renderSystem.getSphere(planet.m_sphereId);
       sphere.m_pos = body.m_pos;
     }
 
@@ -803,18 +803,18 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       Body& body = getGravBody(moon.m_gravBodyId);
 
-      RenderableOrbit& orbit = getOrbit(moon.m_orbitId);
+      RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
       UpdateOrbit(body, orbit);
 
-      RenderableTrail& trail = getTrail(moon.m_trailId);
+      RenderSystem::Trail& trail = m_renderSystem.getTrail(moon.m_trailId);
       trail.Update(_dt, body.m_pos);
 
-      RenderableSphere& sphere = getSphere(moon.m_sphereId);
+      RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
       sphere.m_pos = body.m_pos;
     }
 
     // Update the earth-moon COM
-    RenderablePoint& com = getPoint(m_comPointId);
+    RenderSystem::Point& com = m_renderSystem.getPoint(m_comPointId);
     GravBody& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
     GravBody& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
@@ -826,15 +826,15 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     double const massRatio = MOON_MASS / EARTH_MASS;
     double const r1 = earthMoonOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
     double const r3 = earthMoonOrbitRadius * 7.0 / 12.0 * massRatio;
-    getPoint(m_lagrangePointIds[0]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius - r1) / earthMoonOrbitRadius);
-    getPoint(m_lagrangePointIds[1]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius + r1) / earthMoonOrbitRadius);
-    getPoint(m_lagrangePointIds[2]).m_pos = -earthMoonVector * ((earthMoonOrbitRadius + r3) / earthMoonOrbitRadius);
+    m_renderSystem.getPoint(m_lagrangePointIds[0]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius - r1) / earthMoonOrbitRadius);
+    m_renderSystem.getPoint(m_lagrangePointIds[1]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius + r1) / earthMoonOrbitRadius);
+    m_renderSystem.getPoint(m_lagrangePointIds[2]).m_pos = -earthMoonVector * ((earthMoonOrbitRadius + r3) / earthMoonOrbitRadius);
     
     // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
     Vector3d orbitAxis = moonBody.m_vel.normalized().cross(earthMoonVector.normalized());
     Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
-    getPoint(m_lagrangePointIds[3]).m_pos = rotation           * earthMoonVector;
-    getPoint(m_lagrangePointIds[4]).m_pos = rotation.inverse() * earthMoonVector;
+    m_renderSystem.getPoint(m_lagrangePointIds[3]).m_pos = rotation           * earthMoonVector;
+    m_renderSystem.getPoint(m_lagrangePointIds[4]).m_pos = rotation.inverse() * earthMoonVector;
 
     // Update ships
     for (int i = 0; i < (int)m_shipEntities.size(); ++i) {
@@ -842,13 +842,13 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       Body& body = getParticleBody(ship.m_particleBodyId);
      
-      RenderableOrbit& orbit = getOrbit(ship.m_orbitId);
+      RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
       UpdateOrbit(body, orbit);
 
-      RenderableTrail& trail = getTrail(ship.m_trailId);
+      RenderSystem::Trail& trail = m_renderSystem.getTrail(ship.m_trailId);
       trail.Update(_dt, body.m_pos);
 
-      RenderablePoint& point = getPoint(ship.m_pointId);
+      RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);
       point.m_pos = body.m_pos;
     }
 
@@ -889,7 +889,7 @@ OrbitalSpaceApp::GravBody const& OrbitalSpaceApp::FindSOIGravBody(Vector3d const
   }
 }
 
-void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderableOrbit& o_params) {
+void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderSystem::Orbit& o_params) {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
   // Find body whose sphere of influence we are in
@@ -940,73 +940,6 @@ void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderableOrbit& o_params) {
   o_params.x_dir = x_dir;
   o_params.y_dir = y_dir;
   o_params.m_pos = parentBody.m_pos;
-}
-
-void OrbitalSpaceApp::DrawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks)
-{
-    int curStack, curSlice;
-
-    /* Adjust z and radius as stacks and slices are drawn. */
-
-    double r;
-    double x,y,z;
-
-    double const sliceInc = M_TAU / (-slices);
-    double const stackInc = M_TAU / (2*stacks);
-    
-    /* Draw a line loop for each stack */
-    for (curStack = 1; curStack < stacks; curStack++) {
-        y = cos( curStack * stackInc );
-        r = sin( curStack * stackInc );
-
-        glBegin(GL_LINE_LOOP);
-
-            for(curSlice = 0; curSlice <= slices; curSlice++) {
-                x = cos( curSlice * sliceInc );
-                z = sin( curSlice * sliceInc );
-
-                glNormal3d(x,y,z);
-                glVertex3d(x*r*radius + pos.x(), y*radius + pos.y(), z*r*radius + pos.z());
-            }
-
-        glEnd();
-    }
-
-    /* Draw a line loop for each slice */
-    for (curSlice = 0; curSlice < slices; curSlice++) {
-        glBegin(GL_LINE_STRIP);
-
-            for (curStack = 1; curStack < stacks; curStack++) {
-                x = cos( curSlice * sliceInc ) * sin( curStack * stackInc );
-                z = sin( curSlice * sliceInc ) * sin( curStack * stackInc );
-                y = cos( curStack * stackInc );
-
-                glNormal3d(x,y,z);
-                glVertex3d(x*radius + pos.x(), y*radius + pos.y(), z*radius + pos.z());
-            }
-
-        glEnd();
-    }
-}
-
-void OrbitalSpaceApp::DrawCircle(double const radius, int const steps)
-{
-    /* Adjust z and radius as stacks and slices are drawn. */
-
-    double x,y;
-
-    double const stepInc = M_TAU / steps;
-    
-    /* Draw a line loop for each stack */
-    glBegin(GL_LINE_LOOP);
-    for (int curStep = 0; curStep < steps; curStep++) {
-        x = cos( curStep * stepInc );
-        y = sin( curStep * stepInc );
-
-        glNormal3d(x,y,0.0);
-        glVertex3d(x*radius, y*radius, 0.0);
-    }
-    glEnd();
 }
 
 void OrbitalSpaceApp::LookAt(Vector3d pos, Vector3d target, Vector3d up) {
@@ -1137,120 +1070,7 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
   
-  for (int si = 0; si < (int)m_renderableSpheres.size(); ++si) {
-    RenderableSphere const& sphere = getSphere(si);
-    Util::SetDrawColour(sphere.m_col);
-
-    DrawWireSphere(sphere.m_pos, sphere.m_radius, 32, 32);
-  }
-  
-  for (int pi = 0; pi < (int)m_renderablePoints.size(); ++pi) {
-    RenderablePoint const& point = getPoint(pi);
-    Util::SetDrawColour(point.m_col);
-    
-    glPointSize(10.0);
-    glBegin(GL_POINTS);
-    Vector3d p = point.m_pos;
-    glVertex3d(p.x(), p.y(), p.z());
-    glEnd();
-    glPointSize(1.0);
-  }
-
-  for (int oi = 0; oi < (int)m_renderableOrbits.size(); ++oi) {
-    RenderableOrbit const& orbit = getOrbit(oi);
-    Util::SetDrawColour(orbit.m_col);
-
-    int const steps = 10000;
-    // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
-    // restrict the range of theta?
-    double const delta = .0001;
-    double const HAX_RANGE = .9; // limit range to stay out of very large values
-    // TODO want to instead limit the range based on... some viewing area?
-    // might be two visible segments, one from +ve and one from -ve theta, with
-    // different visible ranges. Could determine 
-    // TODO and want to take steps of fixed length/distance
-    double range;
-    if (orbit.e < 1 - delta) { // ellipse
-        range = .5 * M_TAU;
-    } else if (orbit.e < 1 + delta) { // parabola
-        range = .5 * M_TAU * HAX_RANGE;
-    } else { // hyperbola
-        range = acos(-1/orbit.e) * HAX_RANGE;
-    }
-    double const mint = -range;
-    double const maxt = range;
-    glBegin(GL_LINE_STRIP);
-    for (int i = 0; i <= steps; ++i) {
-        double const ct = Util::Lerp(mint, maxt, (double)i / steps);
-        double const cr = orbit.p / (1 + orbit.e * cos(ct));
-
-        double const x_len = cr * -cos(ct);
-        double const y_len = cr * -sin(ct);
-        Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len) + orbit.m_pos;
-        glVertex3d(pos.x(), pos.y(), pos.z());
-    }
-    glEnd();
-  }
-
-  for (int ti = 0; ti < (int)m_renderableTrails.size(); ++ti) {
-    RenderableTrail const& trail = getTrail(ti);
-    trail.Render();
-  }
+  m_renderSystem.render();
   
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
-}
-
-OrbitalSpaceApp::RenderableTrail::RenderableTrail(double const _duration) :
-  m_duration(_duration), // TODO make sure this works as a value! // TODO what does this mean
-  m_timeSinceUpdate(0.f),    
-  m_headId(0),
-  m_tailId(0)
-{
-  for (int i = 0; i < NUM_TRAIL_PTS; ++i)
-  {
-    m_trailPts[i] = Vector3d::Zero();
-  }
-}
-
-void OrbitalSpaceApp::RenderableTrail::Update(double const _dt, Vector3d _pos)
-{
-  // TODO can have a list of past points and their durations, and cut up trail linearly
-
-  // A -- 50ms -- B -- 10 ms -- C
-
-  // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
-
-  m_timeSinceUpdate += _dt;
-      
-  if (false) { // m_timeSinceUpdate < TODO) { // duration / NUM_TRAIL_PTS? Idea is to ensure queue always has space. This means we are ensuring a minimum time duration for each segment.
-    // Not enough time elapsed. To avoid filling up trail, update the head point instead of adding a new one
-    // m_trailPts[m_headId] = _pos;
-    // m_trailDuration[m_headId] = 0.f;
-  }
-      
-  m_headId++;
-  if (m_headId >= NUM_TRAIL_PTS) { m_headId = 0; }
-  m_trailPts[m_headId] = _pos;
-  if (m_tailId == m_headId) { m_tailId++; }
-      
-  // assert(m_headId != m_tailId);
-}
-
-void OrbitalSpaceApp::RenderableTrail::Render() const
-{
-  glBegin(GL_LINE_STRIP);
-  // TODO render only to m_tailId // TODO what does this mean
-  for (int i = 0; i < RenderableTrail::NUM_TRAIL_PTS; ++i)
-  {
-    int idx = m_headId + i - RenderableTrail::NUM_TRAIL_PTS + 1;
-    if (idx < 0) { idx += RenderableTrail::NUM_TRAIL_PTS; }
-    Vector3d v = m_trailPts[idx];
-
-    float const l = (float)i / RenderableTrail::NUM_TRAIL_PTS;
-    Vector3f c = Util::Lerp(m_colOld, m_colNew, l);
-    Util::SetDrawColour(c);
-
-    glVertex3d(v.x(),v.y(),v.z());
-  }
-  glEnd();
 }

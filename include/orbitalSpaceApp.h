@@ -14,9 +14,13 @@
 
 #include "orStd.h"
 #include "orMath.h"
-#include "orGfx.h"
+
+#include "orRender.h"
+
+#include <vector>
 
 #include <SFML/Audio/Music.hpp>
+
 
 // TODO Renderables, etc should go into their own systems.
 // Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
@@ -47,9 +51,8 @@ protected:
 private:
   struct Body;
   struct GravBody;  
-  struct RenderableOrbit;
   GravBody const& FindSOIGravBody(Vector3d const& p);
-  void UpdateOrbit(Body const& body, RenderableOrbit& o_params);
+  void UpdateOrbit(Body const& body, RenderSystem::Orbit& o_params);
   void LookAt(Vector3d pos, Vector3d target, Vector3d up);
 
   void CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, double m_simTime, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0);
@@ -64,9 +67,6 @@ private:
   void CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA& o_a);
 
   Vector3d CalcThrust(Vector3d p, Vector3d v);
-
-  void DrawCircle(double const radius, int const steps);
-  void DrawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks);
 
 private:
   Rnd64 m_rnd;
@@ -125,73 +125,9 @@ private:
   PhysicsSystem m_physicsSystem;
 
   //// Rendering ////
-
-  struct RenderablePoint {
-    Vector3d m_pos;
-
-    Vector3f m_col;
-  };
-  std::vector<RenderablePoint> m_renderablePoints;
-
-  int makePoint() { m_renderablePoints.push_back(RenderablePoint()); return m_renderablePoints.size() - 1; }
-  RenderablePoint& getPoint(int i) { return m_renderablePoints[i]; }
-
-  struct RenderableSphere {
-    double m_radius;
-    Vector3d m_pos;
-
-    Vector3f m_col;
-  };
-  std::vector<RenderableSphere> m_renderableSpheres;
-
-  int makeSphere() { m_renderableSpheres.push_back(RenderableSphere()); return m_renderableSpheres.size() - 1; }
-  RenderableSphere& getSphere(int i) { return m_renderableSpheres[i]; }
-
-  struct RenderableOrbit
-  {
-    double p;
-    double e;
-    double theta;
-    Vector3d x_dir;
-    Vector3d y_dir;
-    Vector3d m_pos;
-
-    Vector3f m_col;
-  };
-  std::vector<RenderableOrbit> m_renderableOrbits;
-
-  int makeOrbit() { m_renderableOrbits.push_back(RenderableOrbit()); return m_renderableOrbits.size() - 1; }
-  RenderableOrbit& getOrbit(int i) { return m_renderableOrbits[i]; }
-
-  struct RenderableTrail
-  {
-    // TODO make into method on app instead
-    RenderableTrail(double const _duration);
-    void Update(double const _dt, Vector3d _pos);
-    void Render() const;
-
-    // TODO this stores a fixed number of frames, not the best approach
-    enum { NUM_TRAIL_PTS = 1000 };
-    double m_duration;
-    double m_timeSinceUpdate;
-
-    int m_headId;
-    int m_tailId;
-    Vector3d m_trailPts[NUM_TRAIL_PTS];
-    double m_trailDuration[NUM_TRAIL_PTS];
-
-    Vector3f m_colOld;
-    Vector3f m_colNew;
-  };
-  std::vector<RenderableTrail> m_renderableTrails;
-
-  int makeTrail() { m_renderableTrails.push_back(RenderableTrail(3.0)); return m_renderableTrails.size() - 1; }
-  RenderableTrail& getTrail(int i) { return m_renderableTrails[i]; }
-
-  // TODO
-  class RenderSystem {};
+  
   RenderSystem m_renderSystem;
-
+  
   int m_comPointId;
   int m_lagrangePointIds[5];
   

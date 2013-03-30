@@ -8,13 +8,13 @@
 #ifndef ORGFX_H
 #define	ORGFX_H
 
+# include "orStd.h"
 # include "orMath.h"
 
 # include <GL/gl.h>
 # include <GL/glu.h>
 
 # include <Eigen/OpenGLSupport>
-
 
 #endif	/* ORGFX_H */
 

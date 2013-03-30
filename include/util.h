@@ -10,42 +10,6 @@ Logging and verification utility macros and functions
 
 /******************************** Defines *********************************/
 
-#ifdef _WIN32
-# define ENTRY_FN __cdecl
-#else
-# define ENTRY_FN
-#endif
-
-#ifdef _WIN32
-# define NORETURN __declspec(noreturn)
-#else
-# define NORETURN /* TODO: GCC, etc */
-#endif
-
-#ifdef _WIN32
-  extern "C" __declspec(dllimport) void __stdcall DebugBreak(void);
-# define DEBUGBREAK do { DebugBreak(); } while (0)
-#else
-# define DEBUGBREAK /* TODO: GCC, etc */
-#endif
-
-#ifdef _WIN32
-  extern "C" __declspec(dllimport) void __stdcall FatalExit(int);
-# define FATAL do { FatalExit(3); } while (0)
-#else
-# define FATAL /* TODO: GCC, etc */
-#endif
-
-#ifdef CDECL
-#  undef CDECL
-#endif
-
-#ifdef _WIN32
-  #define CDECL __cdecl
-#else
-  #define CDECL __attribute__((__cdecl__))
-#endif
-  
 /******************************** Structures *********************************/
 
 // TODO namespace
@@ -116,9 +80,6 @@ public:
   }
 
   static void SleepMicros(uint32_t const _usecs);
-
-  static void SetDrawColour(Vector3f const& _c);
-  static void SetDrawColour(Vector3d const& _c);
 
 private:
   static void SigAbrt(int);

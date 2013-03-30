@@ -14,6 +14,7 @@
     <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\orbitalSpaceApp.cpp" />
+    <ClCompile Include="src\orRender.cpp" />
     <ClCompile Include="src\perftimer.cpp" />
     <ClCompile Include="src\taskSchedulerWorkStealing.cpp" />
     <ClCompile Include="src\timer.cpp" />
@@ -28,6 +29,7 @@
     <ClInclude Include="include\orbitalSpaceApp.h" />
     <ClInclude Include="include\orGfx.h" />
     <ClInclude Include="include\orMath.h" />
+    <ClInclude Include="include\orRender.h" />
     <ClInclude Include="include\orStd.h" />
     <ClInclude Include="include\perftimer.h" />
     <ClInclude Include="include\rnd.h" />

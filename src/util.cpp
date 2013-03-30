@@ -67,16 +67,6 @@ void Util::SleepMicros(uint32_t const _usecs)
 #endif
 }
 
-void Util::SetDrawColour(Vector3f const& _c)
-{
-  glColor3f(_c.x(), _c.y(), _c.z());
-}
-
-void Util::SetDrawColour(Vector3d const& _c)
-{
-  glColor3d(_c.x(), _c.y(), _c.z());
-}
-
 void Util::SigAbrt(int)
 {
   printf("Received SIGABRT!\n");
