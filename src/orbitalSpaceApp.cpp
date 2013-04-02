@@ -15,7 +15,9 @@
 
 #include <Eigen/Geometry>
 
-// TODO #include <boost/posix_time.hpp>
+#include "boost_begin.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include "boost_end.h"
 
 // m^3 kg^-1 s^-2
 #define GRAV_CONSTANT 6.6738480e-11
@@ -29,6 +31,8 @@
 #define MOON_MASS  7.3477e22
 
 // meters
+// TODO give moon, earth correct orbit, inclination, rotation period, axial tilt.
+// TODO give earth, moon rotation and orbit correct phase for J2000.
 // #define MOON_APOGEE   3.6257e8
 // #define MOON_PERIGEE  4.0541e8
 // degrees
@@ -74,11 +78,6 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   }
   
   m_light /= m_light.norm();
-
-  // TODO
-  // m_camTargetName[0] = "Earth";
-  // m_camTargetName[1] = "Orbital Enforcer";
-  // m_camTargetName[2] = "Suspect";
 
   // TODO real-time date/time + time scale factor display
 
@@ -986,8 +985,22 @@ void OrbitalSpaceApp::RenderState()
     str.precision(3);
     str.width(7);
     str.flags(std::ios::right | std::ios::fixed);
-        
+    
     str << "Time Scale: " << m_timeScale << "\n";
+
+    {
+      using namespace boost::posix_time;
+      using namespace boost::gregorian;
+
+      // Astronomical Epoch: 1200 hours, 1 January 2000
+      // Game start date:
+      ptime epoch(date(2000, Jan, 1), hours(12));
+      ptime gameStart(date(2025, Mar, 15), hours(1753));
+      // Note: the (long) here limits us to ~68 years game time. Should be enough, otherwise just need to keep adding seconds to the dateTime to match the simTime
+      ptime curDateTime = gameStart + seconds((long)m_simTime);
+      str << "UTC DateTime: " << to_simple_string(curDateTime) << "\n";
+    }
+    
     str << "Cam Target: " << m_camTargetNames[m_camTargetId] << "\n";
     str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
