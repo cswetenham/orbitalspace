@@ -1,7 +1,7 @@
 #ifndef TERMINATIONBARRIER_H
 #define	TERMINATIONBARRIER_H
 
-#include "atomic.h"
+#include "orPlatform/atomic.h"
 
 namespace orTask {
 
@@ -15,14 +15,14 @@ public:
 
   // Warning: not idempotent! Call only once per inactive->active transition!
   void incActive() {
-    orCore::atomicInc(&activeCount_);
-    orCore::fullBarrier();
+    orPlatform::atomicInc(&activeCount_);
+    orPlatform::fullBarrier();
   }
 
   // Warning: not idempotent! Call only once per active->inactive transition!
   void decActive() {
-    orCore::fullBarrier();
-    orCore::atomicDec(&activeCount_);
+    orPlatform::fullBarrier();
+    orPlatform::atomicDec(&activeCount_);
   }
 
   bool allInactive() const {

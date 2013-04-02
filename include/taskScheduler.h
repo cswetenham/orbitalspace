@@ -9,8 +9,8 @@ using std::list;
 #include "boost_end.h"
 
 #include "util.h"
-#include "util2.h"
-#include "atomic.h"
+#include "refCount.h"
+#include "orPlatform/atomic.h"
 #include "task.h"
 
 namespace orTask {
@@ -50,8 +50,8 @@ namespace orTask {
     TaskGroup() : tasks(0) {}
     int tasks;
     
-    void addTask() { orCore::atomicInc(&tasks); }
-    void remTask() { orCore::atomicDec(&tasks); }
+    void addTask() { orPlatform::atomicInc(&tasks); }
+    void remTask() { orPlatform::atomicDec(&tasks); }
   };
   
   struct ThreadDataBase

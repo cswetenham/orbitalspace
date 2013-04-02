@@ -31,10 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "boost_begin.h"
 #include <boost/thread.hpp>
-// #include <boost/random.hpp>
 #include "boost_end.h"
 
-#include "atomic.h"
+#include "orPlatform/atomic.h"
 
 
 namespace orTask {
@@ -73,10 +72,10 @@ namespace orTask {
 
         size_t const newPos = oldPos + 1;
 
-        orCore::readBarrier();
+        orPlatform::readBarrier();
         int const seenVal = buffer_[oldPos];
 
-        size_t const seenPos = orCore::atomicCompareAndSwap(&readPos_, oldPos, newPos);
+        size_t const seenPos = orPlatform::atomicCompareAndSwap(&readPos_, oldPos, newPos);
 
         if (seenPos == oldPos) {
           return seenVal;
@@ -93,7 +92,7 @@ namespace orTask {
 
       gen_.Generate(&rng_, size_, (uint32_t*)&buffer_[0]);
 
-      orCore::writeBarrier();
+      orPlatform::writeBarrier();
 
       readPos_ = 0;
     }

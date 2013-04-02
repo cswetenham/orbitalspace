@@ -14,24 +14,29 @@
     <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\orbitalSpaceApp.cpp" />
+    <ClCompile Include="src\orPlatform\win32\window_win32.cpp" />
+    <ClCompile Include="src\orProfile\perftimer.cpp" />
     <ClCompile Include="src\orRender.cpp" />
-    <ClCompile Include="src\perftimer.cpp" />
     <ClCompile Include="src\taskSchedulerWorkStealing.cpp" />
     <ClCompile Include="src\timer.cpp" />
     <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\app.h" />
-    <ClInclude Include="include\atomic.h" />
     <ClInclude Include="include\boost_begin.h" />
     <ClInclude Include="include\boost_end.h" />
     <ClInclude Include="include\geom.h" />
     <ClInclude Include="include\orbitalSpaceApp.h" />
     <ClInclude Include="include\orGfx.h" />
     <ClInclude Include="include\orMath.h" />
+    <ClInclude Include="include\orPlatform\atomic.h" />
+    <ClInclude Include="include\orPlatform\linux\atomic_linux.h" />
+    <ClInclude Include="include\orPlatform\window.h" />
+    <ClInclude Include="include\orPlatform\win32\atomic_win32.h" />
+    <ClInclude Include="include\orPlatform\win32\window_win32.h" />
+    <ClInclude Include="include\orProfile\perftimer.h" />
     <ClInclude Include="include\orRender.h" />
     <ClInclude Include="include\orStd.h" />
-    <ClInclude Include="include\perftimer.h" />
     <ClInclude Include="include\rnd.h" />
     <ClInclude Include="include\task.h" />
     <ClInclude Include="include\taskScheduler.h" />
@@ -39,7 +44,7 @@
     <ClInclude Include="include\terminationBarrier.h" />
     <ClInclude Include="include\timer.h" />
     <ClInclude Include="include\util.h" />
-    <ClInclude Include="include\util2.h" />
+    <ClInclude Include="include\refCount.h" />
     <ClInclude Include="include\victimPicker.h" />
     <ClInclude Include="include\workStealingQueue.h" />
   </ItemGroup>

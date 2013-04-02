@@ -1,8 +1,9 @@
 #include "orStd.h"
+#include "orPlatform/window.h"
 
 #include "orbitalSpaceApp.h"
 
-#include "perftimer.h"
+#include "orProfile/perftimer.h"
 #include "task.h"
 #include "taskScheduler.h"
 #include "taskSchedulerWorkStealing.h"
@@ -311,13 +312,10 @@ void OrbitalSpaceApp::InitRender()
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
   m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
   
-#ifdef _WIN32
-  sf::WindowHandle hwnd = m_window->getSystemHandle();
-  ::SetForegroundWindow(hwnd);
-  ::SetActiveWindow(hwnd);
-  ::SetFocus(hwnd);
+  sf::WindowHandle winHandle = m_window->getSystemHandle();
+  orPlatform::FocusWindow(winHandle);
   m_hasFocus = true;
-#endif
+
 }
 
 void OrbitalSpaceApp::ShutdownRender()
@@ -821,19 +819,26 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     com.m_pos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
 
     // Update the earth-moon Lagrange points
+    // TODO some / all of these should be based on the COM and not earth position
     Vector3d const earthMoonVector = moonBody.m_pos - earthBody.m_pos;
     double const earthMoonOrbitRadius = earthMoonVector.norm();
+    Vector3d const earthMoonDir = earthMoonVector / earthMoonOrbitRadius;
     double const massRatio = MOON_MASS / EARTH_MASS;
     double const r1 = earthMoonOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
-    double const r3 = earthMoonOrbitRadius * 7.0 / 12.0 * massRatio;
-    m_renderSystem.getPoint(m_lagrangePointIds[0]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius - r1) / earthMoonOrbitRadius);
-    m_renderSystem.getPoint(m_lagrangePointIds[1]).m_pos =  earthMoonVector * ((earthMoonOrbitRadius + r1) / earthMoonOrbitRadius);
-    m_renderSystem.getPoint(m_lagrangePointIds[2]).m_pos = -earthMoonVector * ((earthMoonOrbitRadius + r3) / earthMoonOrbitRadius);
+    double const r3 = earthMoonOrbitRadius * (1.0 + (7.0/12.0) * massRatio); // extra 1.0 to make r3 a distand from Earth position rather than an offset from earthMoonOrbitRadius
+    // Lagrange point 1
+    m_renderSystem.getPoint(m_lagrangePointIds[0]).m_pos = moonBody.m_pos - earthMoonDir * r1;
+    // Lagrange point 2
+    m_renderSystem.getPoint(m_lagrangePointIds[1]).m_pos = moonBody.m_pos + earthMoonDir * r1;
+    // Lagrange point 3
+    m_renderSystem.getPoint(m_lagrangePointIds[2]).m_pos = earthBody.m_pos - earthMoonDir * r3;
     
     // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
     Vector3d orbitAxis = moonBody.m_vel.normalized().cross(earthMoonVector.normalized());
     Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
+    // Lagrange point 4
     m_renderSystem.getPoint(m_lagrangePointIds[3]).m_pos = rotation           * earthMoonVector;
+    // Lagrange point 5
     m_renderSystem.getPoint(m_lagrangePointIds[4]).m_pos = rotation.inverse() * earthMoonVector;
 
     // Update ships

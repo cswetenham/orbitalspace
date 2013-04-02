@@ -1,9 +1,9 @@
 #ifndef WORKSTEALINGQUEUE_H
 #define WORKSTEALINGQUEUE_H
 
-#include "atomic.h"
+#include "orPlatform/atomic.h"
 #include "util.h"
-#include "util2.h"
+#include "refCount.h"
 #include <list>
 
 namespace orTask {
@@ -97,8 +97,8 @@ struct HazardPointerRecord
     do {
       oldHead = list->head;
       next = oldHead;
-      orCore::writeBarrier();
-    } while (orCore::atomicCompareAndSwap(&list->head, oldHead, this) != oldHead);
+      orPlatform::writeBarrier();
+    } while (orPlatform::atomicCompareAndSwap(&list->head, oldHead, this) != oldHead);
   }
           
   T* pointer;
@@ -174,14 +174,14 @@ public:
   { }
     
   ~WorkStealingQueue() {
-    orCore::fullBarrier();
+    orPlatform::fullBarrier();
     retired.RetireNode(tasks);
   }
 
   bool isEmpty() const {
     size_t const localTop = top;
     size_t const localBottom = bottom;
-    orCore::readBarrier(); // not strictly necessary...
+    orPlatform::readBarrier(); // not strictly necessary...
     return localBottom <= localTop;
   }
 
@@ -199,29 +199,29 @@ public:
     if (size + 1 >= oldTasks->capacity()) {
       newTasks = new LockFreeCircularArray<T>(*oldTasks, oldBottom, oldTop);
       tasks = newTasks;
-      orCore::fullBarrier(); // Ensure the write replacing tasks is visible before we check any other thread's hazard pointers
+      orPlatform::fullBarrier(); // Ensure the write replacing tasks is visible before we check any other thread's hazard pointers
       retired.RetireNode(oldTasks);
     }
    
     newTasks->put(oldBottom, v);
-    orCore::writeBarrier(); // Write buffer contents before writing bottom (allowing reading of the contents)
+    orPlatform::writeBarrier(); // Write buffer contents before writing bottom (allowing reading of the contents)
     
     bottom = newBottom;
   }
 
   bool popTop(T* v) {
     size_t const oldTop = top;
-    orCore::readBarrier(); // Read top before reading bottom TODO why this particular order?
+    orPlatform::readBarrier(); // Read top before reading bottom TODO why this particular order?
     // Guarantees that if the CAS below succeeds, bottom had a value at least as up to date as top.
     size_t const oldBottom = bottom;
-    orCore::readBarrier(); // Read bottom before reading tasks, ensures that we don't get a value of bottom for a task that was pushed into a new array, but the old value of the array.
+    orPlatform::readBarrier(); // Read bottom before reading tasks, ensures that we don't get a value of bottom for a task that was pushed into a new array, but the old value of the array.
     LockFreeCircularArray<T>* oldTasks;
     
     // Store tasks in hazard pointer
     do {
       oldTasks = tasks;
       hazard->pointer = oldTasks;
-      orCore::fullBarrier(); // ensure we write the hazard pointer before we read tasks again
+      orPlatform::fullBarrier(); // ensure we write the hazard pointer before we read tasks again
     } while (oldTasks != tasks);
     
     int const size = oldBottom - oldTop; // int because we test for < 0. We allow bottom and top to wrap, so the best we could do is test (int64)(bottom - oldTop) < 0.
@@ -231,16 +231,16 @@ public:
       return false;
     }
     
-    orCore::readBarrier(); // Read bottom before reading buffer contents
+    orPlatform::readBarrier(); // Read bottom before reading buffer contents
     
     *v = oldTasks->get(oldTop);
     
-    orCore::fullBarrier(); // Read buffer contents before writing top (if we succeed, we allow overwriting of the contents) or releasing the hazard pointer (allowing replacing the array)
+    orPlatform::fullBarrier(); // Read buffer contents before writing top (if we succeed, we allow overwriting of the contents) or releasing the hazard pointer (allowing replacing the array)
     
     hazard->pointer = NULL;
     
     size_t const newTop = oldTop + 1;
-    if (orCore::atomicCompareAndSwap(&top, oldTop, newTop) == oldTop) {
+    if (orPlatform::atomicCompareAndSwap(&top, oldTop, newTop) == oldTop) {
       return true;
     }
 
@@ -252,7 +252,7 @@ public:
     size_t const newBottom = oldBottom - 1;
     bottom = newBottom;
     
-    orCore::fullBarrier(); // Write bottom before reading from top. Ensures we've claimed an item in the queue.
+    orPlatform::fullBarrier(); // Write bottom before reading from top. Ensures we've claimed an item in the queue.
     
     size_t const oldTop = top;
     
@@ -286,7 +286,7 @@ public:
     // otherwise a concurrent stealing thread got it.
     size_t const newTop = oldTop + 1;
         
-    if (orCore::atomicCompareAndSwap(&top, oldTop, newTop) != oldTop) {
+    if (orPlatform::atomicCompareAndSwap(&top, oldTop, newTop) != oldTop) {
       bottom = newTop;
       return false;
     }

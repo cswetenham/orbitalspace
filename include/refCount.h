@@ -1,17 +1,9 @@
-#ifndef UTIL2_H
-#define UTIL2_H
+#ifndef ORCORE_REFCOUNT_H
+#define ORCORE_REFCOUNT_H
 
-#include "atomic.h"
+#include "orPlatform/atomic.h"
 
 namespace orCore {
-
-// Base class to prevent operator== being generated
-class NoEq
-{
-private:
-  bool operator==(NoEq const&);
-  bool operator!=(NoEq const&);
-};
 
 // Reference counting
 
@@ -29,12 +21,12 @@ protected:
   
 private:
   void claim() {
-    atomicInc(&refCount_);
+    orPlatform::atomicInc(&refCount_);
   }
   
   void release() {
     ensure(refCount_ > 0);
-    if (atomicDec(&refCount_) == 1) { delete this; }
+    if (orPlatform::atomicDec(&refCount_) == 1) { delete this; }
   }
   
 private:
@@ -106,12 +98,7 @@ private:
 template <class T> RefCountPtr<T> wrapWithClaim(T* ptr) { RefCountPtr<T>::claim(ptr); return RefCountPtr<T>(ptr); }
 template <class T> RefCountPtr<T> wrapNoClaim(T* ptr) { return RefCountPtr<T>(ptr); }
 
-// Non-member function which accepts NULL
-template <typename T> inline T* clone(T* t) { if (t) { return t->clone(); } return NULL; }
-
-template <typename T> inline void ignore(T const&) {}; // To explicitly ignore return values without warning
-
 } // namespace orCore
 
-#endif /* UTIL2_H */
+#endif /* ORCORE_REFCOUNT_H */
 

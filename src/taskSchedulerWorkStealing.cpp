@@ -54,7 +54,7 @@ void orTask::TaskSchedulerWorkStealing::thread_fn(ThreadData* threadData) {
 void orTask::TaskSchedulerWorkStealing::waitForTaskGroup(int threadIdx, TaskGroup* group) {
   ThreadData* curThreadData = &threadData[threadIdx];
   while (group->tasks != 0 && curThreadData->curState != ThreadData::STATE_EXIT) {
-    orCore::readBarrier(); // ensures read to group->tasks isn't optimised out
+    orPlatform::readBarrier(); // ensures read to group->tasks isn't optimised out
     
     ThreadData::State startState = curThreadData->curState;
     
@@ -74,7 +74,7 @@ void orTask::TaskSchedulerWorkStealing::waitForTaskGroup(int threadIdx, TaskGrou
   // So just sleep until the group is completed
   boost::posix_time::millisec const sleepTime = boost::posix_time::millisec(1);
   while (group->tasks != 0) {
-    orCore::readBarrier();
+    orPlatform::readBarrier();
     boost::this_thread::sleep(sleepTime);
   }
 }
