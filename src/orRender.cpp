@@ -150,20 +150,42 @@ void RenderSystem::renderTrails() const
   for (int ti = 0; ti < (int)m_renderableTrails.size(); ++ti) {
     Trail const& trail = getTrail(ti);
     glBegin(GL_LINE_STRIP);
-    // TODO render only to m_tailId // TODO what does this mean
+    
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
     {
-      int idx = trail.m_headId + i - Trail::NUM_TRAIL_PTS + 1;
-      if (idx < 0) { idx += Trail::NUM_TRAIL_PTS; }
+      // Render from tail to head
+      int tailIdx = (trail.m_headIdx + 1) % Trail::NUM_TRAIL_PTS;
+      int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
       Vector3d v = trail.m_trailPts[idx];
 
-      float const l = (float)i / Trail::NUM_TRAIL_PTS;
-      Vector3f c = Util::Lerp(trail.m_colOld, trail.m_colNew, l);
+      float const l = (float)trail.m_trailPointAge[idx] / trail.m_duration;
+      Vector3f c = Util::Lerp(trail.m_colNew, trail.m_colOld, l);
       setDrawColour(c);
 
       glVertex3d(v.x(),v.y(),v.z());
     }
+    
     glEnd();
+
+
+    // Debugging trail: show the trail points
+#if 0
+    setDrawColour(Vector3f(0.0, 0.0, 1.0));
+
+    for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
+    {
+      // Render from tail to head
+      int tailIdx = (trail.m_headIdx + 1) % Trail::NUM_TRAIL_PTS;
+      int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
+      Vector3d v = trail.m_trailPts[idx];
+
+      glPointSize(10.0);
+      glBegin(GL_POINTS);
+      glVertex3d(v.x(), v.y(), v.z());
+      glEnd();
+      glPointSize(1.0);
+    }
+#endif
   }
 }
 
@@ -175,20 +197,18 @@ void RenderSystem::render()
   renderTrails();
 }
 
-RenderSystem::Trail::Trail(double const _duration) :
-  m_duration(_duration), // TODO make sure this works as a value! // TODO what does this mean
-  m_timeSinceUpdate(0.f),    
-  m_headId(0),
-  m_tailId(0)
+RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos) :
+  m_duration(_duration), 
+  m_headIdx(0)
 {
-  for (int i = 0; i < NUM_TRAIL_PTS; ++i)
-  {
-    m_trailPts[i] = Vector3d::Zero();
+  for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
+    m_trailPts[i] = _initPos;
+    m_trailPointAge[i] = 0.0;
   }
 }
 
 // TODO grumble not sure this should really be here...
-void RenderSystem::Trail::Update(double const _dt, Vector3d _pos)
+void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
 {
   // TODO can have a list of past points and their durations, and cut up trail linearly
 
@@ -196,18 +216,33 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d _pos)
 
   // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
 
-  m_timeSinceUpdate += _dt;
-      
-  if (false) { // m_timeSinceUpdate < TODO) { // duration / NUM_TRAIL_PTS? Idea is to ensure queue always has space. This means we are ensuring a minimum time duration for each segment.
-    // Not enough time elapsed. To avoid filling up trail, update the head point instead of adding a new one
-    // m_trailPts[m_headId] = _pos;
-    // m_trailDuration[m_headId] = 0.f;
+  for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
+    m_trailPointAge[i] += _dt;
   }
-      
-  m_headId++;
-  if (m_headId >= NUM_TRAIL_PTS) { m_headId = 0; }
-  m_trailPts[m_headId] = _pos;
-  if (m_tailId == m_headId) { m_tailId++; }
-      
-  // assert(m_headId != m_tailId);
+  
+  double const minAge = 100.0; // 100 ms;
+  double const maxAge = m_duration;
+
+  int prevHeadIdx = (m_headIdx - 1 + NUM_TRAIL_PTS) % NUM_TRAIL_PTS;
+  if (m_trailPointAge[prevHeadIdx] > minAge) {
+    // Push a new point
+    m_headIdx = (m_headIdx + 1) % NUM_TRAIL_PTS;
+  }
+
+  m_trailPts[m_headIdx] = _pos;
+  m_trailPointAge[m_headIdx] = 0.f;
+    
+  // From the head, skip over points that are younger than max age;
+#if 0
+  int tailIdx = (m_headIdx + 1) % NUM_TRAIL_PTS;
+  int prevTailIdx = (tailIdx + 1) % NUM_TRAIL_PTS;
+  if (m_trailPointAge[tailIdx] > maxAge) {
+    // Interpolate to target position
+    double const t = m_trailPointAge[tailIdx] - m_trailPointAge[prevTailIdx];
+    double const tt = maxAge - m_trailPointAge[prevTailIdx];
+    Vector3d const d = m_trailPts[tailIdx] - m_trailPts[prevTailIdx];
+    m_trailPts[tailIdx] = m_trailPts[prevTailIdx] + (d / t) * tt;
+    m_trailPointAge[tailIdx] = maxAge;
+  }
+#endif
 }

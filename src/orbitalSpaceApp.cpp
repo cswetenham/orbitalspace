@@ -145,7 +145,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   moonOrbit.m_col = m_colG[1];
   moonOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail());
+  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos));
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
   
@@ -175,7 +175,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   playerOrbit.m_col = m_colB[2];
   playerOrbit.m_pos = earthGravBody.m_pos;
     
-  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail());
+  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos));
   playerTrail.m_colOld = m_colB[0];
   playerTrail.m_colNew = m_colB[4];
 
@@ -196,7 +196,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   suspectOrbit.m_col = m_colR[2];
   suspectOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail());
+  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos));
   suspectTrail.m_colOld = m_colR[0];
   suspectTrail.m_colNew = m_colR[4];
   
@@ -219,7 +219,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   m_music.openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music.setLoop(true);
-  m_music.play();
+  // m_music.play();
 }
 
 OrbitalSpaceApp::~OrbitalSpaceApp()

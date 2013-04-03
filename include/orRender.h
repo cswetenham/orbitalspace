@@ -48,26 +48,23 @@ public:
 
   struct Trail
   {
-    // TODO make into method on app instead
-    Trail(double const _duration);
-    void Update(double const _dt, Vector3d _pos);
-    void Render() const;
+    // TODO make into methods on RenderSystem instead
+    Trail(double const _duration, Vector3d const _initPos);
+    void Update(double const _dt, Vector3d const _pos);
 
     // TODO this stores a fixed number of frames, not the best approach
-    enum { NUM_TRAIL_PTS = 1000 };
-    double m_duration;
-    double m_timeSinceUpdate;
+    enum { NUM_TRAIL_PTS = 32 };
+    double m_duration; // TODO not obeyed at the moment; effective duration is NUM_TRAIL_PTS * minAge
 
-    int m_headId;
-    int m_tailId;
+    int m_headIdx;
     Vector3d m_trailPts[NUM_TRAIL_PTS];
-    double m_trailDuration[NUM_TRAIL_PTS];
+    double m_trailPointAge[NUM_TRAIL_PTS];
 
     Vector3f m_colOld;
     Vector3f m_colNew;
   };
     
-  int makeTrail() { m_renderableTrails.push_back(Trail(3.0)); return m_renderableTrails.size() - 1; }
+  int makeTrail( double const _duration, Vector3d const _initPos ) { m_renderableTrails.push_back(Trail(_duration, _initPos)); return m_renderableTrails.size() - 1; }
   Trail& getTrail(int i) { return m_renderableTrails[i]; }
   Trail const& getTrail(int i) const { return m_renderableTrails[i]; }
 
