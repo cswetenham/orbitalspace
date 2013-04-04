@@ -158,7 +158,7 @@ void RenderSystem::renderTrails() const
       int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
       Vector3d v = trail.m_trailPts[idx];
 
-      float const l = (float)trail.m_trailPointAge[idx] / trail.m_duration;
+      float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
       Vector3f c = Util::Lerp(trail.m_colNew, trail.m_colOld, l);
       setDrawColour(c);
 

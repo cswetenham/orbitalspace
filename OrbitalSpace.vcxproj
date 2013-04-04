@@ -14,6 +14,7 @@
     <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\orbitalSpaceApp.cpp" />
+    <ClCompile Include="src\orCamera.cpp" />
     <ClCompile Include="src\orPhysics.cpp" />
     <ClCompile Include="src\orPlatform\win32\window_win32.cpp" />
     <ClCompile Include="src\orProfile\perftimer.cpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="include\constants.h" />
     <ClInclude Include="include\geom.h" />
     <ClInclude Include="include\orbitalSpaceApp.h" />
+    <ClInclude Include="include\orCamera.h" />
     <ClInclude Include="include\orGfx.h" />
     <ClInclude Include="include\orMath.h" />
     <ClInclude Include="include\orPhysics.h" />

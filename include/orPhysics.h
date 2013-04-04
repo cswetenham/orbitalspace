@@ -52,8 +52,6 @@ private:
   template< class PG, class VG, class OA >
   void CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA& o_a);
 
-public:
-// private: TODO
   std::vector<ParticleBody> m_particleBodies;
   std::vector<GravBody> m_gravBodies;
 }; // class PhysicsSystem

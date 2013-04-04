@@ -32,8 +32,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camDist(-3.1855e7),
   m_camTheta(0.0),
   m_camPhi(0.0),
-  m_camTarget(NULL),
-  m_camTargetId(0),
+  m_cameraId(0),
+  m_cameraTargetId(0),
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
@@ -59,7 +59,9 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   m_light /= m_light.norm();
 
-  // TODO real-time date/time + time scale factor display
+  // Make camera
+
+  CameraSystem::Camera camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
 
   // For now, give the moon a circular orbit
 
@@ -83,8 +85,6 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   // Create Earth
   
-  m_camTargetNames.push_back("Earth"); // TODO how to implement camera now - point to all planets, then moons, then ships?
-
   PlanetEntity& earthPlanet = getPlanet(m_earthPlanetId = makePlanet());
   
   PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthPlanet.m_gravBodyId = m_physicsSystem.makeGravBody());
@@ -100,11 +100,13 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   earthSphere.m_pos = earthGravBody.m_pos;
   earthSphere.m_col = m_colG[1];
   
-  m_camTarget = &earthGravBody;
+  CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthPlanet.m_cameraTargetId = m_cameraSystem.makeTarget());
+  earthCamTarget.m_pos = earthGravBody.m_pos;
+  earthCamTarget.m_name = std::string("Earth");
+
+  m_cameraTargetId = earthPlanet.m_cameraTargetId;
   
   // Create Moon
-
-  m_camTargetNames.push_back("Moon");
 
   MoonEntity& moonMoon = getMoon(m_moonMoonId = makeMoon());
   
@@ -128,6 +130,10 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos));
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
+
+  CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonMoon.m_cameraTargetId = m_cameraSystem.makeTarget());
+  moonCamTarget.m_pos = moonGravBody.m_pos;
+  moonCamTarget.m_name = std::string("Moon");
   
   // Create Earth-Moon COM
 
@@ -141,9 +147,6 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   }
   
   // Create ships
-
-  m_camTargetNames.push_back("Player");
-  
   ShipEntity& playerShip = getShip(m_playerShipId = makeShip());
 
   PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
@@ -163,7 +166,9 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   playerPoint.m_pos = playerBody.m_pos;
   playerPoint.m_col = m_colB[4];
   
-  m_camTargetNames.push_back("Suspect");
+  CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
+  playerCamTarget.m_pos = playerBody.m_pos;
+  playerCamTarget.m_name = std::string("Player");
 
   ShipEntity& suspectShip = getShip(m_suspectShipId = makeShip());
 
@@ -184,7 +189,12 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   suspectPoint.m_pos = suspectBody.m_pos;
   suspectPoint.m_col = m_colR[4];
 
+  CameraSystem::Target& suspectCamTarget = m_cameraSystem.getTarget(suspectShip.m_cameraTargetId = m_cameraSystem.makeTarget());
+  suspectCamTarget.m_pos = suspectBody.m_pos;
+  suspectCamTarget.m_name = std::string("Suspect");
+
   // Perturb all the ship orbits
+  // TODO this should update all the other positions too, or happen earlier!
   float* rnds = new float[6 * m_shipEntities.size()];
   UniformDistribution<float> dist(-1, +1);
   dist.Generate(&m_rnd, 6 * m_shipEntities.size(), &rnds[0]);
@@ -196,7 +206,6 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   }
   delete[] rnds;
   
-
   m_music.openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music.setLoop(true);
   // m_music.play();
@@ -357,16 +366,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 
     if (_event.key.code == sf::Keyboard::Tab)
     {
-      m_camTargetId++;
-      // TODO maybe should point at renderables instead, but eh...
-      if (m_camTargetId < m_physicsSystem.m_gravBodies.size()) {
-        m_camTarget = &m_physicsSystem.getGravBody(m_camTargetId);
-      } else if (m_camTargetId < m_physicsSystem.m_gravBodies.size() + m_physicsSystem.m_particleBodies.size()) {
-        m_camTarget = &m_physicsSystem.getParticleBody(m_camTargetId - m_physicsSystem.m_gravBodies.size());
-      } else {
-        m_camTargetId = 0;
-        m_camTarget = &m_physicsSystem.getGravBody(0);
-      }
+      m_cameraTargetId = m_cameraSystem.nextTarget(m_cameraTargetId);
     }
 
     if (_event.key.code == sf::Keyboard::F1) {
@@ -516,6 +516,9 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
       
       RenderSystem::Sphere& sphere = m_renderSystem.getSphere(planet.m_sphereId);
       sphere.m_pos = body.m_pos;
+
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(planet.m_cameraTargetId);
+      camTarget.m_pos = body.m_pos;
     }
 
     // Update Moons
@@ -532,6 +535,9 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
       sphere.m_pos = body.m_pos;
+
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(moon.m_cameraTargetId);
+      camTarget.m_pos = body.m_pos;
     }
 
     // Update the earth-moon COM
@@ -578,6 +584,9 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
       RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);
       point.m_pos = body.m_pos;
+
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(ship.m_cameraTargetId);
+      camTarget.m_pos = body.m_pos;
     }
 
     m_simTime += dt;
@@ -670,23 +679,6 @@ void OrbitalSpaceApp::UpdateOrbit(PhysicsSystem::Body const& body, RenderSystem:
   o_params.m_pos = parentBody.m_pos;
 }
 
-void OrbitalSpaceApp::LookAt(Vector3d pos, Vector3d target, Vector3d up) {
-  Vector3d camF = (target - pos).normalized();
-  Vector3d camR = camF.cross(up).normalized();
-  Vector3d camU = camF.cross(camR).normalized();
-
-  Matrix3d camMat;
-  camMat.col(0) = camR;
-  camMat.col(1) = -camU;
-  camMat.col(2) = -camF;
-
-  Eigen::Affine3d camT;
-  camT.linear() = camMat;
-  camT.translation() = pos;
-
-  glMultMatrix(camT.inverse());
-}
-
 Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
@@ -725,7 +717,8 @@ void OrbitalSpaceApp::RenderState()
       str << "UTC DateTime: " << to_simple_string(curDateTime) << "\n";
     }
     
-    str << "Cam Target: " << m_camTargetNames[m_camTargetId] << "\n";
+    CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
+    str << "Cam Target: " << camTarget.m_name << "\n";
     str << "Cam Dist: " << m_camDist << "\n";
     str << "Cam Theta:" << m_camTheta << "\n";
     str << "Cam Phi:" << m_camPhi << "\n";
@@ -766,7 +759,8 @@ void OrbitalSpaceApp::RenderState()
   // Set camera
   
   assert(m_camTarget);
-  Vector3d const camTarget = m_camTarget->m_pos;
+  CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
+  Vector3d const camTargetPos = camTarget.m_pos;
 
   Vector3d camPos;
   
@@ -783,20 +777,15 @@ void OrbitalSpaceApp::RenderState()
     camMat1.rotate(thetaRot).rotate(phiRot);
 
     camPos = camMat1 * camPos;
-    camPos += camTarget;
+    camPos += camTargetPos;
   } else {
     assert(false);
   }
 
-  // TODO remove the gluLookAt? Or just have it off by default for now?
-  if (m_camOrig) {
-    gluLookAt(camPos.x(), camPos.y(), camPos.z(),
-              camTarget.x(), camTarget.y(), camTarget.z(),
-              up.x(), up.y(), up.z());
-  } else {
-    // Finally does the same as gluLookAt!
-   LookAt(camPos, camTarget, up);
-  }
+  CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId);
+  camera.m_pos = camPos;
+
+  m_cameraSystem.setCameraMatrix(m_cameraId, m_cameraTargetId, up);
 
   glEnable(GL_TEXTURE_2D);
   

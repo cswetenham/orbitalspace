@@ -17,6 +17,7 @@
 
 #include "orRender.h"
 #include "orPhysics.h"
+#include "orCamera.h"
 
 #include <vector>
 
@@ -52,8 +53,7 @@ protected:
 private:
   PhysicsSystem::GravBody const& FindSOIGravBody(Vector3d const& p);
   void UpdateOrbit(PhysicsSystem::Body const& body, RenderSystem::Orbit& o_params);
-  void LookAt(Vector3d pos, Vector3d target, Vector3d up);
-
+  
   Vector3d CalcPlayerThrust(Vector3d p, Vector3d v);
 
 private:
@@ -82,14 +82,16 @@ private:
   
   //// Physics ////
 
-  double m_timeScale;
-  
   PhysicsSystem m_physicsSystem;
+
+  double m_timeScale;
+  PhysicsSystem::IntegrationMethod m_integrationMethod;
 
   //// Rendering ////
   
   RenderSystem m_renderSystem;
   
+  // TODO make these Entities with a renderPoint and a cameraTarget.
   int m_comPointId;
   int m_lagrangePointIds[5];
   
@@ -100,6 +102,7 @@ private:
     int m_pointId;
     int m_trailId;
     int m_orbitId;
+    int m_cameraTargetId;
   };
   std::vector<ShipEntity> m_shipEntities;
 
@@ -114,6 +117,7 @@ private:
   struct PlanetEntity {
     int m_gravBodyId;
     int m_sphereId;
+    int m_cameraTargetId;
   };
   std::vector<PlanetEntity> m_planetEntities;
 
@@ -125,6 +129,7 @@ private:
     int m_sphereId;
     int m_orbitId;
     int m_trailId;
+    int m_cameraTargetId;
   };
   std::vector<MoonEntity> m_moonEntities;
 
@@ -139,15 +144,18 @@ private:
 
   // Camera
 
-  PhysicsSystem::Body* m_camTarget;
-  size_t m_camTargetId;
-  std::vector<std::string> m_camTargetNames;
+  CameraSystem m_cameraSystem;
 
   enum CameraMode {
     CameraMode_FirstPerson = 0,
     CameraMode_ThirdPerson = 1
   };
   CameraMode m_camMode;
+
+  int m_cameraId;
+  int m_cameraTargetId;
+  
+  // Input
 
   enum InputMode {
     InputMode_Default = 0,
@@ -169,8 +177,6 @@ private:
 
   uint32_t m_thrusters;
 
-  PhysicsSystem::IntegrationMethod m_integrationMethod;
-  
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
   enum {PALETTE_SIZE = 5};
