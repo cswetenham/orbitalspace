@@ -18,17 +18,22 @@ public:
     Vector3d m_userAcc;
   };
   
-  int makeParticleBody() { m_particleBodies.push_back(ParticleBody()); return m_particleBodies.size() - 1; }
-  ParticleBody& getParticleBody(int i) { return m_particleBodies[i]; }
+  int numParticleBodies() const { return (int)m_particleBodies.size(); }
+  int makeParticleBody() { m_particleBodies.push_back(ParticleBody()); return numParticleBodies() - 1; }
+  ParticleBody&       getParticleBody(int i)       { return m_particleBodies[i]; }
+  ParticleBody const& getParticleBody(int i) const { return m_particleBodies[i]; }
 
   struct GravBody : public Body
   {
     double m_radius;
     double m_mass;
+    int m_soiParentBody; // TODO want to avoid this later.
   };
 
-  int makeGravBody() { m_gravBodies.push_back(GravBody()); return m_gravBodies.size() - 1; }
-  GravBody& getGravBody(int i) { return m_gravBodies[i]; }
+  int numGravBodies() const { return (int)m_gravBodies.size(); }
+  int makeGravBody() { m_gravBodies.push_back(GravBody()); return numGravBodies() - 1; }
+  GravBody&       getGravBody(int i)       { return m_gravBodies[i]; }
+  GravBody const& getGravBody(int i) const { return m_gravBodies[i]; }
 
   enum IntegrationMethod {
     IntegrationMethod_ExplicitEuler = 0,
@@ -38,7 +43,8 @@ public:
   };
 
   void update(IntegrationMethod const integrationMethod, double const dt);
-
+  GravBody const& findSOIGravBody(ParticleBody const& body) const;
+  
 private:
   void CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0);
   template< class P, class V, class OA >

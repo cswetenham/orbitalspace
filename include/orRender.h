@@ -8,15 +8,17 @@
 
 class RenderSystem {
 public:
+
   struct Point {
     Vector3d m_pos;
 
     Vector3f m_col;
   };
-    
-  int makePoint() { m_renderablePoints.push_back(Point()); return m_renderablePoints.size() - 1; }
-  Point& getPoint(int i) { return m_renderablePoints[i]; }
-  Point const& getPoint(int i) const { return m_renderablePoints[i]; }
+  
+  int numPoints() const { return m_points.size(); }
+  int makePoint() { m_points.push_back(Point()); return numPoints() - 1; }
+  Point&       getPoint(int i)       { return m_points[i]; }
+  Point const& getPoint(int i) const { return m_points[i]; }
 
   struct Sphere {
     double m_radius;
@@ -24,26 +26,28 @@ public:
 
     Vector3f m_col;
   };
-    
-  int makeSphere() { m_renderableSpheres.push_back(Sphere()); return m_renderableSpheres.size() - 1; }
-  Sphere& getSphere(int i) { return m_renderableSpheres[i]; }
-  Sphere const& getSphere(int i) const { return m_renderableSpheres[i]; }
+  
+  int numSpheres() const { return (int)m_spheres.size(); }
+  int makeSphere() { m_spheres.push_back(Sphere()); return numSpheres() - 1; }
+  Sphere&       getSphere(int i)       { return m_spheres[i]; }
+  Sphere const& getSphere(int i) const { return m_spheres[i]; }
 
-  struct Orbit
-  {
+  struct Orbit {
     double p;
     double e;
     double theta;
     Vector3d x_dir;
     Vector3d y_dir;
+
     Vector3d m_pos;
 
     Vector3f m_col;
   };
-    
-  int makeOrbit() { m_renderableOrbits.push_back(Orbit()); return m_renderableOrbits.size() - 1; }
-  Orbit& getOrbit(int i) { return m_renderableOrbits[i]; }
-  Orbit const& getOrbit(int i) const { return m_renderableOrbits[i]; }
+  
+  int numOrbits() const { return (int)m_orbits.size(); }
+  int makeOrbit() { m_orbits.push_back(Orbit()); return numOrbits() - 1; }
+  Orbit&       getOrbit(int i)       { return m_orbits[i]; }
+  Orbit const& getOrbit(int i) const { return m_orbits[i]; }
 
   struct Trail
   {
@@ -62,10 +66,11 @@ public:
     Vector3f m_colOld;
     Vector3f m_colNew;
   };
-    
-  int makeTrail( double const _duration, Vector3d const _initPos ) { m_renderableTrails.push_back(Trail(_duration, _initPos)); return m_renderableTrails.size() - 1; }
-  Trail& getTrail(int i) { return m_renderableTrails[i]; }
-  Trail const& getTrail(int i) const { return m_renderableTrails[i]; }
+  
+  int numTrails() const { return (int)m_trails.size(); }
+  int makeTrail( double const _duration, Vector3d const _initPos ) { m_trails.push_back(Trail(_duration, _initPos)); return numTrails() - 1; }
+  Trail&       getTrail(int i)       { return m_trails[i]; }
+  Trail const& getTrail(int i) const { return m_trails[i]; }
 
   void render();
 
@@ -82,8 +87,8 @@ private:
   void renderTrails() const;
 
 private:
-  std::vector<Point> m_renderablePoints;
-  std::vector<Sphere> m_renderableSpheres;
-  std::vector<Orbit> m_renderableOrbits;
-  std::vector<Trail> m_renderableTrails;
+  std::vector<Point> m_points;
+  std::vector<Sphere> m_spheres;
+  std::vector<Orbit> m_orbits;
+  std::vector<Trail> m_trails;
 }; // class RenderSystem

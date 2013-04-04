@@ -18,13 +18,12 @@
 #include "orRender.h"
 #include "orPhysics.h"
 #include "orCamera.h"
+#include "orEntity.h"
 
 #include <vector>
 
 #include <SFML/Audio/Music.hpp>
 
-
-// TODO Renderables, etc should go into their own systems.
 // Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
 
 class OrbitalSpaceApp :
@@ -51,18 +50,14 @@ protected:
   virtual void RenderState();
 
 private:
-  PhysicsSystem::GravBody const& FindSOIGravBody(Vector3d const& p);
-  void UpdateOrbit(PhysicsSystem::Body const& body, RenderSystem::Orbit& o_params);
-  
-  Vector3d CalcPlayerThrust(Vector3d p, Vector3d v);
+  Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
 
 private:
   Rnd64 m_rnd;
   
   double m_simTime;
 
-  struct Config
-  {
+  struct Config {
     int width;
     int height;
   };
@@ -72,6 +67,7 @@ private:
   // Simulation options
   bool m_paused;
   bool m_singleStep;
+
   // Rendering options
   bool m_wireframe;
   bool m_camOrig;
@@ -80,69 +76,7 @@ private:
   double m_camTheta;
   double m_camPhi;
   
-  //// Physics ////
-
-  PhysicsSystem m_physicsSystem;
-
-  double m_timeScale;
-  PhysicsSystem::IntegrationMethod m_integrationMethod;
-
-  //// Rendering ////
-  
-  RenderSystem m_renderSystem;
-  
-  // TODO make these Entities with a renderPoint and a cameraTarget.
-  int m_comPointId;
-  int m_lagrangePointIds[5];
-  
-  //// Entities ////
-
-  struct ShipEntity {
-    int m_particleBodyId;
-    int m_pointId;
-    int m_trailId;
-    int m_orbitId;
-    int m_cameraTargetId;
-  };
-  std::vector<ShipEntity> m_shipEntities;
-
-  int makeShip() { m_shipEntities.push_back(ShipEntity()); return m_shipEntities.size() - 1; }
-  ShipEntity& getShip(int i) { return m_shipEntities[i]; }
-
-  int m_playerShipId;
-  int m_suspectShipId;
-
-  // Right now the moon orbits the planet, can get rid of distinction later
-
-  struct PlanetEntity {
-    int m_gravBodyId;
-    int m_sphereId;
-    int m_cameraTargetId;
-  };
-  std::vector<PlanetEntity> m_planetEntities;
-
-  int makePlanet() { m_planetEntities.push_back(PlanetEntity()); return m_planetEntities.size() - 1; }
-  PlanetEntity& getPlanet(int i) { return m_planetEntities[i]; }
-    
-  struct MoonEntity {
-    int m_gravBodyId;
-    int m_sphereId;
-    int m_orbitId;
-    int m_trailId;
-    int m_cameraTargetId;
-  };
-  std::vector<MoonEntity> m_moonEntities;
-
-  int makeMoon() { m_moonEntities.push_back(MoonEntity()); return m_moonEntities.size() - 1; }
-  MoonEntity& getMoon(int i) { return m_moonEntities[i]; }
-
-  class EntitySystem {};
-  EntitySystem m_entitySystem;
-
-  int m_earthPlanetId;
-  int m_moonMoonId;
-
-  // Camera
+  //// Camera ////
 
   CameraSystem m_cameraSystem;
 
@@ -154,7 +88,31 @@ private:
 
   int m_cameraId;
   int m_cameraTargetId;
+
+  //// Rendering ////
   
+  RenderSystem m_renderSystem;
+    
+  //// Physics ////
+
+  PhysicsSystem m_physicsSystem;
+
+  double m_timeScale;
+  PhysicsSystem::IntegrationMethod m_integrationMethod;
+
+  //// Entities ////
+   
+  EntitySystem m_entitySystem;
+  
+  int m_playerShipId;
+  int m_suspectShipId;
+  
+  int m_earthPlanetId;
+  int m_moonMoonId;
+
+  int m_comPoiId;
+  int m_lagrancePoiId[5];
+    
   // Input
 
   enum InputMode {

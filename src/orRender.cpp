@@ -83,7 +83,7 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
 
 void RenderSystem::renderPoints() const
 {
-  for (int pi = 0; pi < (int)m_renderablePoints.size(); ++pi) {
+  for (int pi = 0; pi < (int)m_points.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
     setDrawColour(point.m_col);
     
@@ -98,7 +98,7 @@ void RenderSystem::renderPoints() const
 
 void RenderSystem::renderSpheres() const
 {
-  for (int si = 0; si < (int)m_renderableSpheres.size(); ++si) {
+  for (int si = 0; si < (int)m_spheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
     setDrawColour(sphere.m_col);
 
@@ -108,7 +108,7 @@ void RenderSystem::renderSpheres() const
 
 void RenderSystem::renderOrbits() const
 {
-  for (int oi = 0; oi < (int)m_renderableOrbits.size(); ++oi) {
+  for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
     setDrawColour(orbit.m_col);
 
@@ -147,7 +147,7 @@ void RenderSystem::renderOrbits() const
 
 void RenderSystem::renderTrails() const
 {
-  for (int ti = 0; ti < (int)m_renderableTrails.size(); ++ti) {
+  for (int ti = 0; ti < (int)m_trails.size(); ++ti) {
     Trail const& trail = getTrail(ti);
     glBegin(GL_LINE_STRIP);
     
@@ -210,10 +210,6 @@ RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos) :
 // TODO grumble not sure this should really be here...
 void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
 {
-  // TODO can have a list of past points and their durations, and cut up trail linearly
-
-  // A -- 50ms -- B -- 10 ms -- C
-
   // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
 
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {

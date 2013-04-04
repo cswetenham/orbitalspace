@@ -136,6 +136,43 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   }
 }
 
+PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const& _body) const {
+  // TODO HACK
+  // SOI really requires each body to have a "parent body" for the SOI computation.
+  // At the moment we hack in the parent for all grav bodies...
+  ensure(numGravBodies() > 0);
+  // TODO Id -> Id
+  double minDist = DBL_MAX;
+  int minDistId = -1;
+  for (int i = 0; i < numGravBodies(); ++i)
+  {
+    GravBody const& soiBody = getGravBody(i);
+    GravBody const& parentBody = getGravBody(soiBody.m_soiParentBody);
+
+    double soi;
+    if (soiBody.m_soiParentBody == i) {
+      // If body is own parent, set infinite SOI
+      soi = DBL_MAX;
+    } else {
+      double const orbitRadius = (parentBody.m_pos - soiBody.m_pos).norm();
+
+      // Distances from COM of Earth-Moon system
+      double const parentOrbitRadius = orbitRadius * soiBody.m_mass / (parentBody.m_mass + soiBody.m_mass);
+      double const childOrbitRadius = orbitRadius - parentOrbitRadius;
+
+      soi = childOrbitRadius * pow(soiBody.m_mass / parentBody.m_mass, 2.0/5.0);
+    }
+
+    double const soiDistance = (_body.m_pos - soiBody.m_pos).norm();
+
+    if (soiDistance < soi && soiDistance < minDist) {
+      minDist = soiDistance;
+      minDistId = i;
+    }
+  }
+  ensure(minDistId >= 0); // TODO return Id instead, -1 for none?
+  return getGravBody(minDistId);
+}
 
 void PhysicsSystem::CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0)
 {
@@ -218,3 +255,4 @@ void PhysicsSystem::CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg,
     }
   }
 }
+
