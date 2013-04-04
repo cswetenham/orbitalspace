@@ -1,11 +1,10 @@
-#ifndef ORRENDER_H
-#define	ORRENDER_H
+#pragma once
 
-# include "orStd.h"
-# include "orMath.h"
-# include "orGfx.h"
+#include "orStd.h"
+#include "orMath.h"
+#include "orGfx.h"
 
-# include <vector>
+#include <vector>
 
 class RenderSystem {
 public:
@@ -87,6 +86,4 @@ private:
   std::vector<Sphere> m_renderableSpheres;
   std::vector<Orbit> m_renderableOrbits;
   std::vector<Trail> m_renderableTrails;
-};
-
-#endif // ORRENDER_H
+}; // class RenderSystem

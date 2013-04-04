@@ -19,27 +19,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "boost_end.h"
 
-// m^3 kg^-1 s^-2
-#define GRAV_CONSTANT 6.6738480e-11
-
-// meters
-#define EARTH_RADIUS 6.371e6
-#define MOON_RADIUS  1.737e6
-
-// kg
-#define EARTH_MASS 5.9742e24
-#define MOON_MASS  7.3477e22
-
-// meters
-// TODO give moon, earth correct orbit, inclination, rotation period, axial tilt.
-// TODO give earth, moon rotation and orbit correct phase for J2000.
-// #define MOON_APOGEE   3.6257e8
-// #define MOON_PERIGEE  4.0541e8
-// degrees
-// #define MOON_INCLINATION 5.145
-
-// seconds
-#define MOON_PERIOD 2.3606e6
+#include "constants.h"
 
 OrbitalSpaceApp::OrbitalSpaceApp():
   App(),
@@ -57,7 +37,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
-  m_integrationMethod(IntegrationMethod_RK4),
+  m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
   m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
@@ -107,7 +87,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   PlanetEntity& earthPlanet = getPlanet(m_earthPlanetId = makePlanet());
   
-  GravBody& earthGravBody = getGravBody(earthPlanet.m_gravBodyId = makeGravBody());
+  PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthPlanet.m_gravBodyId = m_physicsSystem.makeGravBody());
 
   earthGravBody.m_mass = EARTH_MASS;
   earthGravBody.m_radius = EARTH_RADIUS;
@@ -128,7 +108,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   MoonEntity& moonMoon = getMoon(m_moonMoonId = makeMoon());
   
-  GravBody& moonGravBody = getGravBody(moonMoon.m_gravBodyId = makeGravBody());
+  PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonMoon.m_gravBodyId = m_physicsSystem.makeGravBody());
 
   moonGravBody.m_mass = MOON_MASS;
   moonGravBody.m_radius = MOON_RADIUS;
@@ -166,7 +146,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   ShipEntity& playerShip = getShip(m_playerShipId = makeShip());
 
-  ParticleBody& playerBody = getParticleBody(playerShip.m_particleBodyId = makeParticleBody());
+  PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
   
   playerBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   playerBody.m_vel = Vector3d(5e3, 0.0, 0.0);
@@ -187,7 +167,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   ShipEntity& suspectShip = getShip(m_suspectShipId = makeShip());
 
-  ParticleBody& suspectBody = getParticleBody(suspectShip.m_particleBodyId = makeParticleBody());
+  PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
   
   suspectBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   suspectBody.m_vel = Vector3d(5e3, 0.0, 0.0);
@@ -210,7 +190,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   dist.Generate(&m_rnd, 6 * m_shipEntities.size(), &rnds[0]);
   for (int i = 0; i < (int)m_shipEntities.size(); ++i)
   {
-    ParticleBody& shipBody = getParticleBody(m_shipEntities[i].m_particleBodyId);
+    PhysicsSystem::ParticleBody& shipBody = m_physicsSystem.getParticleBody(m_shipEntities[i].m_particleBodyId);
     shipBody.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e4;
     shipBody.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
   }
@@ -379,13 +359,13 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     {
       m_camTargetId++;
       // TODO maybe should point at renderables instead, but eh...
-      if (m_camTargetId < m_gravBodies.size()) {
-        m_camTarget = &getGravBody(m_camTargetId);
-      } else if (m_camTargetId < m_gravBodies.size() + m_particleBodies.size()) {
-        m_camTarget = &getParticleBody(m_camTargetId - m_gravBodies.size());
+      if (m_camTargetId < m_physicsSystem.m_gravBodies.size()) {
+        m_camTarget = &m_physicsSystem.getGravBody(m_camTargetId);
+      } else if (m_camTargetId < m_physicsSystem.m_gravBodies.size() + m_physicsSystem.m_particleBodies.size()) {
+        m_camTarget = &m_physicsSystem.getParticleBody(m_camTargetId - m_physicsSystem.m_gravBodies.size());
       } else {
         m_camTargetId = 0;
-        m_camTarget = &getGravBody(0);
+        m_camTarget = &m_physicsSystem.getGravBody(0);
       }
     }
 
@@ -398,7 +378,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     }
 
     if (_event.key.code == sf::Keyboard::PageDown) {
-      m_integrationMethod = IntegrationMethod((m_integrationMethod + 1) % IntegrationMethod_Count);
+      m_integrationMethod = PhysicsSystem::IntegrationMethod((m_integrationMethod + 1) % PhysicsSystem::IntegrationMethod_Count);
     }
     
     if (_event.key.code == sf::Keyboard::R)
@@ -486,85 +466,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-void OrbitalSpaceApp::CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, double m_simTime, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0)
-{
-  // State: positions, velocities
-  // DStateDt: velocities, accelerations
-  dxdt0.block(0, 0, 3, numParticles + numGravBodies) = x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies);
-  CalcAccel(numParticles, numGravBodies, x0.block(0, 0, 3, numParticles + numGravBodies), x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies), mgravs, dxdt0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies));
-}
-
-template< class P, class V, class OA >
-void OrbitalSpaceApp::CalcAccel(int numParticles, int numGravBodies, P const& p, V const& v, Eigen::VectorXd const& mgravs, OA& o_a)
-{
-  CalcParticleAccel(numParticles, p.block(0, 0, 3, numParticles), v.block(0, 0, 3, numParticles), numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, 0, 3, numParticles));
-  CalcGravAccel(numGravBodies, p.block(0, numParticles, 3, numGravBodies), v.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, numParticles, 3, numGravBodies));
-}
-
-template< class PP, class VP, class PG, class OA >
-void OrbitalSpaceApp::CalcParticleAccel(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a)
-{
-  CalcParticleGrav(numParticles, pp, vp, numGravBodies, pg, mg, o_a);
-  o_a.col(m_playerShipId) += CalcThrust(pp.col(m_playerShipId), vp.col(m_playerShipId)).array();
-}
-
-// TODO not data-oriented etc
-// Calculates acceleration on first body by second body
-template< class PP, class VP, class PG, class OA >
-void OrbitalSpaceApp::CalcParticleGrav(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a)
-{
-  double const G = GRAV_CONSTANT;
-
-  for (int pi = 0; pi < numParticles; ++pi) {
-    Vector3d a(0.0, 0.0, 0.0);
-    for (int gi = 0; gi < numGravBodies; ++gi) {
-      
-      double const M = mg[gi];
-   
-      double const mu = M * G;
-
-      // Calc acceleration due to gravity
-      Vector3d const r = (pg.col(gi) - pp.col(pi));
-      double const r_mag = r.norm();
-
-      Vector3d const r_dir = r / r_mag;
-      
-      Vector3d const a_grav = r_dir * mu / (r_mag * r_mag);
-      a += a_grav;
-    }
-    if (pi == m_playerShipId) {
-      a += CalcThrust(pp.col(pi), vp.col(pi));
-    }
-    o_a.col(pi) = a;
-  }
-}
-
-template< class PG, class VG, class OA >
-void OrbitalSpaceApp::CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA& o_a)
-{
-  double const G = GRAV_CONSTANT;
-  
-  for (int g1i = 0; g1i < numGravBodies; ++g1i) {
-    for (int g2i = 0; g2i < numGravBodies; ++g2i) {
-      if (g1i == g2i) { continue; }
-
-      double const M = mg[g2i];
-  
-      // Calc acceleration due to gravity
-      Vector3d const r = (pg.col(g2i) - pg.col(g1i));
-      double const r_mag = r.norm();
-
-      Vector3d const r_dir = r / r_mag;
-      
-      double const a_mag = (M * G) / (r_mag * r_mag);
-      Vector3d const a_grav = a_mag * r_dir;
-
-      o_a.col(g1i) = a_grav;
-    }
-  }
-}
-
-Vector3d OrbitalSpaceApp::CalcThrust(Vector3d p, Vector3d v)
+Vector3d OrbitalSpaceApp::CalcPlayerThrust(Vector3d p, Vector3d v)
 {
   Vector3d origin = FindSOIGravBody(p).m_pos;
    
@@ -600,195 +502,17 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
   if (!m_paused) {
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
         
-    // TODO try these with floats instead of double?
-
-    int numParticles = (int)m_particleBodies.size();
-    int numGravs = (int)m_gravBodies.size();
-    int stateSize = numParticles + numGravs;
-
-    // State:
-    // numParticles * particle positions
-    // numGravs * grav body positions
-    // numParticles * particle velocities
-    // numGravs * grav body velocities
-    Eigen::Array3Xd x_0(3, 2*stateSize);
-    Eigen::Array3Xd x_1;
-
-    // Load world state into state array
-
-    int curId = 0;
-    for (int i = 0; i < numParticles; ++i, ++curId) {
-      Body& body = m_particleBodies[i];
-      x_0.col(curId) = body.m_pos;
-    }
-
-    for (int i = 0; i < numGravs; ++i, ++curId) {
-      Body& body = m_gravBodies[i];
-      x_0.col(curId) = body.m_pos;
-    }
+    // Update player thrust
+    PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(getShip(m_playerShipId).m_particleBodyId);
+    playerShipBody.m_userAcc = CalcPlayerThrust(playerShipBody.m_pos, playerShipBody.m_vel);
     
-    for (int i = 0; i < numParticles; ++i, ++curId) {
-      Body& body = m_particleBodies[i];
-      x_0.col(curId) = body.m_vel;
-    }
-
-    for (int i = 0; i < numGravs; ++i, ++curId) {
-      Body& body = m_gravBodies[i];
-      x_0.col(curId) = body.m_vel;
-    }
-
-    Eigen::VectorXd mgravs(numGravs);
-    
-    for (int i = 0; i < numGravs; ++i, ++curId) {
-      GravBody& body = m_gravBodies[i];
-      mgravs[i] = body.m_mass;
-    }
-
-    switch (m_integrationMethod) {
-      case IntegrationMethod_ExplicitEuler: { // Comically bad
-        // Previous code, for reference:
-        
-        // Vector3d const a0 = CalcAccel(i, p0, v0);
-        // Vector3d const p1 = p0 + v0 * dt;
-        // Vector3d const v1 = v0 + a0 * dt;
-                
-        Eigen::Array3Xd dxdt_0(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, dxdt_0);
-        
-        x_1 = x_0 + dxdt_0 * dt;
-                
-        break;
-      }
-#if 0
-      case IntegrationMethod_ImplicitEuler: { // Visible creep
-        // Previous code, for reference:
-
-        // Vector3d const a0 = CalcAccel(i, p0, v0);
-        // Vector3d const v1 = v0 + a0 * dt;
-        // Vector3d const p1 = p0 + v1 * dt;
-
-        Eigen::Array3Xd a0particles(3, numParticles);
-        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
-        
-        Eigen::Array3Xd a0gravs(3, numGravs);
-        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
-
-        Eigen::Array3Xd v1particles = v0particles + a0particles * dt;
-        Eigen::Array3Xd p1particles = p0particles + v1particles * dt;
-        
-        Eigen::Array3Xd v1gravs = v0gravs + a0gravs * dt;
-        Eigen::Array3Xd p1gravs = p0gravs + v1gravs * dt;
-
-        break;
-      }
-#endif
-      case IntegrationMethod_ImprovedEuler: { // Looks perfect at low speeds. Really breaks down at 16k x speed... is there drift at slightly lower speeds than that?
-        
-        // TODO is this just the simplest version of RK?
-
-        // Previous code, for reference:
-
-        // Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
-        // Vector3d const pt = p0 + v0 * dt;
-        // Vector3d const vt = v0 + a0 * dt;
-        // Vector3d const at = CalcAccel(i, pt, vt);
-        // Vector3d const p1 = p0 + .5f * (v0 + vt) * dt;
-        // Vector3d const v1 = v0 + .5f * (a0 + at) * dt;
-
-        Eigen::Array3Xd dxdt_0(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, dxdt_0);
-        
-        x_1 = x_0 + dxdt_0 * dt;
-
-        Eigen::Array3Xd x_t = x_0 + dxdt_0 * dt;
-        
-        Eigen::Array3Xd dxdt_t(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + dt, x_t, dxdt_t);
-        
-        x_1 = x_0 + .5 * (dxdt_0 + dxdt_t) * dt;
-        break;
-      }
-#if 0
-      case IntegrationMethod_WeirdVerlet: { // Pretty bad - surprised that this is worse than implicit euler rather than better!
-        // Previous code, for reference:
-        
-        // Vector3d const a0 = CalcAccel(i, p0, v0);
-        // Vector3d const v1 = v0 + a0 * dt;
-        // Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
-
-        Eigen::Array3Xd a0particles(3, numParticles);
-        CalcParticleAccel(numParticles, p0particles, v0particles, numGravs, p0gravs, mgravs, a0particles);
-
-        Eigen::Array3Xd a0gravs(3, numGravs);
-        CalcGravAccel(numGravs, p0gravs, v0gravs, mgravs, a0gravs);
-
-        v1particles = v0particles + a0particles * dt;
-        p1particles = p0particles + v0particles * dt + .5 * a0particles * dt * dt;
-        
-        v1gravs = v0gravs + a0gravs * dt;
-        p1gravs = p0gravs + v0gravs * dt + .5 * a0gravs * dt * dt;
-
-        break;
-      }
-#endif
-#if 0
-      case IntegrationMethod_VelocityVerlet: { // Looks perfect at low speeds. Breaks down at 32k x speed... is there drift at slightly lower speeds? Was less obvious than with IntegrationMethod_ImprovedEuler.
-        Vector3d const a0 = CalcAccel(i, p0, v0); // TODO this is wrong, needs to store the acceleration/thrust last frame
-        Vector3d const p1 = p0 + v0 * dt + .5f * a0 * dt * dt;
-        Vector3d const a1 = CalcAccel(i, p1, v0); // TODO this is wrong, using thrust dir from old frame...
-        Vector3d const v1 = v0 + .5f * (a0 + a1) * dt;
-        break;
-      }
-#endif
-      case IntegrationMethod_RK4: { // Stable up to around 65535x...
-
-        Eigen::Array3Xd k_1(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime, x_0, k_1);
-        Eigen::Array3Xd k_2(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + .5 * dt, x_0 + k_1 * .5 * dt, k_2);
-        Eigen::Array3Xd k_3(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + .5 * dt, x_0 + k_2 * .5 * dt, k_3);
-        Eigen::Array3Xd k_4(3, 2*stateSize);
-        CalcDxDt(numParticles, numGravs, mgravs, m_simTime + dt, x_0 + k_3 * dt, k_4);
-
-        x_1 = x_0 + ((k_1 + 2.0 * k_2 + 2.0 * k_3 + k_4) / 6.0) * dt;
-
-        break;
-      }
-      default: {
-        orErr("Unknown Integration Method!");
-        break;
-      }
-    }
-    
-    // Store world state from array
-    
-    curId = 0;
-    for (int i = 0; i < numParticles; ++i, ++curId) {
-      Body& body = m_particleBodies[i];
-      body.m_pos = x_1.col(curId);
-    }
-
-    for (int i = 0; i < numGravs; ++i, ++curId) {
-      Body& body = m_gravBodies[i];
-      body.m_pos = x_1.col(curId);
-    }
-    
-    for (int i = 0; i < numParticles; ++i, ++curId) {
-      Body& body = m_particleBodies[i];
-      body.m_vel = x_1.col(curId);
-    }
-
-    for (int i = 0; i < numGravs; ++i, ++curId) {
-      Body& body = m_gravBodies[i];
-      body.m_vel = x_1.col(curId);
-    }
+    m_physicsSystem.update(m_integrationMethod, dt);
 
     // Update Planets
     for (int i = 0; i < (int)m_planetEntities.size(); ++i) {
       PlanetEntity& planet = getPlanet(i);
 
-      Body& body = getGravBody(planet.m_gravBodyId);
+      PhysicsSystem::Body& body = m_physicsSystem.getGravBody(planet.m_gravBodyId);
       
       RenderSystem::Sphere& sphere = m_renderSystem.getSphere(planet.m_sphereId);
       sphere.m_pos = body.m_pos;
@@ -798,7 +522,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     for (int i = 0; i < (int)m_moonEntities.size(); ++i) {
       MoonEntity& moon = getMoon(i);
 
-      Body& body = getGravBody(moon.m_gravBodyId);
+      PhysicsSystem::Body& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
 
       RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
       UpdateOrbit(body, orbit);
@@ -812,8 +536,8 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 
     // Update the earth-moon COM
     RenderSystem::Point& com = m_renderSystem.getPoint(m_comPointId);
-    GravBody& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
-    GravBody& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
+    PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
+    PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
     com.m_pos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
 
@@ -844,7 +568,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     for (int i = 0; i < (int)m_shipEntities.size(); ++i) {
       ShipEntity& ship = getShip(i);
 
-      Body& body = getParticleBody(ship.m_particleBodyId);
+      PhysicsSystem::Body& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
      
       RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
       UpdateOrbit(body, orbit);
@@ -866,15 +590,15 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
   }
 }
 
-OrbitalSpaceApp::GravBody const& OrbitalSpaceApp::FindSOIGravBody(Vector3d const& p) {
+PhysicsSystem::GravBody const& OrbitalSpaceApp::FindSOIGravBody(Vector3d const& p) {
   // TODO HACK
   // SOI really requires each body to have a "parent body" for the SOI computation.
   // For now will hack the earth-moon one.
   
   // TODO Id -> Id
 
-  GravBody const& earthBody = getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
-  GravBody const& moonBody = getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
+  PhysicsSystem::GravBody const& earthBody = m_physicsSystem.getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId);
+  PhysicsSystem::GravBody const& moonBody = m_physicsSystem.getGravBody(getMoon(m_moonMoonId).m_gravBodyId);
 
   double const earthMoonOrbitRadius = (earthBody.m_pos - moonBody.m_pos).norm();
 
@@ -893,7 +617,7 @@ OrbitalSpaceApp::GravBody const& OrbitalSpaceApp::FindSOIGravBody(Vector3d const
   }
 }
 
-void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderSystem::Orbit& o_params) {
+void OrbitalSpaceApp::UpdateOrbit(PhysicsSystem::Body const& body, RenderSystem::Orbit& o_params) {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
   // Find body whose sphere of influence we are in
@@ -902,9 +626,9 @@ void OrbitalSpaceApp::UpdateOrbit(Body const& body, RenderSystem::Orbit& o_param
   // Compute Kepler orbit
 
   // HACK
-  GravBody const& parentBody =
-    (&body == (Body const*)&getGravBody(getMoon(m_moonMoonId).m_gravBodyId))
-      ? getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId)
+  PhysicsSystem::GravBody const& parentBody =
+    (&body == (PhysicsSystem::Body const*)&m_physicsSystem.getGravBody(getMoon(m_moonMoonId).m_gravBodyId))
+      ? m_physicsSystem.getGravBody(getPlanet(m_earthPlanetId).m_gravBodyId)
       : FindSOIGravBody(body.m_pos);
   
   double const G = GRAV_CONSTANT;
@@ -1047,7 +771,7 @@ void OrbitalSpaceApp::RenderState()
   Vector3d camPos;
   
   if (m_camMode == CameraMode_FirstPerson) {
-    camPos = getParticleBody(getShip(m_playerShipId).m_particleBodyId).m_pos;
+    camPos = m_physicsSystem.getParticleBody(getShip(m_playerShipId).m_particleBodyId).m_pos;
   } else if (m_camMode == CameraMode_ThirdPerson) {
     camPos = Vector3d(0.0, 0.0, m_camDist);
 

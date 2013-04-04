@@ -16,6 +16,7 @@
 #include "orMath.h"
 
 #include "orRender.h"
+#include "orPhysics.h"
 
 #include <vector>
 
@@ -49,24 +50,11 @@ protected:
   virtual void RenderState();
 
 private:
-  struct Body;
-  struct GravBody;  
-  GravBody const& FindSOIGravBody(Vector3d const& p);
-  void UpdateOrbit(Body const& body, RenderSystem::Orbit& o_params);
+  PhysicsSystem::GravBody const& FindSOIGravBody(Vector3d const& p);
+  void UpdateOrbit(PhysicsSystem::Body const& body, RenderSystem::Orbit& o_params);
   void LookAt(Vector3d pos, Vector3d target, Vector3d up);
 
-  void CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, double m_simTime, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0);
-  template< class P, class V, class OA >
-  void CalcAccel(int numParticles, int numGravBodies, P const& p, V const& v, Eigen::VectorXd const& mgravs, OA& o_a);
-  template< class PP, class VP, class PG, class OA >
-  void CalcParticleAccel(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a);
-  template< class PP, class VP, class PG, class OA >
-  void CalcParticleGrav(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA& o_a);
-  
-  template< class PG, class VG, class OA >
-  void CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA& o_a);
-
-  Vector3d CalcThrust(Vector3d p, Vector3d v);
+  Vector3d CalcPlayerThrust(Vector3d p, Vector3d v);
 
 private:
   Rnd64 m_rnd;
@@ -95,33 +83,7 @@ private:
   //// Physics ////
 
   double m_timeScale;
-
-  struct Body
-  {
-    Vector3d m_pos;
-    Vector3d m_vel;
-  };
-
-  struct ParticleBody : public Body
-  {
-  };
-  std::vector<ParticleBody> m_particleBodies;
-
-  int makeParticleBody() { m_particleBodies.push_back(ParticleBody()); return m_particleBodies.size() - 1; }
-  ParticleBody& getParticleBody(int i) { return m_particleBodies[i]; }
-
-  struct GravBody : public Body
-  {
-    double m_radius;
-    double m_mass;
-  };
-  std::vector<GravBody> m_gravBodies;
-
-  int makeGravBody() { m_gravBodies.push_back(GravBody()); return m_gravBodies.size() - 1; }
-  GravBody& getGravBody(int i) { return m_gravBodies[i]; }
-
-  // TODO
-  class PhysicsSystem {};
+  
   PhysicsSystem m_physicsSystem;
 
   //// Rendering ////
@@ -177,7 +139,7 @@ private:
 
   // Camera
 
-  Body* m_camTarget;
+  PhysicsSystem::Body* m_camTarget;
   size_t m_camTargetId;
   std::vector<std::string> m_camTargetNames;
 
@@ -207,16 +169,7 @@ private:
 
   uint32_t m_thrusters;
 
-  enum IntegrationMethod {
-    IntegrationMethod_ExplicitEuler = 0,
-    // IntegrationMethod_ImplicitEuler,
-    IntegrationMethod_ImprovedEuler,
-    // IntegrationMethod_WeirdVerlet,
-    // IntegrationMethod_VelocityVerlet,
-    IntegrationMethod_RK4,
-    IntegrationMethod_Count
-  };
-  IntegrationMethod m_integrationMethod;
+  PhysicsSystem::IntegrationMethod m_integrationMethod;
   
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
