@@ -135,7 +135,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   moonOrbit.m_col = m_colG[1];
   moonOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos));
+  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
 
@@ -145,13 +145,28 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   
   // Create Earth-Moon COM
 
-  RenderSystem::Point& comPoint = m_renderSystem.getPoint(m_comPointId = m_renderSystem.makePoint());
+  EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
+  
+  RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId = m_renderSystem.makePoint());
   comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
   comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
+  
+  CameraSystem::Target& comCamTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId = m_cameraSystem.makeTarget());
+  comCamTarget.m_pos = comPoint.m_pos;
+  comCamTarget.m_name = std::string("Earth-Moon COM");
 
   for (int i = 0; i < 5; ++i) {
-    RenderSystem::Point& comPoint = m_renderSystem.getPoint(m_lagrangePointIds[i] = m_renderSystem.makePoint());
-    comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
+    EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i] = m_entitySystem.makePoi());
+    
+    RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId = m_renderSystem.makePoint());
+    lagrangePoint.m_pos = Vector3d(0.0, 0.0, 0.0);
+    lagrangePoint.m_col = Vector3f(1.0, 0.0, 0.0);
+
+    CameraSystem::Target& lagrangeCamTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId = m_cameraSystem.makeTarget());
+    lagrangeCamTarget.m_pos = lagrangePoint.m_pos;
+    std::stringstream builder;
+    builder << "Earth-Moon L" << (i + 1);
+    lagrangeCamTarget.m_name = builder.str();
   }
   
   // Create ships
@@ -166,7 +181,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   playerOrbit.m_col = m_colB[2];
   playerOrbit.m_pos = earthGravBody.m_pos;
     
-  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos));
+  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   playerTrail.m_colOld = m_colB[0];
   playerTrail.m_colNew = m_colB[4];
 
@@ -189,7 +204,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   suspectOrbit.m_col = m_colR[2];
   suspectOrbit.m_pos = earthGravBody.m_pos;
   
-  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos));
+  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   suspectTrail.m_colOld = m_colR[0];
   suspectTrail.m_colNew = m_colR[4];
   
@@ -376,6 +391,11 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::Tab)
     {
       m_cameraTargetId = m_cameraSystem.nextTarget(m_cameraTargetId);
+      // TODO clear all trails
+      // TODO make all trails relative to camera target
+      // Maybe make a physics frame object, with position + velocity?
+      // Make Body the frame?
+      // Make frame its own system, have render, physics etc share the frame?
     }
 
     if (_event.key.code == sf::Keyboard::F1) {
@@ -517,37 +537,53 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     
     m_physicsSystem.update(m_integrationMethod, dt);
 
-    m_entitySystem.update(_dt);
+    m_entitySystem.update(_dt, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
     
+    // TODO eaghghgh not clear where these should live
+
     // Update the earth-moon COM
-    RenderSystem::Point& com = m_renderSystem.getPoint(m_comPointId);
     PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_earthPlanetId).m_gravBodyId);
     PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(m_entitySystem.getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
-    com.m_pos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
+    Vector3d comPos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
+    
+    EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId);
+    RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId);
+    comPoint.m_pos = comPos;
+    CameraSystem::Target& comTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId);
+    comTarget.m_pos = comPos;
 
     // Update the earth-moon Lagrange points
-    // TODO some / all of these should be based on the COM and not earth position
     Vector3d const earthMoonVector = moonBody.m_pos - earthBody.m_pos;
     double const earthMoonOrbitRadius = earthMoonVector.norm();
     Vector3d const earthMoonDir = earthMoonVector / earthMoonOrbitRadius;
     double const massRatio = MOON_MASS / EARTH_MASS;
     double const r1 = earthMoonOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
     double const r3 = earthMoonOrbitRadius * (1.0 + (7.0/12.0) * massRatio); // extra 1.0 to make r3 a distand from Earth position rather than an offset from earthMoonOrbitRadius
+    
+    Vector3d lagrangePos[5];
     // Lagrange point 1
-    m_renderSystem.getPoint(m_lagrangePointIds[0]).m_pos = moonBody.m_pos - earthMoonDir * r1;
+    lagrangePos[0] = moonBody.m_pos - earthMoonDir * r1;
     // Lagrange point 2
-    m_renderSystem.getPoint(m_lagrangePointIds[1]).m_pos = moonBody.m_pos + earthMoonDir * r1;
+    lagrangePos[1] = moonBody.m_pos + earthMoonDir * r1;
     // Lagrange point 3
-    m_renderSystem.getPoint(m_lagrangePointIds[2]).m_pos = earthBody.m_pos - earthMoonDir * r3;
+    lagrangePos[2] = earthBody.m_pos - earthMoonDir * r3;
     
     // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
     Vector3d orbitAxis = moonBody.m_vel.normalized().cross(earthMoonVector.normalized());
     Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
     // Lagrange point 4
-    m_renderSystem.getPoint(m_lagrangePointIds[3]).m_pos = rotation           * earthMoonVector;
+    lagrangePos[3] = rotation           * earthMoonVector;
     // Lagrange point 5
-    m_renderSystem.getPoint(m_lagrangePointIds[4]).m_pos = rotation.inverse() * earthMoonVector;
+    lagrangePos[4] = rotation.inverse() * earthMoonVector;
+
+    for (int i = 0; i < 5; ++i) {
+      EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i]);
+      RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId);
+      lagrangePoint.m_pos = lagrangePos[i];
+      CameraSystem::Target& lagrangeTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId);
+      lagrangeTarget.m_pos = lagrangePos[i];
+    }
 
     m_simTime += dt;
   }

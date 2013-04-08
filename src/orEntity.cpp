@@ -6,7 +6,11 @@
 
 #include "constants.h"
 
-void EntitySystem::update(double const _dt)
+// TODO want ability to record past simulation states and extrapolate future ones...
+// Ideally will need to support entities being created or destroyed...
+// Will want to support AI; we'll want to 
+
+void EntitySystem::update(double const _dt, Vector3d const _origin)
 {
   // Update Planets
   for (int i = 0; i < (int)m_planets.size(); ++i) {
@@ -50,14 +54,18 @@ void EntitySystem::update(double const _dt)
     UpdateOrbit(body, m_physicsSystem.findSOIGravBody(body), orbit);
 
     RenderSystem::Trail& trail = m_renderSystem.getTrail(ship.m_trailId);
+    trail.m_HACKorigin = _origin;
     trail.Update(_dt, body.m_pos);
-
+    
     RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);
     point.m_pos = body.m_pos;
 
     CameraSystem::Target& camTarget = m_cameraSystem.getTarget(ship.m_cameraTargetId);
     camTarget.m_pos = body.m_pos;
   }
+
+  // Update POIs
+
 }
 
 void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, RenderSystem::Orbit& o_params)

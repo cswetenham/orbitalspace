@@ -156,7 +156,7 @@ void RenderSystem::renderTrails() const
       // Render from tail to head
       int tailIdx = (trail.m_headIdx + 1) % Trail::NUM_TRAIL_PTS;
       int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
-      Vector3d v = trail.m_trailPts[idx];
+      Vector3d v = trail.m_trailPts[idx] + trail.m_HACKorigin;
 
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
       Vector3f c = Util::Lerp(trail.m_colNew, trail.m_colOld, l);
@@ -177,7 +177,7 @@ void RenderSystem::renderTrails() const
       // Render from tail to head
       int tailIdx = (trail.m_headIdx + 1) % Trail::NUM_TRAIL_PTS;
       int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
-      Vector3d v = trail.m_trailPts[idx];
+      Vector3d v = trail.m_trailPts[idx] + trail.m_HACKorigin;
 
       glPointSize(10.0);
       glBegin(GL_POINTS);
@@ -197,12 +197,12 @@ void RenderSystem::render()
   renderTrails();
 }
 
-RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos) :
+RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos, Vector3d const _initOrigin) :
   m_duration(_duration), 
   m_headIdx(0)
 {
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
-    m_trailPts[i] = _initPos;
+    m_trailPts[i] = _initPos - m_HACKorigin;
     m_trailPointAge[i] = 0.0;
   }
 }
@@ -211,6 +211,8 @@ RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos) :
 void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
 {
   // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
+
+  Vector3d const pos = _pos - m_HACKorigin;
 
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
     m_trailPointAge[i] += _dt;
@@ -225,7 +227,7 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
     m_headIdx = (m_headIdx + 1) % NUM_TRAIL_PTS;
   }
 
-  m_trailPts[m_headIdx] = _pos;
+  m_trailPts[m_headIdx] = pos;
   m_trailPointAge[m_headIdx] = 0.f;
     
   // From the head, skip over points that are younger than max age;

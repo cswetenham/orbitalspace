@@ -111,7 +111,7 @@ private:
   int m_moonMoonId;
 
   int m_comPoiId;
-  int m_lagrancePoiId[5];
+  int m_lagrangePoiIds[5];
     
   // Input
 

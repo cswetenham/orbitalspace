@@ -52,7 +52,7 @@ public:
   struct Trail
   {
     // TODO make into methods on RenderSystem instead
-    Trail(double const _duration, Vector3d const _initPos);
+    Trail(double const _duration, Vector3d const _initPos, Vector3d const _initOrigin);
     void Update(double const _dt, Vector3d const _pos);
 
     // TODO this stores a fixed number of frames, not the best approach
@@ -63,12 +63,14 @@ public:
     Vector3d m_trailPts[NUM_TRAIL_PTS];
     double m_trailPointAge[NUM_TRAIL_PTS];
 
+    Vector3d m_HACKorigin;
+
     Vector3f m_colOld;
     Vector3f m_colNew;
   };
   
   int numTrails() const { return (int)m_trails.size(); }
-  int makeTrail( double const _duration, Vector3d const _initPos ) { m_trails.push_back(Trail(_duration, _initPos)); return numTrails() - 1; }
+  int makeTrail( double const _duration, Vector3d const _initPos, Vector3d const _origin ) { m_trails.push_back(Trail(_duration, _initPos, _origin)); return numTrails() - 1; }
   Trail&       getTrail(int i)       { return m_trails[i]; }
   Trail const& getTrail(int i) const { return m_trails[i]; }
 

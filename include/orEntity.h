@@ -19,7 +19,7 @@ public:
     m_physicsSystem(physicsSystem)
   {
   }
-
+  
   struct Ship {
     int m_particleBodyId;
     int m_pointId;
@@ -70,7 +70,7 @@ public:
   Poi&       getPoi(int id)       { return m_pois[id]; }
   Poi const& getPoi(int id) const { return m_pois[id]; }
 
-  void update(double const _dt);
+  void update(double const _dt, Vector3d const _origin);
 
 private:
   // TODO not happy this lives here
