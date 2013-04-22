@@ -60,7 +60,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
     m_colR[i] = Vector3f(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
     m_colB[i] = Vector3f(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
   }
-  
+
   m_light /= m_light.norm();
 
   // Make camera
@@ -77,20 +77,20 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   // Distances from COM of Earth-Moon system
   double const earthOrbitRadius = earthMoonOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
   double const moonOrbitRadius = earthMoonOrbitRadius - earthOrbitRadius;
-  
+
   Vector3d const earthPos = Vector3d(0.0, 0.0, -earthOrbitRadius);
   Vector3d const moonPos = Vector3d(0.0, 0.0, moonOrbitRadius);
-    
+
   double const earthSpeed = earthOrbitRadius / angularSpeed;
   double const moonSpeed = moonOrbitRadius / angularSpeed;
-    
+
   Vector3d const earthVel = Vector3d(-earthSpeed, 0.0, 0.0);
   Vector3d const moonVel = Vector3d(moonSpeed, 0.0, 0.0);
 
   // Create Earth
-  
+
   EntitySystem::Planet& earthPlanet = m_entitySystem.getPlanet(m_earthPlanetId = m_entitySystem.makePlanet());
-  
+
   PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthPlanet.m_gravBodyId = m_physicsSystem.makeGravBody());
 
   earthGravBody.m_mass = EARTH_MASS;
@@ -105,17 +105,17 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   earthSphere.m_radius = earthGravBody.m_radius;
   earthSphere.m_pos = earthGravBody.m_pos;
   earthSphere.m_col = m_colG[1];
-  
+
   CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthPlanet.m_cameraTargetId = m_cameraSystem.makeTarget());
   earthCamTarget.m_pos = earthGravBody.m_pos;
   earthCamTarget.m_name = std::string("Earth");
 
   m_cameraTargetId = earthPlanet.m_cameraTargetId;
-  
+
   // Create Moon
 
   EntitySystem::Moon& moonMoon = m_entitySystem.getMoon(m_moonMoonId = m_entitySystem.makeMoon());
-  
+
   PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonMoon.m_gravBodyId = m_physicsSystem.makeGravBody());
 
   moonGravBody.m_mass = MOON_MASS;
@@ -134,7 +134,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonMoon.m_orbitId = m_renderSystem.makeOrbit());
   moonOrbit.m_col = m_colG[1];
   moonOrbit.m_pos = earthGravBody.m_pos;
-  
+
   RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   moonTrail.m_colOld = m_colG[0];
   moonTrail.m_colNew = m_colG[4];
@@ -142,22 +142,22 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonMoon.m_cameraTargetId = m_cameraSystem.makeTarget());
   moonCamTarget.m_pos = moonGravBody.m_pos;
   moonCamTarget.m_name = std::string("Moon");
-  
+
   // Create Earth-Moon COM
 
   EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
-  
+
   RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId = m_renderSystem.makePoint());
   comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
   comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
-  
+
   CameraSystem::Target& comCamTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId = m_cameraSystem.makeTarget());
   comCamTarget.m_pos = comPoint.m_pos;
   comCamTarget.m_name = std::string("Earth-Moon COM");
 
   for (int i = 0; i < 5; ++i) {
     EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i] = m_entitySystem.makePoi());
-    
+
     RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId = m_renderSystem.makePoint());
     lagrangePoint.m_pos = Vector3d(0.0, 0.0, 0.0);
     lagrangePoint.m_col = Vector3f(1.0, 0.0, 0.0);
@@ -168,19 +168,19 @@ OrbitalSpaceApp::OrbitalSpaceApp():
     builder << "Earth-Moon L" << (i + 1);
     lagrangeCamTarget.m_name = builder.str();
   }
-  
+
   // Create ships
   EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
 
   PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
-  
+
   playerBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   playerBody.m_vel = Vector3d(5e3, 0.0, 0.0);
-  
+
   RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
   playerOrbit.m_col = m_colB[2];
   playerOrbit.m_pos = earthGravBody.m_pos;
-    
+
   RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   playerTrail.m_colOld = m_colB[0];
   playerTrail.m_colNew = m_colB[4];
@@ -188,7 +188,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
   playerPoint.m_pos = playerBody.m_pos;
   playerPoint.m_col = m_colB[4];
-  
+
   CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
   playerCamTarget.m_pos = playerBody.m_pos;
   playerCamTarget.m_name = std::string("Player");
@@ -196,18 +196,18 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_suspectShipId = m_entitySystem.makeShip());
 
   PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
-  
+
   suspectBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
   suspectBody.m_vel = Vector3d(5e3, 0.0, 0.0);
-  
+
   RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
   suspectOrbit.m_col = m_colR[2];
   suspectOrbit.m_pos = earthGravBody.m_pos;
-  
+
   RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   suspectTrail.m_colOld = m_colR[0];
   suspectTrail.m_colNew = m_colR[4];
-  
+
   RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
   suspectPoint.m_pos = suspectBody.m_pos;
   suspectPoint.m_col = m_colR[4];
@@ -229,7 +229,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
     shipBody.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
   }
   delete[] rnds;
-  
+
   m_music.openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music.setLoop(true);
   // m_music.play();
@@ -261,7 +261,7 @@ void OrbitalSpaceApp::Run()
   while (m_running)
   {
     Timer::PerfTime const frameStart = Timer::GetPerfTime();
-    
+
     {
       PERFTIMER("PollEvents");
       PollEvents();
@@ -273,7 +273,7 @@ void OrbitalSpaceApp::Run()
         sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
         sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
         sf::Mouse::setPosition(centerPos, *m_window);
-    
+
         m_camTheta += mouseDelta.x * M_TAU / 300.0;
         m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
         m_camPhi += mouseDelta.y * M_TAU / 300.0;
@@ -288,7 +288,7 @@ void OrbitalSpaceApp::Run()
         UpdateState(Timer::PerfTimeToMillis(m_lastFrameDuration));
       }
     }
-    
+
     {
       PERFTIMER("BeginRender");
       BeginRender();
@@ -303,7 +303,7 @@ void OrbitalSpaceApp::Run()
       PERFTIMER("EndRender");
       EndRender();
     }
-    
+
     sf::sleep(sf::milliseconds(1)); // TODO sleep according to frame duration
 
     m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
@@ -317,15 +317,17 @@ void OrbitalSpaceApp::InitRender()
   // TODO
   m_config.width = 1280;
   m_config.height = 768;
-  
+
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
   settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
   m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
-  
+
   sf::WindowHandle winHandle = m_window->getSystemHandle();
+#ifdef WIN32 // TODO linux
   orPlatform::FocusWindow(winHandle);
+#endif
   m_hasFocus = true;
 
 }
@@ -357,16 +359,16 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   if (_event.type == sf::Event::MouseButtonPressed) {
     if (_event.mouseButton.button == sf::Mouse::Right) {
       m_inputMode = InputMode_RotateCamera;
-      
+
       // When rotating the camera, hide the mouse cursor and center it. We'll then track how far it's moved off center each frame.
       sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
       m_savedMousePos = sf::Mouse::getPosition(*m_window);
       m_window->setMouseCursorVisible(false);
       sf::Mouse::setPosition(centerPos, *m_window);
-      
+
     }
   }
-  
+
   if (_event.type == sf::Event::MouseButtonReleased) {
     if (_event.mouseButton.button == sf::Mouse::Right) {
       // Restore the old position of the cursor.
@@ -409,7 +411,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::PageDown) {
       m_integrationMethod = PhysicsSystem::IntegrationMethod((m_integrationMethod + 1) % PhysicsSystem::IntegrationMethod_Count);
     }
-    
+
     if (_event.key.code == sf::Keyboard::R)
     {
       m_camOrig = !m_camOrig;
@@ -498,7 +500,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
 Vector3d OrbitalSpaceApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 {
   Vector3d origin = m_physicsSystem.findSOIGravBody(playerBody).m_pos;
-   
+
   // Calc acceleration due to gravity
   Vector3d const r = (origin - playerBody.m_pos);
   double const r_mag = r.norm();
@@ -507,9 +509,9 @@ Vector3d OrbitalSpaceApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& pl
 
   // Calc acceleration due to thrust
   double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
-      
+
   Vector3d thrustVec(0.0,0.0,0.0);
-    
+
   Vector3d const fwd = playerBody.m_vel.normalized(); // Prograde
   Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
   Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
@@ -530,15 +532,15 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
 {
   if (!m_paused) {
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
-        
+
     // Update player thrust
     PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId);
     playerShipBody.m_userAcc = CalcPlayerThrust(playerShipBody);
-    
+
     m_physicsSystem.update(m_integrationMethod, dt);
 
     m_entitySystem.update(_dt, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
-    
+
     // TODO eaghghgh not clear where these should live
 
     // Update the earth-moon COM
@@ -546,7 +548,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(m_entitySystem.getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
     Vector3d comPos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
-    
+
     EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId);
     RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId);
     comPoint.m_pos = comPos;
@@ -560,7 +562,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     double const massRatio = MOON_MASS / EARTH_MASS;
     double const r1 = earthMoonOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
     double const r3 = earthMoonOrbitRadius * (1.0 + (7.0/12.0) * massRatio); // extra 1.0 to make r3 a distand from Earth position rather than an offset from earthMoonOrbitRadius
-    
+
     Vector3d lagrangePos[5];
     // Lagrange point 1
     lagrangePos[0] = moonBody.m_pos - earthMoonDir * r1;
@@ -568,7 +570,7 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     lagrangePos[1] = moonBody.m_pos + earthMoonDir * r1;
     // Lagrange point 3
     lagrangePos[2] = earthBody.m_pos - earthMoonDir * r3;
-    
+
     // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
     Vector3d orbitAxis = moonBody.m_vel.normalized().cross(earthMoonVector.normalized());
     Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
@@ -602,12 +604,12 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 void OrbitalSpaceApp::RenderState()
 {
   m_window->resetGLStates();
-  
+
   // Render debug text
   {
     sf::Font font(sf::Font::getDefaultFont());
     Eigen::Matrix<sf::Uint8, 3, 1> ct = (m_colG[4] * 255).cast<sf::Uint8>();
-    
+
     uint32_t const fontSize = 14;
     sf::Text text(sf::String("Hello, World!"), font, fontSize);
     text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
@@ -617,7 +619,7 @@ void OrbitalSpaceApp::RenderState()
     str.precision(3);
     str.width(7);
     str.flags(std::ios::right | std::ios::fixed);
-    
+
     str << "Time Scale: " << m_timeScale << "\n";
 
     {
@@ -632,7 +634,7 @@ void OrbitalSpaceApp::RenderState()
       ptime curDateTime = gameStart + seconds((long)m_simTime);
       str << "UTC DateTime: " << to_simple_string(curDateTime) << "\n";
     }
-    
+
     CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
     str << "Cam Target: " << camTarget.m_name << "\n";
     str << "Cam Dist: " << m_camDist << "\n";
@@ -645,7 +647,7 @@ void OrbitalSpaceApp::RenderState()
 
     // TODO: better double value text formatting
     // TODO: small visualisations for the angle etc values
-   
+
     text.setString(str.str());
     m_window->draw(text);
   }
@@ -673,13 +675,12 @@ void OrbitalSpaceApp::RenderState()
   Vector3d up(0.0, 1.0, 0.0);
 
   // Set camera
-  
-  assert(m_camTarget);
+
   CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
   Vector3d const camTargetPos = camTarget.m_pos;
 
   Vector3d camPos;
-  
+
   if (m_camMode == CameraMode_FirstPerson) {
     camPos = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos;
   } else if (m_camMode == CameraMode_ThirdPerson) {
@@ -704,7 +705,7 @@ void OrbitalSpaceApp::RenderState()
   m_cameraSystem.setCameraMatrix(m_cameraId, m_cameraTargetId, up);
 
   glEnable(GL_TEXTURE_2D);
-  
+
   glLineWidth(1);
   glEnable(GL_POINT_SMOOTH);
   glEnable(GL_LINE_SMOOTH);
@@ -716,8 +717,8 @@ void OrbitalSpaceApp::RenderState()
   } else {
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
-  
+
   m_renderSystem.render();
-  
+
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }

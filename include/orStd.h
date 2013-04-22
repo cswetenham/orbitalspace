@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   orStd.h
  * Author: fib
  *
@@ -10,6 +10,7 @@
 
 # include <stdint.h>
 # include <limits.h>
+# include <float.h>
 
 # include <assert.h>
 # include <malloc.h>
@@ -88,7 +89,7 @@ NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _
   }
 }
 
-// TODO set up CONFIG_DEBUG, CONFIG_PROFILE 
+// TODO set up CONFIG_DEBUG, CONFIG_PROFILE
 #ifdef _DEBUG
 # define ensure(_cond, ...) ensure_impl(_cond, #_cond, __FILE__, __LINE__, __VA_ARGS__)
 #else
