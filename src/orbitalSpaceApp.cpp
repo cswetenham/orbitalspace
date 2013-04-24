@@ -324,6 +324,12 @@ void OrbitalSpaceApp::InitRender()
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
   m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
 
+  GLenum err = glewInit();
+  if (GLEW_OK != err) {
+    /* Problem: glewInit failed, something is seriously wrong. */
+    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+  }
+
   sf::WindowHandle winHandle = m_window->getSystemHandle();
 #ifdef WIN32 // TODO linux
   orPlatform::FocusWindow(winHandle);

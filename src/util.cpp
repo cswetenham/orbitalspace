@@ -23,7 +23,7 @@ Logging and verification utility macros and functions
 #endif
 
 // For glColor3f()
-#include <Eigen/OpenGLSupport>
+#include <orGfx.h>
 
 static bool x_shouldExit;
 
