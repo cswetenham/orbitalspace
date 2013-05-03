@@ -11,6 +11,7 @@ public:
 
   struct Camera {
     Vector3d m_pos;
+    float m_fov;
   };
 
   int numCameras() const { return (int)m_cameras.size(); }
@@ -32,6 +33,7 @@ public:
 
   int nextTarget(int targetId) { return (targetId + 1) % numTargets(); }
 
+  Eigen::Projective3d calcProjMatrix( int cameraId, int width, int height, float minZ, float maxZ );
   Eigen::Affine3d calcCameraMatrix( int cameraId, int targetId, Vector3d up  );
 
 private:

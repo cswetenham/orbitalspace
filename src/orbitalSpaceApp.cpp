@@ -66,6 +66,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   // Make camera
 
   CameraSystem::Camera camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
+  camera.m_fov = 35.0; // degrees? Seems low...this is the vertical fov though...
 
   // Make debug text label
 
@@ -651,23 +652,10 @@ void OrbitalSpaceApp::RenderState()
 {
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
-  double const fov = 35.0; // degrees?
-  double const aspect = m_config.width / (double)m_config.height;
   double const minZ = 1.0; // meters
   double const maxZ = 1e11; // meters
 
-  double const heightZ = tan(0.5 * M_TAU * fov / 360.0);
-  double const widthZ = heightZ * aspect;
-
-  Eigen::Matrix4d projMatrix;
-  projMatrix.setZero(4, 4);
-  projMatrix.coeffRef(0, 0) = 1 / widthZ;
-  projMatrix.coeffRef(1, 1) = 1 / heightZ;
-  projMatrix.coeffRef(2, 2) = -(maxZ + minZ) / (maxZ - minZ);
-  projMatrix.coeffRef(2, 3) = -2*maxZ*minZ / (maxZ - minZ);
-
-  projMatrix.coeffRef(3, 2) = -1;
-
+  Eigen::Projective3d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.height, m_config.width, minZ, maxZ );
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up(0.0, 1.0, 0.0);
@@ -726,11 +714,7 @@ void OrbitalSpaceApp::RenderState()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  if ( m_inputMode ) { // laziest hack
-    glMultMatrix( projMatrix );
-  } else {
-    gluPerspective(fov, aspect, minZ, maxZ); // meters
-  }
+  glMultMatrix( projMatrix );
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
