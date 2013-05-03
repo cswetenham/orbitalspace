@@ -32,7 +32,7 @@ public:
 
   int nextTarget(int targetId) { return (targetId + 1) % numTargets(); }
 
-  void setCameraMatrix( int cameraId, int targetId, Vector3d up );
+  Eigen::Affine3d calcCameraMatrix( int cameraId, int targetId, Vector3d up  );
 
 private:
   std::vector<Camera> m_cameras;

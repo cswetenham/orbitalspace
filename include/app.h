@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   app.h
  * Author: fib
  *
@@ -18,6 +18,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
+// TODO remove this base class, it's of no use.
+
 class App
 {
 public:
@@ -30,16 +32,16 @@ protected:
 
   virtual void InitState();
   virtual void ShutdownState();
-  
+
   virtual void HandleEvent(sf::Event const& _event) = 0;
-  
+
   virtual void UpdateState(double const _dt) = 0;
-  
+
   virtual void RenderState() = 0;
 
-public:  
+public:
   virtual void Run();
-  
+
   void Init();
   void Shutdown();
 
@@ -47,7 +49,7 @@ protected:
   void PollEvents();
   void BeginRender();
   void EndRender();
-    
+
 protected:
   sf::RenderWindow* m_window;
   Timer::PerfTime m_lastFrameDuration;

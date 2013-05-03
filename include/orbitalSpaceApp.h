@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ssrm1app.h
  * Author: s1149322
  *
@@ -32,7 +32,7 @@ class OrbitalSpaceApp :
 public:
   OrbitalSpaceApp();
   virtual ~OrbitalSpaceApp();
-  
+
   // From App
 public:
   virtual void Run();
@@ -46,7 +46,7 @@ protected:
 
   virtual void HandleEvent(sf::Event const& _event);
   virtual void UpdateState(double const _dt);
-    
+
   virtual void RenderState();
 
 private:
@@ -54,14 +54,14 @@ private:
 
 private:
   Rnd64 m_rnd;
-  
+
   double m_simTime;
 
   struct Config {
     int width;
     int height;
   };
-  
+
   Config m_config;
 
   // Simulation options
@@ -75,7 +75,7 @@ private:
   double m_camDist;
   double m_camTheta;
   double m_camPhi;
-  
+
   //// Camera ////
 
   CameraSystem m_cameraSystem;
@@ -90,9 +90,11 @@ private:
   int m_cameraTargetId;
 
   //// Rendering ////
-  
+
   RenderSystem m_renderSystem;
-    
+
+  int m_debugTextLabelId;
+
   //// Physics ////
 
   PhysicsSystem m_physicsSystem;
@@ -101,18 +103,18 @@ private:
   PhysicsSystem::IntegrationMethod m_integrationMethod;
 
   //// Entities ////
-   
+
   EntitySystem m_entitySystem;
-  
+
   int m_playerShipId;
   int m_suspectShipId;
-  
+
   int m_earthPlanetId;
   int m_moonMoonId;
 
   int m_comPoiId;
   int m_lagrangePoiIds[5];
-    
+
   // Input
 
   enum InputMode {
@@ -122,7 +124,7 @@ private:
   InputMode m_inputMode;
 
   sf::Vector2i m_savedMousePos;
-  
+
   enum Thrusters
   {
     ThrustFwd = 1 << 0,
@@ -141,7 +143,7 @@ private:
   Vector3f m_colG[PALETTE_SIZE];
   Vector3f m_colR[PALETTE_SIZE];
   Vector3f m_colB[PALETTE_SIZE];
-  
+
   Vector3d m_light;
 
   bool m_hasFocus;

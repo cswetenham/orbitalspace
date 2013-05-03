@@ -3,6 +3,9 @@
 
 #include "orRender.h"
 
+// For Text rendering
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 void RenderSystem::setDrawColour(Vector3f const& _c) const
 {
@@ -21,7 +24,7 @@ void RenderSystem::drawCircle(double const radius, int const steps) const
     double x,y;
 
     double const stepInc = M_TAU / steps;
-    
+
     /* Draw a line loop for each stack */
     glBegin(GL_LINE_LOOP);
     for (int curStep = 0; curStep < steps; curStep++) {
@@ -45,7 +48,7 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
 
     double const sliceInc = M_TAU / (-slices);
     double const stackInc = M_TAU / (2*stacks);
-    
+
     /* Draw a line loop for each stack */
     for (curStack = 1; curStack < stacks; curStack++) {
         y = cos( curStack * stackInc );
@@ -86,13 +89,34 @@ void RenderSystem::renderPoints() const
   for (int pi = 0; pi < (int)m_points.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
     setDrawColour(point.m_col);
-    
+
     glPointSize(10.0);
     glBegin(GL_POINTS);
     Vector3d p = point.m_pos;
     glVertex3d(p.x(), p.y(), p.z());
     glEnd();
     glPointSize(1.0);
+  }
+}
+
+
+void RenderSystem::renderLabels(sf::RenderWindow* window) const
+{
+  sf::Font font(sf::Font::getDefaultFont());
+  uint32_t const fontSize = 14;
+
+  for (int li = 0; li < (int)m_labels.size(); ++li) {
+    RenderSystem::Label const& label = getLabel(li);
+    sf::Text text(label.m_text, font, fontSize);
+
+    Eigen::Matrix<sf::Uint8, 3, 1> ct = (label.m_col * 255).cast<sf::Uint8>();
+    text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
+
+    // TODO actually, want to project the 3D position for Labels, but not
+    // for debug text / 2D UI elements!
+    text.setPosition(label.m_pos.x(), label.m_pos.y());
+
+    window->draw(text);
   }
 }
 
@@ -119,7 +143,7 @@ void RenderSystem::renderOrbits() const
     double const HAX_RANGE = .9; // limit range to stay out of very large values
     // TODO want to instead limit the range based on... some viewing area?
     // might be two visible segments, one from +ve and one from -ve theta, with
-    // different visible ranges. Could determine 
+    // different visible ranges. Could determine
     // TODO and want to take steps of fixed length/distance
     double range;
     if (orbit.e < 1 - delta) { // ellipse
@@ -150,7 +174,7 @@ void RenderSystem::renderTrails() const
   for (int ti = 0; ti < (int)m_trails.size(); ++ti) {
     Trail const& trail = getTrail(ti);
     glBegin(GL_LINE_STRIP);
-    
+
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
     {
       // Render from tail to head
@@ -164,7 +188,7 @@ void RenderSystem::renderTrails() const
 
       glVertex3d(v.x(),v.y(),v.z());
     }
-    
+
     glEnd();
 
 
@@ -189,7 +213,12 @@ void RenderSystem::renderTrails() const
   }
 }
 
-void RenderSystem::render()
+void RenderSystem::render2D(sf::RenderWindow* window)
+{
+  renderLabels(window);
+}
+
+void RenderSystem::render3D(sf::RenderWindow* window)
 {
   renderPoints();
   renderSpheres();
@@ -198,7 +227,7 @@ void RenderSystem::render()
 }
 
 RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos, Vector3d const _initOrigin) :
-  m_duration(_duration), 
+  m_duration(_duration),
   m_headIdx(0)
 {
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
@@ -217,7 +246,7 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
     m_trailPointAge[i] += _dt;
   }
-  
+
   double const minAge = 100.0; // 100 ms;
   double const maxAge = m_duration;
 
@@ -229,7 +258,7 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
 
   m_trailPts[m_headIdx] = pos;
   m_trailPointAge[m_headIdx] = 0.f;
-    
+
   // From the head, skip over points that are younger than max age;
 #if 0
   int tailIdx = (m_headIdx + 1) % NUM_TRAIL_PTS;

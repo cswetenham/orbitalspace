@@ -67,6 +67,13 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   CameraSystem::Camera camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
 
+  // Make debug text label
+
+  RenderSystem::Label& debugTextLabel = m_renderSystem.getLabel(m_debugTextLabelId = m_renderSystem.makeLabel());
+  debugTextLabel.m_pos = Vector3d(8, 8, 0);
+  debugTextLabel.m_col = m_colG[4];
+
+
   // For now, give the moon a circular orbit
 
   double const muEarthMoon = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
@@ -423,12 +430,12 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
       m_camOrig = !m_camOrig;
     }
 
-    if (_event.key.code == sf::Keyboard::Add)
+    if (_event.key.code == sf::Keyboard::Add || _event.key.code == sf::Keyboard::Equal)
     {
       m_timeScale *= 2;
     }
 
-    if (_event.key.code == sf::Keyboard::Subtract)
+    if (_event.key.code == sf::Keyboard::Subtract || _event.key.code == sf::Keyboard::Dash)
     {
       m_timeScale /= 2;
     }
@@ -537,6 +544,8 @@ Vector3d OrbitalSpaceApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& pl
 void OrbitalSpaceApp::UpdateState(double const _dt)
 {
   if (!m_paused) {
+    // Update Simulation
+
     double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
 
     // Update player thrust
@@ -596,10 +605,41 @@ void OrbitalSpaceApp::UpdateState(double const _dt)
     m_simTime += dt;
   }
 
-  if (m_singleStep)
-  {
+  if (m_singleStep) {
+    // Pause simulation after this step
+
     m_singleStep = false;
     m_paused = true;
+  }
+
+  {
+    // Update camera
+
+    CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
+    Vector3d const camTargetPos = camTarget.m_pos;
+
+    Vector3d camPos;
+
+    if (m_camMode == CameraMode_FirstPerson) {
+      camPos = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos;
+    } else if (m_camMode == CameraMode_ThirdPerson) {
+      camPos = Vector3d(0.0, 0.0, m_camDist);
+
+      Eigen::AngleAxisd thetaRot(m_camTheta, Vector3d(0.0, 1.0, 0.0));
+      Eigen::AngleAxisd phiRot(m_camPhi, Vector3d(1.0, 0.0, 0.0));
+
+      Eigen::Affine3d camMat1;
+      camMat1.setIdentity();
+      camMat1.rotate(thetaRot).rotate(phiRot);
+
+      camPos = camMat1 * camPos;
+      camPos += camTargetPos;
+    } else {
+      assert(false);
+    }
+
+    CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId);
+    camera.m_pos = camPos;
   }
 }
 
@@ -609,18 +649,34 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 
 void OrbitalSpaceApp::RenderState()
 {
+  // Projection matrix (GL_PROJECTION)
+  // Simplified for symmetric case
+  double const fov = 35.0; // degrees?
+  double const aspect = m_config.width / (double)m_config.height;
+  double const minZ = 1.0; // meters
+  double const maxZ = 1e11; // meters
+
+  double const heightZ = tan(0.5 * M_TAU * fov / 360.0);
+  double const widthZ = heightZ * aspect;
+
+  Eigen::Matrix4d projMatrix;
+  projMatrix.setZero(4, 4);
+  projMatrix.coeffRef(0, 0) = 1 / widthZ;
+  projMatrix.coeffRef(1, 1) = 1 / heightZ;
+  projMatrix.coeffRef(2, 2) = -(maxZ + minZ) / (maxZ - minZ);
+  projMatrix.coeffRef(2, 3) = -2*maxZ*minZ / (maxZ - minZ);
+
+  projMatrix.coeffRef(3, 2) = -1;
+
+
+  // Camera matrix (GL_MODELVIEW)
+  Vector3d up(0.0, 1.0, 0.0);
+  Eigen::Affine3d camMatrix = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+
   m_window->resetGLStates();
 
   // Render debug text
   {
-    sf::Font font(sf::Font::getDefaultFont());
-    Eigen::Matrix<sf::Uint8, 3, 1> ct = (m_colG[4] * 255).cast<sf::Uint8>();
-
-    uint32_t const fontSize = 14;
-    sf::Text text(sf::String("Hello, World!"), font, fontSize);
-    text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
-    text.setPosition(8, 8);
-
     std::ostringstream str;
     str.precision(3);
     str.width(7);
@@ -654,61 +710,31 @@ void OrbitalSpaceApp::RenderState()
     // TODO: better double value text formatting
     // TODO: small visualisations for the angle etc values
 
-    text.setString(str.str());
-    m_window->draw(text);
+    RenderSystem::Label& debugTextLabel = m_renderSystem.getLabel(m_debugTextLabelId);
+    debugTextLabel.m_text = str.str();
   }
+
+  m_renderSystem.render2D(m_window);
 
   m_window->resetGLStates();
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  Vector3f c = m_colG[0];
-  glClearColor(c.x(), c.y(), c.z(), 0);
-  glClearDepth(1.0);
+  Vector3f clearCol = m_colG[0];
+  glClearColor(clearCol.x(), clearCol.y(), clearCol.z(), 0);
+  glClearDepth(minZ);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-
-  double const aspect = m_config.width / (double)m_config.height;
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  double const fov = 35.0; // degrees?
-  gluPerspective(fov, aspect, 1.0, 1e11); // meters
+  if ( m_inputMode ) { // laziest hack
+    glMultMatrix( projMatrix );
+  } else {
+    gluPerspective(fov, aspect, minZ, maxZ); // meters
+  }
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  Vector3d up(0.0, 1.0, 0.0);
-
-  // Set camera
-
-  CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
-  Vector3d const camTargetPos = camTarget.m_pos;
-
-  Vector3d camPos;
-
-  if (m_camMode == CameraMode_FirstPerson) {
-    camPos = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos;
-  } else if (m_camMode == CameraMode_ThirdPerson) {
-    camPos = Vector3d(0.0, 0.0, m_camDist);
-
-    Eigen::AngleAxisd thetaRot(m_camTheta, Vector3d(0.0, 1.0, 0.0));
-    Eigen::AngleAxisd phiRot(m_camPhi, Vector3d(1.0, 0.0, 0.0));
-
-    Eigen::Affine3d camMat1;
-    camMat1.setIdentity();
-    camMat1.rotate(thetaRot).rotate(phiRot);
-
-    camPos = camMat1 * camPos;
-    camPos += camTargetPos;
-  } else {
-    assert(false);
-  }
-
-  CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId);
-  camera.m_pos = camPos;
-
-  m_cameraSystem.setCameraMatrix(m_cameraId, m_cameraTargetId, up);
+  glMultMatrix( camMatrix );
 
   glEnable(GL_TEXTURE_2D);
 
@@ -724,7 +750,7 @@ void OrbitalSpaceApp::RenderState()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
 
-  m_renderSystem.render();
+  m_renderSystem.render3D(m_window);
 
   printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
