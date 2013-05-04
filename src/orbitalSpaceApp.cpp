@@ -65,7 +65,7 @@ OrbitalSpaceApp::OrbitalSpaceApp():
 
   // Make camera
 
-  CameraSystem::Camera camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
+  CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
   camera.m_fov = 35.0; // degrees? Seems low...this is the vertical fov though...
 
   // Make debug text label
@@ -73,7 +73,6 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   RenderSystem::Label& debugTextLabel = m_renderSystem.getLabel(m_debugTextLabelId = m_renderSystem.makeLabel());
   debugTextLabel.m_pos = Vector3d(8, 8, 0);
   debugTextLabel.m_col = m_colG[4];
-
 
   // For now, give the moon a circular orbit
 
@@ -150,6 +149,11 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonMoon.m_cameraTargetId = m_cameraSystem.makeTarget());
   moonCamTarget.m_pos = moonGravBody.m_pos;
   moonCamTarget.m_name = std::string("Moon");
+
+  RenderSystem::Label& moonLabel = m_renderSystem.getLabel(moonMoon.m_labelId = m_renderSystem.makeLabel());
+  moonLabel.m_pos = moonGravBody.m_pos;
+  moonLabel.m_col = m_colG[4];
+  moonLabel.m_text = std::string("Moon");
 
   // Create Earth-Moon COM
 
@@ -650,12 +654,13 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 
 void OrbitalSpaceApp::RenderState()
 {
+  Eigen::Matrix4d screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.width, m_config.height );
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
   double const minZ = 1.0; // meters
   double const maxZ = 1e11; // meters
 
-  Eigen::Projective3d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.height, m_config.width, minZ, maxZ );
+  Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.width, m_config.height, minZ, maxZ );
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up(0.0, 1.0, 0.0);
@@ -702,7 +707,8 @@ void OrbitalSpaceApp::RenderState()
     debugTextLabel.m_text = str.str();
   }
 
-  m_renderSystem.render2D(m_window);
+  m_renderSystem.render2D(m_window, (screenMatrix * projMatrix * camMatrix).matrix());
+  // m_renderSystem.render2D(m_window, (projMatrix * camMatrix.inverse()).matrix());
 
   m_window->resetGLStates();
 

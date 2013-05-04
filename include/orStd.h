@@ -36,14 +36,16 @@
   extern "C" __declspec(dllimport) void __stdcall DebugBreak(void);
 # define DEBUGBREAK do { DebugBreak(); } while (0)
 #else
-# define DEBUGBREAK /* TODO: GCC, etc */
+  extern "C" int raise (int __sig) __THROW;
+  // #define	SIGTRAP		5	/* Trace trap (POSIX). */
+# define DEBUGBREAK do { raise(5); } while (0)
 #endif
 
 #ifdef _MSC_VER
   extern "C" __declspec(dllimport) void __stdcall FatalExit(int);
 # define FATAL do { FatalExit(3); } while (0)
 #else
-# define FATAL /* TODO: GCC, etc */
+# define FATAL do { __builtin_trap(); } while (0)
 #endif
 
 #ifdef CDECL
@@ -91,7 +93,7 @@ NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _
 
 // TODO set up CONFIG_DEBUG, CONFIG_PROFILE
 #ifdef _DEBUG
-# define ensure(_cond, ...) ensure_impl(_cond, #_cond, __FILE__, __LINE__, __VA_ARGS__)
+# define ensure(_cond, ...) ensure_impl(_cond, #_cond, __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 # define ensure(...)
 #endif

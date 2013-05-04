@@ -33,7 +33,8 @@ public:
 
   int nextTarget(int targetId) { return (targetId + 1) % numTargets(); }
 
-  Eigen::Projective3d calcProjMatrix( int cameraId, int width, int height, float minZ, float maxZ );
+  Eigen::Matrix4d calcScreenMatrix( int width, int height );
+  Eigen::Matrix4d calcProjMatrix( int cameraId, int width, int height, float minZ, float maxZ );
   Eigen::Affine3d calcCameraMatrix( int cameraId, int targetId, Vector3d up  );
 
 private:

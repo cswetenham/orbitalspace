@@ -100,7 +100,7 @@ void RenderSystem::renderPoints() const
 }
 
 
-void RenderSystem::renderLabels(sf::RenderWindow* window) const
+void RenderSystem::renderLabels(sf::RenderWindow* window, Eigen::Matrix4d const& projMatrix) const
 {
   sf::Font font(sf::Font::getDefaultFont());
   uint32_t const fontSize = 14;
@@ -114,7 +114,14 @@ void RenderSystem::renderLabels(sf::RenderWindow* window) const
 
     // TODO actually, want to project the 3D position for Labels, but not
     // for debug text / 2D UI elements!
-    text.setPosition(label.m_pos.x(), label.m_pos.y());
+
+    Vector4d pos3d;
+    pos3d.x() = label.m_pos.x(); // is this really the best way?
+    pos3d.y() = label.m_pos.y();
+    pos3d.z() = label.m_pos.z();
+    pos3d.w() = 1.0;
+    Vector4d pos2d = projMatrix * pos3d;
+    text.setPosition(pos2d.x() / pos2d.w(), pos2d.y() / pos2d.w());
 
     window->draw(text);
   }
@@ -213,9 +220,9 @@ void RenderSystem::renderTrails() const
   }
 }
 
-void RenderSystem::render2D(sf::RenderWindow* window)
+void RenderSystem::render2D(sf::RenderWindow* window, Eigen::Matrix4d const& proj)
 {
-  renderLabels(window);
+  renderLabels(window, proj);
 }
 
 void RenderSystem::render3D(sf::RenderWindow* window)

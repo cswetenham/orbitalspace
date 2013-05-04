@@ -31,8 +31,8 @@ public:
   // TODO this is currently implemented as 2D text, want 3D labels too
   int numLabels() const { return m_labels.size(); }
   int makeLabel() { m_labels.push_back(Label()); return numLabels() - 1; }
-  Label&       getLabel(int i)       { ensure(0 < i && i < numLabels()); return m_labels[i]; }
-  Label const& getLabel(int i) const { ensure(0 < i && i < numLabels()); return m_labels[i]; }
+  Label&       getLabel(int i)       { ensure(0 <= i && i < numLabels()); return m_labels[i]; }
+  Label const& getLabel(int i) const { ensure(0 <= i && i < numLabels()); return m_labels[i]; }
 
   struct Sphere {
     double m_radius;
@@ -88,7 +88,7 @@ public:
   Trail&       getTrail(int i)       { return m_trails[i]; }
   Trail const& getTrail(int i) const { return m_trails[i]; }
 
-  void render2D(sf::RenderWindow* window);
+  void render2D(sf::RenderWindow* window, Eigen::Matrix4d const& projMatrix); // TODO not the best param...
   void render3D(sf::RenderWindow* window);
 
 private:
@@ -98,7 +98,7 @@ private:
   void drawCircle(double const radius, int const steps) const;
   void drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
 
-  void renderLabels(sf::RenderWindow* window) const;
+  void renderLabels(sf::RenderWindow* window, Eigen::Matrix4d const& projMatrix) const;
 
   void renderPoints() const;
   void renderSpheres() const;

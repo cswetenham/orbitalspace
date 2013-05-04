@@ -19,7 +19,7 @@ public:
     m_physicsSystem(physicsSystem)
   {
   }
-  
+
   struct Ship {
     int m_particleBodyId;
     int m_pointId;
@@ -27,7 +27,7 @@ public:
     int m_orbitId;
     int m_cameraTargetId;
   };
-  
+
   int numShips() const { return (int)m_ships.size(); }
   int makeShip() { m_ships.push_back(Ship()); return numShips() - 1; }
   Ship&       getShip(int id)       { return m_ships[id]; }
@@ -45,15 +45,16 @@ public:
   int makePlanet() { m_planets.push_back(Planet()); return numPlanets() - 1; }
   Planet&       getPlanet(int id)       { return m_planets[id]; }
   Planet const& getPlanet(int id) const { return m_planets[id]; }
-    
+
   struct Moon {
     int m_gravBodyId;
     int m_sphereId;
     int m_orbitId;
     int m_trailId;
     int m_cameraTargetId;
+    int m_labelId;
   };
-  
+
   int numMoons() const { return (int)m_moons.size(); }
   int makeMoon() { m_moons.push_back(Moon()); return numMoons() - 1; }
   Moon&       getMoon(int id)       { return m_moons[id]; }

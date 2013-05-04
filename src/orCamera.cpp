@@ -2,17 +2,36 @@
 
 #include "orGfx.h"
 
-Eigen::Projective3d CameraSystem::calcProjMatrix(int cameraId, int width, int height, float minZ, float maxZ)
+// Normalised Device Coordinates -> Screen Space Coordinates
+Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
+{
+  Eigen::Matrix4d screenMatrix;
+  // NDC: -1 to 1
+  // Screen: 0 to +width or 0 to +height
+  double const halfWidth = width / 2.0;
+  double const halfHeight = height / 2.0;
+
+  screenMatrix.coeffRef(0, 0) = halfWidth;
+  screenMatrix.coeffRef(0, 3) = halfWidth;
+  screenMatrix.coeffRef(1, 1) = -halfHeight;
+  screenMatrix.coeffRef(1, 3) = halfHeight;
+  screenMatrix.coeffRef(3, 3) = 1.0;
+
+
+  return screenMatrix;
+}
+
+// Camera Space Coordinates -> Normalised Device Coordinates
+Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, float minZ, float maxZ)
 {
   Camera& camera = getCamera( cameraId );
-
+  double const fov = camera.m_fov;
   double const aspect = width / (double)height;
 
-  double const heightZ = tan(0.5 * M_TAU * camera.m_fov / 360.0);
+  double const heightZ = tan(0.5 * M_TAU * fov / 360.0);
   double const widthZ = heightZ * aspect;
 
-  Eigen::Projective3d proj;
-  Eigen::Matrix4d& projMatrix = proj.matrix();
+  Eigen::Matrix4d projMatrix;
   projMatrix.setZero(4, 4);
   projMatrix.coeffRef(0, 0) = 1 / widthZ;
   projMatrix.coeffRef(1, 1) = 1 / heightZ;
@@ -20,9 +39,10 @@ Eigen::Projective3d CameraSystem::calcProjMatrix(int cameraId, int width, int he
   projMatrix.coeffRef(2, 3) = -2*maxZ*minZ / (maxZ - minZ);
   projMatrix.coeffRef(3, 2) = -1;
 
-  return proj;
+  return projMatrix;
 }
 
+// World Space Coordinates -> Camera Space Coordinates
 Eigen::Affine3d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vector3d up )
 {
   Camera& camera = getCamera( cameraId );
