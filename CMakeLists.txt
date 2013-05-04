@@ -3,7 +3,8 @@ cmake_minimum_required (VERSION 2.6)
 project (OrbitalSpace)
 
 #set(CMAKE_CXX_FLAGS "-g3 -Wall -Wextra -Wno-shadow -Wno-unused-function")
-set(CMAKE_CXX_FLAGS "-g3 -Wall -O3")
+#set(CMAKE_CXX_FLAGS "-g3 -Wall -O3")
+set(CMAKE_CXX_FLAGS "-g3 -Wall -D_DEBUG")
 set(CMAKE_EXE_LINKER_FLAGS "-L/media/Data2/Coding/SFML-2.0-rc/lib")
 
 include_directories(${Boost_INCLUDE_DIRS})
