@@ -100,28 +100,58 @@ void RenderSystem::renderPoints() const
 }
 
 
-void RenderSystem::renderLabels(sf::RenderWindow* window, Eigen::Matrix4d const& projMatrix) const
+void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
+{
+  for (int li = 0; li < (int)m_label3Ds.size(); ++li) {
+    RenderSystem::Label3D const& label3D = getLabel3D(li);
+    
+    Vector4d pos3d;
+    pos3d.x() = label3D.m_pos.x(); // is this really the best way?
+    pos3d.y() = label3D.m_pos.y();
+    pos3d.z() = label3D.m_pos.z();
+    pos3d.w() = 1.0;
+
+    Vector4d pos2d = projMatrix * pos3d;
+    pos2d /= pos2d.w();
+    
+    float x = (float)pos2d.x();
+    float y = (float)pos2d.y();
+    
+    m_label2DBuffer.push_back(Label2D());
+    Label2D& label2D = m_label2DBuffer.back();
+
+    label2D.m_text = label3D.m_text;
+    label2D.m_col = label3D.m_col;
+    label2D.m_pos.x() = x;
+    label2D.m_pos.y() = y;
+  }
+}
+
+void RenderSystem::renderLabels(sf::RenderWindow* window)
 {
   sf::Font font(sf::Font::getDefaultFont());
   uint32_t const fontSize = 14;
 
-  for (int li = 0; li < (int)m_labels.size(); ++li) {
-    RenderSystem::Label const& label = getLabel(li);
-    sf::Text text(label.m_text, font, fontSize);
+  for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
+    RenderSystem::Label2D const& label2D = getLabel2D(li);
+    sf::Text text(label2D.m_text, font, fontSize);
 
-    Eigen::Matrix<sf::Uint8, 3, 1> ct = (label.m_col * 255).cast<sf::Uint8>();
+    Eigen::Matrix<sf::Uint8, 3, 1> ct = (label2D.m_col * 255).cast<sf::Uint8>();
     text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
 
-    // TODO actually, want to project the 3D position for Labels, but not
-    // for debug text / 2D UI elements!
+    text.setPosition(label2D.m_pos.x(), label2D.m_pos.y());
 
-    Vector4d pos3d;
-    pos3d.x() = label.m_pos.x(); // is this really the best way?
-    pos3d.y() = label.m_pos.y();
-    pos3d.z() = label.m_pos.z();
-    pos3d.w() = 1.0;
-    Vector4d pos2d = projMatrix * pos3d;
-    text.setPosition(pos2d.x() / pos2d.w(), pos2d.y() / pos2d.w());
+    window->draw(text);
+  }
+
+  for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
+    RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
+    sf::Text text(label2D.m_text, font, fontSize);
+
+    Eigen::Matrix<sf::Uint8, 3, 1> ct = (label2D.m_col * 255).cast<sf::Uint8>();
+    text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
+
+    text.setPosition(label2D.m_pos.x(), label2D.m_pos.y());
 
     window->draw(text);
   }
@@ -222,7 +252,8 @@ void RenderSystem::renderTrails() const
 
 void RenderSystem::render2D(sf::RenderWindow* window, Eigen::Matrix4d const& proj)
 {
-  renderLabels(window, proj);
+  projectLabel3Ds(proj);
+  renderLabels(window);
 }
 
 void RenderSystem::render3D(sf::RenderWindow* window)

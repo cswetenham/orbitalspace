@@ -8,51 +8,76 @@
 #ifndef ORBITALSPACEAPP_H
 #define	ORBITALSPACEAPP_H
 
-#include "app.h"
-#include "rnd.h"
+// STL
+#include <vector>
+
+// SFML
+
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio/Music.hpp>
+
+// Old style libs
+
 #include "util.h"
+#include "rnd.h"
+#include "timer.h"
+
+// New style libs
 
 #include "orStd.h"
 #include "orMath.h"
+#include "orGfx.h"
+
+// Systems
 
 #include "orRender.h"
 #include "orPhysics.h"
 #include "orCamera.h"
 #include "orEntity.h"
 
-#include <vector>
-
-#include <SFML/Audio/Music.hpp>
-
 // Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
 
-class OrbitalSpaceApp :
-  public App
+// TODO make the opaque IDs into strong typedefs for safety? (enum - not perfect. struct containing just an int?)
+
+class orApp
 {
 public:
-  OrbitalSpaceApp();
-  virtual ~OrbitalSpaceApp();
+  orApp();
+  ~orApp();
 
-  // From App
 public:
-  virtual void Run();
+  void Run();
 
-protected:
-  virtual void InitRender();
-  virtual void ShutdownRender();
+private:
+  void Init();
+  void Shutdown();
 
-  virtual void InitState();
-  virtual void ShutdownState();
+  void InitRender();
+  void ShutdownRender();
 
-  virtual void HandleEvent(sf::Event const& _event);
-  virtual void UpdateState(double const _dt);
+  void InitState();
+  void ShutdownState();
 
-  virtual void RenderState();
+  void HandleEvent(sf::Event const& _event);
+  void UpdateState(double const _dt);
+
+  void RenderState();
+
+  void PollEvents();
+  void BeginRender();
+  void EndRender();
 
 private:
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
 
 private:
+  sf::RenderWindow* m_window;
+  
+  Timer::PerfTime m_lastFrameDuration;
+  bool m_running;
+  
   Rnd64 m_rnd;
 
   double m_simTime;
@@ -93,7 +118,7 @@ private:
 
   RenderSystem m_renderSystem;
 
-  int m_debugTextLabelId;
+  int m_debugTextLabel2DId;
 
   //// Physics ////
 

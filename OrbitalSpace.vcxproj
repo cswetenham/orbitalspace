@@ -11,26 +11,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\orbitalSpaceApp.cpp" />
+    <ClCompile Include="src\orApp.cpp" />
     <ClCompile Include="src\orCamera.cpp" />
     <ClCompile Include="src\orEntity.cpp" />
     <ClCompile Include="src\orPhysics.cpp" />
     <ClCompile Include="src\orPlatform\win32\window_win32.cpp" />
     <ClCompile Include="src\orProfile\perftimer.cpp" />
     <ClCompile Include="src\orRender.cpp" />
-    <ClCompile Include="src\taskSchedulerWorkStealing.cpp" />
     <ClCompile Include="src\timer.cpp" />
     <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\app.h" />
     <ClInclude Include="include\boost_begin.h" />
     <ClInclude Include="include\boost_end.h" />
     <ClInclude Include="include\constants.h" />
     <ClInclude Include="include\geom.h" />
-    <ClInclude Include="include\orbitalSpaceApp.h" />
+    <ClInclude Include="include\orApp.h" />
     <ClInclude Include="include\orCamera.h" />
     <ClInclude Include="include\orEntity.h" />
     <ClInclude Include="include\orGfx.h" />
@@ -44,16 +41,16 @@
     <ClInclude Include="include\orProfile\perftimer.h" />
     <ClInclude Include="include\orRender.h" />
     <ClInclude Include="include\orStd.h" />
+    <ClInclude Include="include\orTask\task.h" />
+    <ClInclude Include="include\orTask\taskScheduler.h" />
+    <ClInclude Include="include\orTask\taskSchedulerWorkStealing.h" />
+    <ClInclude Include="include\orTask\terminationBarrier.h" />
+    <ClInclude Include="include\orTask\victimPicker.h" />
+    <ClInclude Include="include\orTask\workStealingQueue.h" />
     <ClInclude Include="include\rnd.h" />
-    <ClInclude Include="include\task.h" />
-    <ClInclude Include="include\taskScheduler.h" />
-    <ClInclude Include="include\taskSchedulerWorkStealing.h" />
-    <ClInclude Include="include\terminationBarrier.h" />
     <ClInclude Include="include\timer.h" />
     <ClInclude Include="include\util.h" />
     <ClInclude Include="include\refCount.h" />
-    <ClInclude Include="include\victimPicker.h" />
-    <ClInclude Include="include\workStealingQueue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59A0CC2B-696D-47ED-9176-E8C5AC78EEEF}</ProjectGuid>

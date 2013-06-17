@@ -21,18 +21,31 @@ public:
   Point&       getPoint(int i)       { return m_points[i]; }
   Point const& getPoint(int i) const { return m_points[i]; }
 
-  struct Label {
-    Vector3d m_pos;
+  
+  // TODO internally, first convert all to Label2D for the frame, then render those
+  struct Label2D {
     std::string m_text;
-
+    Vector2f m_pos;
+    
     Vector3f m_col;
   };
 
-  // TODO this is currently implemented as 2D text, want 3D labels too
-  int numLabels() const { return m_labels.size(); }
-  int makeLabel() { m_labels.push_back(Label()); return numLabels() - 1; }
-  Label&       getLabel(int i)       { ensure(0 <= i && i < numLabels()); return m_labels[i]; }
-  Label const& getLabel(int i) const { ensure(0 <= i && i < numLabels()); return m_labels[i]; }
+  int numLabel2Ds() const { return m_label2Ds.size(); }
+  int makeLabel2D() { m_label2Ds.push_back(Label2D()); return numLabel2Ds() - 1; }
+  Label2D&       getLabel2D(int i)       { ensure(0 <= i && i < numLabel2Ds()); return m_label2Ds[i]; }
+  Label2D const& getLabel2D(int i) const { ensure(0 <= i && i < numLabel2Ds()); return m_label2Ds[i]; }
+
+  struct Label3D {
+    std::string m_text;
+    Vector3d m_pos;
+    
+    Vector3f m_col;
+  };
+
+  int numLabel3Ds() const { return m_label3Ds.size(); }
+  int makeLabel3D() { m_label3Ds.push_back(Label3D()); return numLabel3Ds() - 1; }
+  Label3D&       getLabel3D(int i)       { ensure(0 <= i && i < numLabel3Ds()); return m_label3Ds[i]; }
+  Label3D const& getLabel3D(int i) const { ensure(0 <= i && i < numLabel3Ds()); return m_label3Ds[i]; }
 
   struct Sphere {
     double m_radius;
@@ -88,6 +101,9 @@ public:
   Trail&       getTrail(int i)       { return m_trails[i]; }
   Trail const& getTrail(int i) const { return m_trails[i]; }
 
+  void beginRender() { m_label2DBuffer.clear(); }
+  void endRender() {}
+
   void render2D(sf::RenderWindow* window, Eigen::Matrix4d const& projMatrix); // TODO not the best param...
   void render3D(sf::RenderWindow* window);
 
@@ -98,16 +114,22 @@ private:
   void drawCircle(double const radius, int const steps) const;
   void drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
 
-  void renderLabels(sf::RenderWindow* window, Eigen::Matrix4d const& projMatrix) const;
-
+  void projectLabel3Ds(Eigen::Matrix4d const& projMatrix);
+  
   void renderPoints() const;
+  void renderLabels(sf::RenderWindow* window);
   void renderSpheres() const;
   void renderOrbits() const;
   void renderTrails() const;
 
 private:
   std::vector<Point> m_points;
-  std::vector<Label> m_labels;
+  std::vector<Label2D> m_label2Ds;
+  std::vector<Label3D> m_label3Ds;
+
+  // 2D labels for this frame
+  std::vector<Label2D> m_label2DBuffer;
+
   std::vector<Sphere> m_spheres;
   std::vector<Orbit> m_orbits;
   std::vector<Trail> m_trails;

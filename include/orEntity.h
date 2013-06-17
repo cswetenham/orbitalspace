@@ -52,7 +52,7 @@ public:
     int m_orbitId;
     int m_trailId;
     int m_cameraTargetId;
-    int m_labelId;
+    int m_label3DId;
   };
 
   int numMoons() const { return (int)m_moons.size(); }

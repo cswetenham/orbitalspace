@@ -1,12 +1,15 @@
 #include "orStd.h"
 #include "orPlatform/window.h"
 
-#include "orbitalSpaceApp.h"
+#include "orApp.h"
 
 #include "orProfile/perftimer.h"
+
+#if 0
 #include "task.h"
 #include "taskScheduler.h"
 #include "taskSchedulerWorkStealing.h"
+#endif
 
 #include <string>
 #include <sstream>
@@ -21,8 +24,16 @@
 
 #include "constants.h"
 
-OrbitalSpaceApp::OrbitalSpaceApp():
-  App(),
+#include "util.h"
+
+#include "orGfx.h"
+#include "orProfile/perftimer.h"
+
+
+orApp::orApp():
+  m_window(NULL),
+  m_lastFrameDuration(0),
+  m_running(true),
   m_rnd(1123LL),
   m_simTime(0.0),
   m_paused(false),
@@ -48,6 +59,8 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_music(),
   m_timeScale(1.0)
 {
+  PerfTimer::StaticInit(); // TODO terrible code
+
   // Create palette
   m_colG[0] = Vector3f(41,42,34)/255;
   m_colG[1] = Vector3f(77,82,50)/255;
@@ -68,11 +81,11 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
   camera.m_fov = 35.0; // degrees? Seems low...this is the vertical fov though...
 
-  // Make debug text label
+  // Make debug text label3D
 
-  RenderSystem::Label& debugTextLabel = m_renderSystem.getLabel(m_debugTextLabelId = m_renderSystem.makeLabel());
-  debugTextLabel.m_pos = Vector3d(8, 8, 0);
-  debugTextLabel.m_col = m_colG[4];
+  RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId = m_renderSystem.makeLabel2D());
+  debugTextLabel2D.m_pos = Vector2f(8, 8);
+  debugTextLabel2D.m_col = m_colG[4];
 
   // For now, give the moon a circular orbit
 
@@ -150,10 +163,10 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   moonCamTarget.m_pos = moonGravBody.m_pos;
   moonCamTarget.m_name = std::string("Moon");
 
-  RenderSystem::Label& moonLabel = m_renderSystem.getLabel(moonMoon.m_labelId = m_renderSystem.makeLabel());
-  moonLabel.m_pos = moonGravBody.m_pos;
-  moonLabel.m_col = m_colG[4];
-  moonLabel.m_text = std::string("Moon");
+  RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonMoon.m_label3DId = m_renderSystem.makeLabel3D());
+  moonLabel3D.m_pos = moonGravBody.m_pos;
+  moonLabel3D.m_col = m_colG[4];
+  moonLabel3D.m_text = std::string("Moon");
 
   // Create Earth-Moon COM
 
@@ -245,10 +258,30 @@ OrbitalSpaceApp::OrbitalSpaceApp():
   m_music.openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music.setLoop(true);
   // m_music.play();
+
+  Init();
 }
 
-OrbitalSpaceApp::~OrbitalSpaceApp()
+orApp::~orApp()
 {
+  Shutdown();
+
+  delete m_window; m_window = NULL;
+  PerfTimer::StaticShutdown(); // TODO terrible code
+}
+
+void orApp::Init()
+{
+  InitState();
+  InitRender();
+}
+
+void orApp::Shutdown()
+{
+  PerfTimer::Print();
+
+  ShutdownRender();
+  ShutdownState();
 }
 
 // TODO put elsewhere
@@ -266,7 +299,31 @@ void runTests() {
   }
 }
 
-void OrbitalSpaceApp::Run()
+void orApp::PollEvents()
+{
+    sf::Event event;
+    while (m_window->pollEvent(event))
+    {
+      HandleEvent(event);
+    }
+}
+
+void orApp::BeginRender()
+{
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
+
+  m_renderSystem.beginRender();
+}
+
+void orApp::EndRender()
+{
+  m_renderSystem.endRender();
+  
+  m_window->display();
+}
+
+void orApp::Run()
 {
   runTests();
 
@@ -322,10 +379,8 @@ void OrbitalSpaceApp::Run()
   }
 }
 
-void OrbitalSpaceApp::InitRender()
+void orApp::InitRender()
 {
-  App::InitRender();
-
   // TODO
   m_config.width = 1280;
   m_config.height = 768;
@@ -350,22 +405,21 @@ void OrbitalSpaceApp::InitRender()
 
 }
 
-void OrbitalSpaceApp::ShutdownRender()
+void orApp::ShutdownRender()
 {
-  App::ShutdownRender();
+  m_window->close();
+  delete m_window; m_window = NULL;
 }
 
-void OrbitalSpaceApp::InitState()
+void orApp::InitState()
 {
-  App::InitState();
 }
 
-void OrbitalSpaceApp::ShutdownState()
+void orApp::ShutdownState()
 {
-  App::ShutdownState();
 }
 
-void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
+void orApp::HandleEvent(sf::Event const& _event)
 {
   /* TODO allow?
   if (_event.type == sf::Event::Resized)
@@ -515,7 +569,7 @@ void OrbitalSpaceApp::HandleEvent(sf::Event const& _event)
   }
 }
 
-Vector3d OrbitalSpaceApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
+Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 {
   Vector3d origin = m_physicsSystem.findSOIGravBody(playerBody).m_pos;
 
@@ -546,7 +600,7 @@ Vector3d OrbitalSpaceApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& pl
   return a_thrust;
 }
 
-void OrbitalSpaceApp::UpdateState(double const _dt)
+void orApp::UpdateState(double const _dt)
 {
   if (!m_paused) {
     // Update Simulation
@@ -652,7 +706,7 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
 
-void OrbitalSpaceApp::RenderState()
+void orApp::RenderState()
 {
   Eigen::Matrix4d screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.width, m_config.height );
   // Projection matrix (GL_PROJECTION)
@@ -703,12 +757,11 @@ void OrbitalSpaceApp::RenderState()
     // TODO: better double value text formatting
     // TODO: small visualisations for the angle etc values
 
-    RenderSystem::Label& debugTextLabel = m_renderSystem.getLabel(m_debugTextLabelId);
-    debugTextLabel.m_text = str.str();
+    RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId);
+    debugTextLabel2D.m_text = str.str();
   }
 
   m_renderSystem.render2D(m_window, (screenMatrix * projMatrix * camMatrix).matrix());
-  // m_renderSystem.render2D(m_window, (projMatrix * camMatrix.inverse()).matrix());
 
   m_window->resetGLStates();
 

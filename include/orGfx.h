@@ -8,6 +8,8 @@
 #ifndef ORGFX_H
 #define	ORGFX_H
 
+// TODO move to orPlatform
+
 # include "orStd.h"
 # include "orMath.h"
 
