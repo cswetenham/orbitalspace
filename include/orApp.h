@@ -148,6 +148,7 @@ private:
   };
   InputMode m_inputMode;
 
+  // sf::Vectors are just plain old data. Eigen::Vectors are SSE magic.
   sf::Vector2i m_savedMousePos;
 
   enum Thrusters
@@ -165,11 +166,13 @@ private:
   // TODO make into a palette array.
   // TODO Convert to HSV so can modify the hue to make new palettes.
   enum {PALETTE_SIZE = 5};
-  Vector3f m_colG[PALETTE_SIZE];
-  Vector3f m_colR[PALETTE_SIZE];
-  Vector3f m_colB[PALETTE_SIZE];
+  
+  // Lazy
+  sf::Vector3f m_colG[PALETTE_SIZE];
+  sf::Vector3f m_colR[PALETTE_SIZE];
+  sf::Vector3f m_colB[PALETTE_SIZE];
 
-  Vector3d m_light;
+  double m_lightDir[3];
 
   bool m_hasFocus;
 

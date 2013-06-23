@@ -10,7 +10,7 @@ class CameraSystem {
 public:
 
   struct Camera {
-    Vector3d m_pos;
+    double m_pos[3];
     float m_fov;
   };
 
@@ -22,7 +22,7 @@ public:
   int nextCamera(int cameraId) { return (cameraId + 1) % numCameras(); }
 
   struct Target {
-    Vector3d m_pos;
+    double m_pos[3];
     std::string m_name;
   };
 

@@ -9,13 +9,13 @@ class PhysicsSystem {
 public:
   struct Body
   {
-    Vector3d m_pos;
-    Vector3d m_vel;
+    double m_pos[3];
+    double m_vel[3];
   };
 
   struct ParticleBody : public Body
   {
-    Vector3d m_userAcc;
+    double m_userAcc[3];
   };
 
   int numParticleBodies() const { return (int)m_particleBodies.size(); }

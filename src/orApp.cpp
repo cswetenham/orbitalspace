@@ -53,7 +53,6 @@ orApp::orApp():
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
-  m_light(1, 1, 0),
   m_thrusters(0),
   m_hasFocus(false),
   m_music(),
@@ -62,19 +61,25 @@ orApp::orApp():
   PerfTimer::StaticInit(); // TODO terrible code
 
   // Create palette
-  m_colG[0] = Vector3f(41,42,34)/255;
-  m_colG[1] = Vector3f(77,82,50)/255;
-  m_colG[2] = Vector3f(99,115,76)/255;
-  m_colG[3] = Vector3f(151,168,136)/255;
-  m_colG[4] = Vector3f(198,222,172)/255;
+  m_colG[0] = sf::Vector3f(41,42,34)/255.f;
+  m_colG[1] = sf::Vector3f(77,82,50)/255.f;
+  m_colG[2] = sf::Vector3f(99,115,76)/255.f;
+  m_colG[3] = sf::Vector3f(151,168,136)/255.f;
+  m_colG[4] = sf::Vector3f(198,222,172)/255.f;
 
   for (int i = 0; i < PALETTE_SIZE; ++i)
   {
-    m_colR[i] = Vector3f(m_colG[i].y(), m_colG[i].x(), m_colG[i].z());
-    m_colB[i] = Vector3f(m_colG[i].x(), m_colG[i].z(), m_colG[i].y());
+    m_colR[i] = sf::Vector3f(m_colG[i].y, m_colG[i].x, m_colG[i].z);
+    m_colB[i] = sf::Vector3f(m_colG[i].x, m_colG[i].z, m_colG[i].y);
   }
 
-  m_light /= m_light.norm();
+  Vector3d const lightDir = Vector3d(1.0, 1.0, 0.0).normalized();
+  
+  const double* const lightDirData = lightDir.data();
+  
+  m_lightDir[0] = lightDirData[0];
+  m_lightDir[1] = lightDirData[1];
+  m_lightDir[2] = lightDirData[2];
 
   // Make camera
 
@@ -83,9 +88,16 @@ orApp::orApp():
 
   // Make debug text label3D
 
-  RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId = m_renderSystem.makeLabel2D());
-  debugTextLabel2D.m_pos = Vector2f(8, 8);
-  debugTextLabel2D.m_col = m_colG[4];
+  // RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId = m_renderSystem.makeLabel2D());
+  m_debugTextLabel2DId = m_renderSystem.makeLabel2D();
+  RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId);
+    
+  debugTextLabel2D.m_pos[0] = 8;
+  debugTextLabel2D.m_pos[1] = 8;
+  
+  debugTextLabel2D.m_col[0] =  m_colG[4].x;
+  debugTextLabel2D.m_col[1] =  m_colG[4].y;
+  debugTextLabel2D.m_col[2] =  m_colG[4].z;
 
   // For now, give the moon a circular orbit
 
@@ -107,28 +119,53 @@ orApp::orApp():
   Vector3d const earthVel = Vector3d(-earthSpeed, 0.0, 0.0);
   Vector3d const moonVel = Vector3d(moonSpeed, 0.0, 0.0);
 
+  double const* const earthPosData = earthPos.data();
+  double const* const earthVelData = earthVel.data();
+
+  double const* const moonPosData = moonPos.data();
+  double const* const moonVelData = moonVel.data();
+
   // Create Earth
 
   EntitySystem::Planet& earthPlanet = m_entitySystem.getPlanet(m_earthPlanetId = m_entitySystem.makePlanet());
 
   PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthPlanet.m_gravBodyId = m_physicsSystem.makeGravBody());
+  {
+    earthGravBody.m_mass = EARTH_MASS;
+    earthGravBody.m_radius = EARTH_RADIUS;
 
-  earthGravBody.m_mass = EARTH_MASS;
-  earthGravBody.m_radius = EARTH_RADIUS;
+    earthGravBody.m_pos[0] = earthPosData[0];
+    earthGravBody.m_pos[1] = earthPosData[1];
+    earthGravBody.m_pos[2] = earthPosData[2];
+    
+    earthGravBody.m_vel[0] = earthVelData[0];
+    earthGravBody.m_vel[1] = earthVelData[1];
+    earthGravBody.m_vel[2] = earthVelData[2];
 
-  earthGravBody.m_pos = earthPos;
-  earthGravBody.m_vel = earthVel;
-
-  earthGravBody.m_soiParentBody = earthPlanet.m_gravBodyId;
+    earthGravBody.m_soiParentBody = earthPlanet.m_gravBodyId;
+  }
 
   RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthPlanet.m_sphereId = m_renderSystem.makeSphere());
-  earthSphere.m_radius = earthGravBody.m_radius;
-  earthSphere.m_pos = earthGravBody.m_pos;
-  earthSphere.m_col = m_colG[1];
+  {
+    earthSphere.m_radius = earthGravBody.m_radius;
+
+    earthSphere.m_pos[0] = earthPosData[0];
+    earthSphere.m_pos[1] = earthPosData[1];
+    earthSphere.m_pos[2] = earthPosData[2];
+
+    earthSphere.m_col[0] = m_colG[1].x;
+    earthSphere.m_col[1] = m_colG[1].y;
+    earthSphere.m_col[2] = m_colG[1].z;
+  }
 
   CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthPlanet.m_cameraTargetId = m_cameraSystem.makeTarget());
-  earthCamTarget.m_pos = earthGravBody.m_pos;
-  earthCamTarget.m_name = std::string("Earth");
+  {
+    earthCamTarget.m_pos[0] = earthPosData[0];
+    earthCamTarget.m_pos[1] = earthPosData[1];
+    earthCamTarget.m_pos[2] = earthPosData[2];
+
+    earthCamTarget.m_name = std::string("Earth");
+  }
 
   m_cameraTargetId = earthPlanet.m_cameraTargetId;
 
@@ -137,58 +174,124 @@ orApp::orApp():
   EntitySystem::Moon& moonMoon = m_entitySystem.getMoon(m_moonMoonId = m_entitySystem.makeMoon());
 
   PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonMoon.m_gravBodyId = m_physicsSystem.makeGravBody());
+  {
+    moonGravBody.m_mass = MOON_MASS;
+    moonGravBody.m_radius = MOON_RADIUS;
 
-  moonGravBody.m_mass = MOON_MASS;
-  moonGravBody.m_radius = MOON_RADIUS;
+    moonGravBody.m_pos[0] = moonPosData[0];
+    moonGravBody.m_pos[1] = moonPosData[1];
+    moonGravBody.m_pos[2] = moonPosData[2];
 
-  moonGravBody.m_pos = moonPos;
-  moonGravBody.m_vel = moonVel;
+    moonGravBody.m_vel[0] = moonVelData[0];
+    moonGravBody.m_vel[1] = moonVelData[1];
+    moonGravBody.m_vel[2] = moonVelData[2];
 
-  moonGravBody.m_soiParentBody = earthPlanet.m_gravBodyId;
+    moonGravBody.m_soiParentBody = earthPlanet.m_gravBodyId;
+  }
 
   RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonMoon.m_sphereId = m_renderSystem.makeSphere());
-  moonSphere.m_radius = moonGravBody.m_radius;
-  moonSphere.m_pos = moonGravBody.m_pos;
-  moonSphere.m_col = m_colG[1];
+  {
+    moonSphere.m_radius = moonGravBody.m_radius;
+
+    moonSphere.m_pos[0] = moonPosData[0];
+    moonSphere.m_pos[1] = moonPosData[1];
+    moonSphere.m_pos[2] = moonPosData[2];
+
+    moonSphere.m_col[0] = m_colG[1].x;
+    moonSphere.m_col[1] = m_colG[1].y;
+    moonSphere.m_col[2] = m_colG[1].z;
+  }
 
   RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonMoon.m_orbitId = m_renderSystem.makeOrbit());
-  moonOrbit.m_col = m_colG[1];
-  moonOrbit.m_pos = earthGravBody.m_pos;
+  {
+    // Orbit pos is pos of parent body
+
+    moonOrbit.m_pos[0] = earthPosData[0];
+    moonOrbit.m_pos[1] = earthPosData[1];
+    moonOrbit.m_pos[2] = earthPosData[2];
+
+    moonOrbit.m_col[0] = m_colG[1].x;
+    moonOrbit.m_col[1] = m_colG[1].y;
+    moonOrbit.m_col[2] = m_colG[1].z;
+  }
 
   RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
-  moonTrail.m_colOld = m_colG[0];
-  moonTrail.m_colNew = m_colG[4];
+  {
+    moonTrail.m_colOld[0] = m_colG[0].x;
+    moonTrail.m_colOld[1] = m_colG[0].y;
+    moonTrail.m_colOld[2] = m_colG[0].z;
+    
+    moonTrail.m_colNew[0] = m_colG[4].x;
+    moonTrail.m_colNew[1] = m_colG[4].y;
+    moonTrail.m_colNew[2] = m_colG[4].z;
+  }
 
   CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonMoon.m_cameraTargetId = m_cameraSystem.makeTarget());
-  moonCamTarget.m_pos = moonGravBody.m_pos;
-  moonCamTarget.m_name = std::string("Moon");
+  {
+    moonCamTarget.m_pos[0] = moonPosData[0];
+    moonCamTarget.m_pos[1] = moonPosData[1];
+    moonCamTarget.m_pos[2] = moonPosData[2];
+
+    moonCamTarget.m_name = std::string("Moon");
+  }
 
   RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonMoon.m_label3DId = m_renderSystem.makeLabel3D());
-  moonLabel3D.m_pos = moonGravBody.m_pos;
-  moonLabel3D.m_col = m_colG[4];
-  moonLabel3D.m_text = std::string("Moon");
+  {
+    moonLabel3D.m_pos[0] = moonPosData[0];
+    moonLabel3D.m_pos[1] = moonPosData[1];
+    moonLabel3D.m_pos[2] = moonPosData[2];
+
+    moonLabel3D.m_col[0] = m_colG[4].x;
+    moonLabel3D.m_col[1] = m_colG[4].y;
+    moonLabel3D.m_col[2] = m_colG[4].z;
+    
+    moonLabel3D.m_text = std::string("Moon");
+  }
 
   // Create Earth-Moon COM
 
   EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
 
   RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId = m_renderSystem.makePoint());
-  comPoint.m_pos = Vector3d(0.0, 0.0, 0.0);
-  comPoint.m_col = Vector3f(1.0, 0.0, 0.0);
+  {
+    comPoint.m_pos[0] = 0.0;
+    comPoint.m_pos[1] = 0.0;
+    comPoint.m_pos[2] = 0.0;
+
+    comPoint.m_col[0] = 1.0f;
+    comPoint.m_col[1] = 0.0f;
+    comPoint.m_col[2] = 0.0f;
+  }
 
   CameraSystem::Target& comCamTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId = m_cameraSystem.makeTarget());
-  comCamTarget.m_pos = comPoint.m_pos;
-  comCamTarget.m_name = std::string("Earth-Moon COM");
+  {
+    comCamTarget.m_pos[0] = comPoint.m_pos[0];
+    comCamTarget.m_pos[1] = comPoint.m_pos[1];
+    comCamTarget.m_pos[2] = comPoint.m_pos[2];
+
+    comCamTarget.m_name = std::string("Earth-Moon COM");
+  }
 
   for (int i = 0; i < 5; ++i) {
     EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i] = m_entitySystem.makePoi());
 
     RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId = m_renderSystem.makePoint());
-    lagrangePoint.m_pos = Vector3d(0.0, 0.0, 0.0);
-    lagrangePoint.m_col = Vector3f(1.0, 0.0, 0.0);
+    {
+      lagrangePoint.m_pos[0] = 0.0;
+      lagrangePoint.m_pos[1] = 0.0;
+      lagrangePoint.m_pos[2] = 0.0;
+
+      lagrangePoint.m_col[0] = 1.0f;
+      lagrangePoint.m_col[1] = 0.0f;
+      lagrangePoint.m_col[2] = 0.0f;
+    }
 
     CameraSystem::Target& lagrangeCamTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId = m_cameraSystem.makeTarget());
-    lagrangeCamTarget.m_pos = lagrangePoint.m_pos;
+    
+    lagrangeCamTarget.m_pos[0] = lagrangePoint.m_pos[0];
+    lagrangeCamTarget.m_pos[1] = lagrangePoint.m_pos[1];
+    lagrangeCamTarget.m_pos[2] = lagrangePoint.m_pos[2];
+    
     std::stringstream builder;
     builder << "Earth-Moon L" << (i + 1);
     lagrangeCamTarget.m_name = builder.str();
@@ -198,60 +301,130 @@ orApp::orApp():
   EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
 
   PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
+  {
+    playerBody.m_pos[0] = 0.0;
+    playerBody.m_pos[1] = 0.0;
+    playerBody.m_pos[2] = 1.3e7;
 
-  playerBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
-  playerBody.m_vel = Vector3d(5e3, 0.0, 0.0);
+    playerBody.m_vel[0] = 5e3;
+    playerBody.m_vel[1] = 0.0;
+    playerBody.m_vel[2] = 0.0;
+  }
 
   RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
-  playerOrbit.m_col = m_colB[2];
-  playerOrbit.m_pos = earthGravBody.m_pos;
+  {
+    playerOrbit.m_pos[0] = earthPosData[0];
+    playerOrbit.m_pos[1] = earthPosData[1];
+    playerOrbit.m_pos[2] = earthPosData[2];
+
+    playerOrbit.m_col[0] = m_colB[2].x;
+    playerOrbit.m_col[1] = m_colB[2].y;
+    playerOrbit.m_col[2] = m_colB[2].z;
+  }
 
   RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
-  playerTrail.m_colOld = m_colB[0];
-  playerTrail.m_colNew = m_colB[4];
+  {
+    playerTrail.m_colOld[0] = m_colB[0].x;
+    playerTrail.m_colOld[1] = m_colB[0].y;
+    playerTrail.m_colOld[2] = m_colB[0].z;
+    
+    playerTrail.m_colNew[0] = m_colB[4].x;
+    playerTrail.m_colNew[1] = m_colB[4].y;
+    playerTrail.m_colNew[2] = m_colB[4].z;
+  }
 
   RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
-  playerPoint.m_pos = playerBody.m_pos;
-  playerPoint.m_col = m_colB[4];
+  {
+    playerPoint.m_pos[0] = playerBody.m_pos[0];
+    playerPoint.m_pos[1] = playerBody.m_pos[1];
+    playerPoint.m_pos[2] = playerBody.m_pos[2];
+
+    playerPoint.m_col[0] = m_colB[4].x;
+    playerPoint.m_col[1] = m_colB[4].y;
+    playerPoint.m_col[2] = m_colB[4].z;
+  }
 
   CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
-  playerCamTarget.m_pos = playerBody.m_pos;
-  playerCamTarget.m_name = std::string("Player");
+  {
+    playerCamTarget.m_pos[0] = playerBody.m_pos[0];
+    playerCamTarget.m_pos[1] = playerBody.m_pos[1];
+    playerCamTarget.m_pos[2] = playerBody.m_pos[2];
+
+    playerCamTarget.m_name = std::string("Player");
+  }
 
   EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_suspectShipId = m_entitySystem.makeShip());
 
   PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
+  {
+    suspectBody.m_pos[0] = 0.0;
+    suspectBody.m_pos[1] = 0.0;
+    suspectBody.m_pos[2] = 1.3e7;
 
-  suspectBody.m_pos = Vector3d(0.0, 0.0, 1.3e7);
-  suspectBody.m_vel = Vector3d(5e3, 0.0, 0.0);
+    suspectBody.m_vel[0] = 5e3;
+    suspectBody.m_vel[1] = 0.0;
+    suspectBody.m_vel[2] = 0.0;
+  }
 
   RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
-  suspectOrbit.m_col = m_colR[2];
-  suspectOrbit.m_pos = earthGravBody.m_pos;
+  {
+    suspectOrbit.m_pos[0] = earthPosData[0];
+    suspectOrbit.m_pos[1] = earthPosData[1];
+    suspectOrbit.m_pos[2] = earthPosData[2];
+
+    suspectOrbit.m_col[0] = m_colR[2].x;
+    suspectOrbit.m_col[1] = m_colR[2].y;
+    suspectOrbit.m_col[2] = m_colR[2].z;
+  }
 
   RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
-  suspectTrail.m_colOld = m_colR[0];
-  suspectTrail.m_colNew = m_colR[4];
+  {
+    suspectTrail.m_colOld[0] = m_colR[0].x;
+    suspectTrail.m_colOld[1] = m_colR[0].y;
+    suspectTrail.m_colOld[2] = m_colR[0].z;
+    
+    suspectTrail.m_colNew[0] = m_colR[4].x;
+    suspectTrail.m_colNew[1] = m_colR[4].y;
+    suspectTrail.m_colNew[2] = m_colR[4].z;
+  }
 
   RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
-  suspectPoint.m_pos = suspectBody.m_pos;
-  suspectPoint.m_col = m_colR[4];
+  {
+    suspectPoint.m_pos[0] = suspectBody.m_pos[0];
+    suspectPoint.m_pos[1] = suspectBody.m_pos[1];
+    suspectPoint.m_pos[2] = suspectBody.m_pos[2];
+
+    suspectPoint.m_col[0] = m_colR[4].x;
+    suspectPoint.m_col[1] = m_colR[4].y;
+    suspectPoint.m_col[2] = m_colR[4].z;
+  }
 
   CameraSystem::Target& suspectCamTarget = m_cameraSystem.getTarget(suspectShip.m_cameraTargetId = m_cameraSystem.makeTarget());
-  suspectCamTarget.m_pos = suspectBody.m_pos;
-  suspectCamTarget.m_name = std::string("Suspect");
+  {
+    suspectCamTarget.m_pos[0] = suspectBody.m_pos[0];
+    suspectCamTarget.m_pos[1] = suspectBody.m_pos[1];
+    suspectCamTarget.m_pos[2] = suspectBody.m_pos[2];
+
+    suspectCamTarget.m_name = std::string("Suspect");
+  }
 
   // Perturb all the ship orbits
   // TODO this should update all the other positions too, or happen earlier!
-  // TODO shouldn't iterate through IDs.
+  // TODO shouldn't iterate through IDs outside a system.
   float* rnds = new float[6 * m_entitySystem.numShips()];
   UniformDistribution<float> dist(-1, +1);
   dist.Generate(&m_rnd, 6 * m_entitySystem.numShips(), &rnds[0]);
   for (int i = 0; i < m_entitySystem.numShips(); ++i)
   {
     PhysicsSystem::ParticleBody& shipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(i).m_particleBodyId);
-    shipBody.m_pos += Vector3d(rnds[6*i  ], rnds[6*i+1], rnds[6*i+2]) * 6e4;
-    shipBody.m_vel += Vector3d(rnds[6*i+3], rnds[6*i+4], rnds[6*i+5]) * 1e2;
+    // could round-trip to vector, or do it in components...
+    shipBody.m_pos[0] += 6e4 * rnds[6*i  ];
+    shipBody.m_pos[1] += 6e4 * rnds[6*i+1];
+    shipBody.m_pos[2] += 6e4 * rnds[6*i+2];
+    
+    shipBody.m_vel[0] += 1e2 * rnds[6*i+3];
+    shipBody.m_vel[1] += 1e2 * rnds[6*i+4];
+    shipBody.m_vel[2] += 1e2 * rnds[6*i+5];
   }
   delete[] rnds;
 
@@ -571,10 +744,12 @@ void orApp::HandleEvent(sf::Event const& _event)
 
 Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 {
-  Vector3d origin = m_physicsSystem.findSOIGravBody(playerBody).m_pos;
+  Vector3d const origin(m_physicsSystem.findSOIGravBody(playerBody).m_pos);
+  Vector3d const playerPos(playerBody.m_pos);
+  Vector3d const playerVel(playerBody.m_vel);
 
   // Calc acceleration due to gravity
-  Vector3d const r = (origin - playerBody.m_pos);
+  Vector3d const r = origin - playerPos;
   double const r_mag = r.norm();
 
   Vector3d const r_dir = r / r_mag;
@@ -584,7 +759,7 @@ Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 
   Vector3d thrustVec(0.0,0.0,0.0);
 
-  Vector3d const fwd = playerBody.m_vel.normalized(); // Prograde
+  Vector3d const fwd = playerVel.normalized(); // Prograde
   Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
   Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
 
@@ -609,7 +784,13 @@ void orApp::UpdateState(double const _dt)
 
     // Update player thrust
     PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId);
-    playerShipBody.m_userAcc = CalcPlayerThrust(playerShipBody);
+    Vector3d const userAcc = CalcPlayerThrust(playerShipBody);
+    
+    const double* const userAccData = userAcc.data();
+    
+    playerShipBody.m_userAcc[0] = userAccData[0];
+    playerShipBody.m_userAcc[1] = userAccData[1];
+    playerShipBody.m_userAcc[2] = userAccData[2];
 
     m_physicsSystem.update(m_integrationMethod, dt);
 
@@ -621,16 +802,33 @@ void orApp::UpdateState(double const _dt)
     PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_earthPlanetId).m_gravBodyId);
     PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(m_entitySystem.getMoon(m_moonMoonId).m_gravBodyId);
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
-    Vector3d comPos = (earthBody.m_pos * earthBody.m_mass / totalMass) + (moonBody.m_pos * moonBody.m_mass / totalMass);
+
+    Vector3d const earthPos(earthBody.m_pos);
+    Vector3d const earthVel(earthBody.m_vel);
+    Vector3d const moonPos(moonBody.m_pos);
+    Vector3d const moonVel(moonBody.m_vel);
+
+    Vector3d const comPos = (earthPos * earthBody.m_mass / totalMass) + (moonPos * moonBody.m_mass / totalMass);
+    const double* const comPosData = comPos.data();
 
     EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId);
+    
     RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId);
-    comPoint.m_pos = comPos;
+    {
+      comPoint.m_pos[0] = comPosData[0];
+      comPoint.m_pos[1] = comPosData[1];
+      comPoint.m_pos[2] = comPosData[2];
+    }
+    
     CameraSystem::Target& comTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId);
-    comTarget.m_pos = comPos;
+    {
+      comTarget.m_pos[0] = comPosData[0];
+      comTarget.m_pos[1] = comPosData[1];
+      comTarget.m_pos[2] = comPosData[2];
+    }
 
     // Update the earth-moon Lagrange points
-    Vector3d const earthMoonVector = moonBody.m_pos - earthBody.m_pos;
+    Vector3d const earthMoonVector = moonPos - earthPos;
     double const earthMoonOrbitRadius = earthMoonVector.norm();
     Vector3d const earthMoonDir = earthMoonVector / earthMoonOrbitRadius;
     double const massRatio = MOON_MASS / EARTH_MASS;
@@ -639,14 +837,14 @@ void orApp::UpdateState(double const _dt)
 
     Vector3d lagrangePos[5];
     // Lagrange point 1
-    lagrangePos[0] = moonBody.m_pos - earthMoonDir * r1;
+    lagrangePos[0] = moonPos - earthMoonDir * r1;
     // Lagrange point 2
-    lagrangePos[1] = moonBody.m_pos + earthMoonDir * r1;
+    lagrangePos[1] = moonPos + earthMoonDir * r1;
     // Lagrange point 3
-    lagrangePos[2] = earthBody.m_pos - earthMoonDir * r3;
+    lagrangePos[2] = earthPos - earthMoonDir * r3;
 
     // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
-    Vector3d orbitAxis = moonBody.m_vel.normalized().cross(earthMoonVector.normalized());
+    Vector3d orbitAxis = moonVel.normalized().cross(earthMoonVector.normalized());
     Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
     // Lagrange point 4
     lagrangePos[3] = rotation           * earthMoonVector;
@@ -656,9 +854,17 @@ void orApp::UpdateState(double const _dt)
     for (int i = 0; i < 5; ++i) {
       EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i]);
       RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId);
-      lagrangePoint.m_pos = lagrangePos[i];
       CameraSystem::Target& lagrangeTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId);
-      lagrangeTarget.m_pos = lagrangePos[i];
+
+      const double* const lagrangePos_data = lagrangePos[i].data();
+
+      lagrangePoint.m_pos[0] = lagrangePos_data[0];
+      lagrangePoint.m_pos[1] = lagrangePos_data[1];
+      lagrangePoint.m_pos[2] = lagrangePos_data[2];
+      
+      lagrangeTarget.m_pos[0] = lagrangePos_data[0];
+      lagrangeTarget.m_pos[1] = lagrangePos_data[1];
+      lagrangeTarget.m_pos[2] = lagrangePos_data[2];
     }
 
     m_simTime += dt;
@@ -675,12 +881,12 @@ void orApp::UpdateState(double const _dt)
     // Update camera
 
     CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
-    Vector3d const camTargetPos = camTarget.m_pos;
+    Vector3d const camTargetPos(camTarget.m_pos);
 
     Vector3d camPos;
 
     if (m_camMode == CameraMode_FirstPerson) {
-      camPos = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos;
+      camPos = Vector3d(m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos);
     } else if (m_camMode == CameraMode_ThirdPerson) {
       camPos = Vector3d(0.0, 0.0, m_camDist);
 
@@ -698,7 +904,12 @@ void orApp::UpdateState(double const _dt)
     }
 
     CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId);
-    camera.m_pos = camPos;
+    
+    const double* const camPosData = camPos.data();
+    
+    camera.m_pos[0] = camPosData[0];
+    camera.m_pos[1] = camPosData[1];
+    camera.m_pos[2] = camPosData[2];
   }
 }
 
@@ -767,8 +978,8 @@ void orApp::RenderState()
 
   glViewport(0, 0, m_config.width, m_config.height);
 
-  Vector3f clearCol = m_colG[0];
-  glClearColor(clearCol.x(), clearCol.y(), clearCol.z(), 0);
+  sf::Vector3f clearCol = m_colG[0];
+  glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
   glClearDepth(minZ);
 
   glMatrixMode(GL_PROJECTION);

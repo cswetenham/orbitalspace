@@ -8,12 +8,13 @@
 
 namespace sf { class RenderWindow; }
 
+// TODO convert to floats
 class RenderSystem {
 public:
   struct Point {
-    Vector3d m_pos;
+    double m_pos[3];
 
-    Vector3f m_col;
+    float m_col[3];
   };
 
   int numPoints() const { return m_points.size(); }
@@ -22,12 +23,14 @@ public:
   Point const& getPoint(int i) const { return m_points[i]; }
 
   
-  // TODO internally, first convert all to Label2D for the frame, then render those
+  // TODO keep a persistent sf::Text object allocated in a different array?
   struct Label2D {
     std::string m_text;
-    Vector2f m_pos;
+
+    // Vector3d m_pos;
+    float m_pos[2];
     
-    Vector3f m_col;
+    float m_col[3];
   };
 
   int numLabel2Ds() const { return m_label2Ds.size(); }
@@ -37,9 +40,10 @@ public:
 
   struct Label3D {
     std::string m_text;
-    Vector3d m_pos;
+
+    double m_pos[3];
     
-    Vector3f m_col;
+    float m_col[3];
   };
 
   int numLabel3Ds() const { return m_label3Ds.size(); }
@@ -49,9 +53,9 @@ public:
 
   struct Sphere {
     double m_radius;
-    Vector3d m_pos;
+    double m_pos[3];
 
-    Vector3f m_col;
+    float m_col[3];
   };
 
   int numSpheres() const { return (int)m_spheres.size(); }
@@ -63,12 +67,12 @@ public:
     double p;
     double e;
     double theta;
-    Vector3d x_dir;
-    Vector3d y_dir;
+    double x_dir[3];
+    double y_dir[3];
 
-    Vector3d m_pos;
+    double m_pos[3];
 
-    Vector3f m_col;
+    float m_col[3];
   };
 
   int numOrbits() const { return (int)m_orbits.size(); }
@@ -79,7 +83,8 @@ public:
   struct Trail
   {
     // TODO make into methods on RenderSystem instead
-    Trail(double const _duration, Vector3d const _initPos, Vector3d const _initOrigin);
+    Trail(double const _duration, const double _initPos[3], const double _initOrigin[3]);
+
     void Update(double const _dt, Vector3d const _pos);
 
     // TODO this stores a fixed number of frames, not the best approach
@@ -87,17 +92,17 @@ public:
     double m_duration; // TODO not obeyed at the moment; effective duration is NUM_TRAIL_PTS * minAge
 
     int m_headIdx;
-    Vector3d m_trailPts[NUM_TRAIL_PTS];
+    double m_trailPts[NUM_TRAIL_PTS*3];
     double m_trailPointAge[NUM_TRAIL_PTS];
 
-    Vector3d m_HACKorigin;
+    double m_HACKorigin[3];
 
-    Vector3f m_colOld;
-    Vector3f m_colNew;
+    float m_colOld[3];
+    float m_colNew[3];
   };
 
   int numTrails() const { return (int)m_trails.size(); }
-  int makeTrail( double const _duration, Vector3d const _initPos, Vector3d const _origin ) { m_trails.push_back(Trail(_duration, _initPos, _origin)); return numTrails() - 1; }
+  int makeTrail( double const _duration, const double _initPos[3], const double _origin[3] ) { m_trails.push_back(Trail(_duration, _initPos, _origin)); return numTrails() - 1; }
   Trail&       getTrail(int i)       { return m_trails[i]; }
   Trail const& getTrail(int i) const { return m_trails[i]; }
 

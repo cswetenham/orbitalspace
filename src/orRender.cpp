@@ -88,11 +88,13 @@ void RenderSystem::renderPoints() const
 {
   for (int pi = 0; pi < (int)m_points.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
-    setDrawColour(point.m_col);
+
+    setDrawColour(Vector3f(point.m_col));
 
     glPointSize(10.0);
     glBegin(GL_POINTS);
-    Vector3d p = point.m_pos;
+    Vector3d p(point.m_pos);
+    // TODO isn't there Eigen opengl support included?
     glVertex3d(p.x(), p.y(), p.z());
     glEnd();
     glPointSize(1.0);
@@ -106,9 +108,9 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
     RenderSystem::Label3D const& label3D = getLabel3D(li);
     
     Vector4d pos3d;
-    pos3d.x() = label3D.m_pos.x(); // is this really the best way?
-    pos3d.y() = label3D.m_pos.y();
-    pos3d.z() = label3D.m_pos.z();
+    pos3d.x() = label3D.m_pos[0]; // is this really the best way?
+    pos3d.y() = label3D.m_pos[1];
+    pos3d.z() = label3D.m_pos[2];
     pos3d.w() = 1.0;
 
     Vector4d pos2d = projMatrix * pos3d;
@@ -121,9 +123,13 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
     Label2D& label2D = m_label2DBuffer.back();
 
     label2D.m_text = label3D.m_text;
-    label2D.m_col = label3D.m_col;
-    label2D.m_pos.x() = x;
-    label2D.m_pos.y() = y;
+
+    label2D.m_col[0] = label3D.m_col[0];
+    label2D.m_col[1] = label3D.m_col[1];
+    label2D.m_col[2] = label3D.m_col[2];
+
+    label2D.m_pos[0] = x;
+    label2D.m_pos[1] = y;
   }
 }
 
@@ -136,10 +142,10 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
     RenderSystem::Label2D const& label2D = getLabel2D(li);
     sf::Text text(label2D.m_text, font, fontSize);
 
-    Eigen::Matrix<sf::Uint8, 3, 1> ct = (label2D.m_col * 255).cast<sf::Uint8>();
+    Eigen::Matrix<sf::Uint8, 3, 1> ct = (Vector3f(label2D.m_col) * 255).cast<sf::Uint8>();
     text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
 
-    text.setPosition(label2D.m_pos.x(), label2D.m_pos.y());
+    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
 
     window->draw(text);
   }
@@ -148,10 +154,10 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
     sf::Text text(label2D.m_text, font, fontSize);
 
-    Eigen::Matrix<sf::Uint8, 3, 1> ct = (label2D.m_col * 255).cast<sf::Uint8>();
+    Eigen::Matrix<sf::Uint8, 3, 1> ct = (Vector3f(label2D.m_col) * 255).cast<sf::Uint8>();
     text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
 
-    text.setPosition(label2D.m_pos.x(), label2D.m_pos.y());
+    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
 
     window->draw(text);
   }
@@ -161,9 +167,9 @@ void RenderSystem::renderSpheres() const
 {
   for (int si = 0; si < (int)m_spheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
-    setDrawColour(sphere.m_col);
+    setDrawColour(Vector3f(sphere.m_col));
 
-    drawWireSphere(sphere.m_pos, sphere.m_radius, 32, 32);
+    drawWireSphere(Vector3d(sphere.m_pos), sphere.m_radius, 32, 32);
   }
 }
 
@@ -171,7 +177,7 @@ void RenderSystem::renderOrbits() const
 {
   for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
-    setDrawColour(orbit.m_col);
+    setDrawColour(Vector3f(orbit.m_col));
 
     int const steps = 10000;
     // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
@@ -199,7 +205,7 @@ void RenderSystem::renderOrbits() const
 
         double const x_len = cr * -cos(ct);
         double const y_len = cr * -sin(ct);
-        Vector3d pos = (orbit.x_dir * x_len) + (orbit.y_dir * y_len) + orbit.m_pos;
+        Vector3d pos = (Vector3d(orbit.x_dir) * x_len) + (Vector3d(orbit.y_dir) * y_len) + Vector3d(orbit.m_pos);
         glVertex3d(pos.x(), pos.y(), pos.z());
     }
     glEnd();
@@ -217,10 +223,10 @@ void RenderSystem::renderTrails() const
       // Render from tail to head
       int tailIdx = (trail.m_headIdx + 1) % Trail::NUM_TRAIL_PTS;
       int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
-      Vector3d v = trail.m_trailPts[idx] + trail.m_HACKorigin;
+      Vector3d v = Vector3d(&trail.m_trailPts[3*idx]) + Vector3d(trail.m_HACKorigin);
 
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
-      Vector3f c = Util::Lerp(trail.m_colNew, trail.m_colOld, l);
+      Vector3f c = Util::Lerp(Vector3f(trail.m_colNew), Vector3f(trail.m_colOld), l);
       setDrawColour(c);
 
       glVertex3d(v.x(),v.y(),v.z());
@@ -264,12 +270,24 @@ void RenderSystem::render3D(sf::RenderWindow* window)
   renderTrails();
 }
 
-RenderSystem::Trail::Trail(double const _duration, Vector3d const _initPos, Vector3d const _initOrigin) :
+RenderSystem::Trail::Trail(double const _duration, const double _initPos[3], const double _initOrigin[3]) :
   m_duration(_duration),
   m_headIdx(0)
 {
+  // TODO need to set m_HACKorigin from _initOrigin? _initOrigin never read right now, m_HACKorigin never set...
+  Vector3d initPos(_initPos);
+  Vector3d initOrigin(_initOrigin);
+
+  Vector3d initPt = initPos - Vector3d(m_HACKorigin);
+  const double* const initPtData = initPt.data();
+
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
-    m_trailPts[i] = _initPos - m_HACKorigin;
+    m_trailPts[3*i  ] = initPtData[0];
+    m_trailPts[3*i+1] = initPtData[1];
+    m_trailPts[3*i+2] = initPtData[2];
+  }
+
+  for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
     m_trailPointAge[i] = 0.0;
   }
 }
@@ -279,7 +297,7 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
 {
   // So if we get several 10ms updates we would interpolate A towards B a proportional amount, then finally remove it.
 
-  Vector3d const pos = _pos - m_HACKorigin;
+  Vector3d const pos = _pos - Vector3d(m_HACKorigin);
 
   for (int i = 0; i < NUM_TRAIL_PTS; ++i) {
     m_trailPointAge[i] += _dt;
@@ -294,7 +312,8 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
     m_headIdx = (m_headIdx + 1) % NUM_TRAIL_PTS;
   }
 
-  m_trailPts[m_headIdx] = pos;
+  Eigen::Map<Vector3d> v(&m_trailPts[3*m_headIdx]);
+  v = pos;
   m_trailPointAge[m_headIdx] = 0.f;
 
   // From the head, skip over points that are younger than max age;

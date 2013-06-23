@@ -25,22 +25,22 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   int curId = 0;
   for (int i = 0; i < numParticles; ++i, ++curId) {
     Body& body = m_particleBodies[i];
-    x_0.col(curId) = body.m_pos;
+    x_0.col(curId) = Vector3d(body.m_pos);
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
     Body& body = m_gravBodies[i];
-    x_0.col(curId) = body.m_pos;
+    x_0.col(curId) = Vector3d(body.m_pos);
   }
 
   for (int i = 0; i < numParticles; ++i, ++curId) {
     Body& body = m_particleBodies[i];
-    x_0.col(curId) = body.m_vel;
+    x_0.col(curId) = Vector3d(body.m_vel);
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
     Body& body = m_gravBodies[i];
-    x_0.col(curId) = body.m_vel;
+    x_0.col(curId) = Vector3d(body.m_vel);
   }
 
   Eigen::VectorXd mgravs(numGravs);
@@ -117,22 +117,42 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   curId = 0;
   for (int i = 0; i < numParticles; ++i, ++curId) {
     Body& body = m_particleBodies[i];
-    body.m_pos = x_1.col(curId);
+
+    const double* const bodyPos = x_1.col(curId).data();
+    
+    body.m_pos[0] = bodyPos[0];
+    body.m_pos[1] = bodyPos[1];
+    body.m_pos[2] = bodyPos[2];
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
     Body& body = m_gravBodies[i];
-    body.m_pos = x_1.col(curId);
+    
+    const double* const bodyPos = x_1.col(curId).data();
+    
+    body.m_pos[0] = bodyPos[0];
+    body.m_pos[1] = bodyPos[1];
+    body.m_pos[2] = bodyPos[2];
   }
 
   for (int i = 0; i < numParticles; ++i, ++curId) {
     Body& body = m_particleBodies[i];
-    body.m_vel = x_1.col(curId);
+    
+    const double* const bodyVel = x_1.col(curId).data();
+    
+    body.m_vel[0] = bodyVel[0];
+    body.m_vel[1] = bodyVel[1];
+    body.m_vel[2] = bodyVel[2];
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
     Body& body = m_gravBodies[i];
-    body.m_vel = x_1.col(curId);
+    
+    const double* const bodyVel = x_1.col(curId).data();
+    
+    body.m_vel[0] = bodyVel[0];
+    body.m_vel[1] = bodyVel[1];
+    body.m_vel[2] = bodyVel[2];
   }
 }
 
@@ -141,20 +161,26 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
   // SOI really requires each body to have a "parent body" for the SOI computation.
   // At the moment we hack in the parent for all grav bodies...
   ensure(numGravBodies() > 0);
-  // TODO Id -> Id
+
+  Vector3d const bodyPos(_body.m_pos);
+
   double minDist = DBL_MAX;
   int minDistId = -1;
+  
   for (int i = 0; i < numGravBodies(); ++i)
   {
     GravBody const& soiBody = getGravBody(i);
     GravBody const& parentBody = getGravBody(soiBody.m_soiParentBody);
 
+    Vector3d const soiPos(soiBody.m_pos);
+    Vector3d const parentPos(parentBody.m_pos);
+    
     double soi;
     if (soiBody.m_soiParentBody == i) {
       // If body is own parent, set infinite SOI
       soi = DBL_MAX;
     } else {
-      double const orbitRadius = (parentBody.m_pos - soiBody.m_pos).norm();
+      double const orbitRadius = (parentPos - soiPos).norm();
 
       // Distances from COM of Earth-Moon system
       double const parentOrbitRadius = orbitRadius * soiBody.m_mass / (parentBody.m_mass + soiBody.m_mass);
@@ -163,7 +189,7 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
       soi = childOrbitRadius * pow(soiBody.m_mass / parentBody.m_mass, 2.0/5.0);
     }
 
-    double const soiDistance = (_body.m_pos - soiBody.m_pos).norm();
+    double const soiDistance = (bodyPos - soiPos).norm();
 
     if (soiDistance < soi && soiDistance < minDist) {
       minDist = soiDistance;
@@ -227,7 +253,7 @@ template< class PP, class VP, class OA >
 void PhysicsSystem::CalcParticleUserAcc(int numParticles, PP const& pp, VP const& vp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   for (int pi = 0; pi < numParticles; ++pi) {
-    o_a.col(pi) += getParticleBody(pi).m_userAcc.array();
+    o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pi).m_userAcc);
   }
 }
 

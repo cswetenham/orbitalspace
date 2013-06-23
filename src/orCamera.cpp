@@ -48,7 +48,10 @@ Eigen::Affine3d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vect
   Camera& camera = getCamera( cameraId );
   Target& target = getTarget( targetId );
 
-  Vector3d camF = (target.m_pos - camera.m_pos).normalized();
+  Vector3d const targetPos(target.m_pos);
+  Vector3d const cameraPos(camera.m_pos);
+
+  Vector3d camF = (targetPos - cameraPos).normalized();
   Vector3d camR = camF.cross(up).normalized();
   Vector3d camU = camF.cross(camR).normalized();
 
@@ -59,7 +62,7 @@ Eigen::Affine3d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vect
 
   Eigen::Affine3d camT;
   camT.linear() = camRot;
-  camT.translation() = camera.m_pos;
+  camT.translation() = cameraPos;
 
   return camT.inverse();
 }

@@ -71,7 +71,7 @@ public:
   Poi&       getPoi(int id)       { return m_pois[id]; }
   Poi const& getPoi(int id) const { return m_pois[id]; }
 
-  void update(double const _dt, Vector3d const _origin);
+  void update(double const _dt, double const _origin[3]);
 
 private:
   // TODO not happy this lives here
