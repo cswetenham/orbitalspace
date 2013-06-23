@@ -952,6 +952,8 @@ void orApp::RenderState()
     str.width(7);
     str.flags(std::ios::right | std::ios::fixed);
 
+    str << "FPS:       " << (1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
+
     str << "Time Scale: " << m_timeScale << "\n";
 
     {
