@@ -70,7 +70,7 @@ template <typename T> inline void ignore(T const&) {}; // To explicitly ignore r
 
 // TODO portable implementations
 
-NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line) {
+inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line) {
   if (!_cond) {
     printf("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
     DEBUGBREAK;
@@ -78,7 +78,7 @@ NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _
   }
 }
 
-NORETURN inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line, char const* _msg, ...) {
+inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line, char const* _msg, ...) {
   if (!_cond) {
     printf("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
     printf("%s(%d): ", _file, _line);
