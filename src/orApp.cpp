@@ -954,11 +954,50 @@ void orApp::RenderState()
   Vector3d up(0.0, 1.0, 0.0);
   Eigen::Affine3d camMatrix = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
 
-  m_window->resetGLStates();
+  {
+    PERFTIMER("Prepare3D");
+    m_window->resetGLStates();
+
+    glViewport(0, 0, m_config.width, m_config.height);
+
+    sf::Vector3f clearCol = m_colG[0];
+    glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
+    glClearDepth(minZ);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMultMatrix( projMatrix );
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glMultMatrix( camMatrix );
+
+    glEnable(GL_TEXTURE_2D);
+
+    glLineWidth(1);
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // TODO clean up
+    if (m_wireframe) {
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    } else {
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    }
+  }
+
+  {
+    PERFTIMER("Render3D");
+    m_renderSystem.render3D(m_window);
+  }
 
   // Render debug text
   {
-    PERFTIMER("PrepareDebugText");
+    PERFTIMER("Prepare2D");
+
+    m_window->resetGLStates();
+    
     std::ostringstream str;
     str.precision(3);
     str.width(7);
@@ -1001,44 +1040,6 @@ void orApp::RenderState()
   {
     PERFTIMER("Render2D");
     m_renderSystem.render2D(m_window, screenMatrix, projMatrix, camMatrix.matrix());
-  }
-
-  {
-    PERFTIMER("Prepare3D");
-    m_window->resetGLStates();
-
-    glViewport(0, 0, m_config.width, m_config.height);
-
-    sf::Vector3f clearCol = m_colG[0];
-    glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
-    glClearDepth(minZ);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMultMatrix( projMatrix );
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glMultMatrix( camMatrix );
-
-    glEnable(GL_TEXTURE_2D);
-
-    glLineWidth(1);
-    glEnable(GL_POINT_SMOOTH);
-    glEnable(GL_LINE_SMOOTH);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // TODO clean up
-    if (m_wireframe) {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    } else {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    }
-  }
-
-  {
-    PERFTIMER("Render3D");
-    m_renderSystem.render3D(m_window);
   }
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
