@@ -195,11 +195,13 @@ void orApp::Run()
 void orApp::InitRender()
 {
   // TODO
-  // m_config.width = 1280;
-  // m_config.height = 768;
-
+#if 1
+  m_config.width = 1280;
+  m_config.height = 768;
+#else
   m_config.width = 320;
   m_config.height = 200;
+#endif
 
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer

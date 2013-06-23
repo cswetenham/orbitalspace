@@ -159,8 +159,8 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
     RenderSystem::Label2D const& label2D = getLabel2D(li);
     sf::Text text("", *m_font, fontSize);
 
-    PERFTIMER("ConfigText");
     {
+      PERFTIMER("ConfigText");
       {
         PERFTIMER("ConfigString");
         text.setString(label2D.m_text);
@@ -192,18 +192,27 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
     sf::Text text("", *m_font, fontSize);
 
-    PERFTIMER("ConfigText");
     {
-      text.setString(label2D.m_text);
+      PERFTIMER("ConfigText");
+      {
+        PERFTIMER("ConfigString");
+        text.setString(label2D.m_text);
+      }
 
-      text.setColor(sf::Color(
-        uint8_t(label2D.m_col[0] * 255),
-        uint8_t(label2D.m_col[1] * 255),
-        uint8_t(label2D.m_col[2] * 255),
-        255
-      ));
+      {
+        PERFTIMER("ConfigColor");
+        text.setColor(sf::Color(
+          uint8_t(label2D.m_col[0] * 255),
+          uint8_t(label2D.m_col[1] * 255),
+          uint8_t(label2D.m_col[2] * 255),
+          255
+        ));
+      }
 
-      text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+      {
+        PERFTIMER("ConfigPos");
+        text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+      }
     }
 
     {
