@@ -810,16 +810,26 @@ void orApp::UpdateState(double const _dt)
 
     // TODO eaghghgh not clear where these should live
 
-    // Update the earth-moon COM
     PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_earthPlanetId).m_gravBodyId);
-    PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(m_entitySystem.getMoon(m_moonMoonId).m_gravBodyId);
-    double const totalMass = earthBody.m_mass + moonBody.m_mass;
-
+    EntitySystem::Moon& moon = m_entitySystem.getMoon(m_moonMoonId);
+    PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(moon.m_gravBodyId);
+    
     Vector3d const earthPos(earthBody.m_pos);
     Vector3d const earthVel(earthBody.m_vel);
     Vector3d const moonPos(moonBody.m_pos);
     Vector3d const moonVel(moonBody.m_vel);
 
+    const double* const moonPosData = moonPos.data();
+
+    // Update the moon's label
+    RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moon.m_label3DId);
+    moonLabel3D.m_pos[0] = moonPosData[0];
+    moonLabel3D.m_pos[1] = moonPosData[1];
+    moonLabel3D.m_pos[2] = moonPosData[2];
+
+    // Update the earth-moon COM
+    double const totalMass = earthBody.m_mass + moonBody.m_mass;
+    
     Vector3d const comPos = (earthPos * earthBody.m_mass / totalMass) + (moonPos * moonBody.m_mass / totalMass);
     const double* const comPosData = comPos.data();
 
@@ -932,7 +942,7 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 void orApp::RenderState()
 {
   // TODO no timer here
-  Eigen::Matrix4d screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.width, m_config.height );
+  Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.width, m_config.height );
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
   double const minZ = 1.0; // meters
@@ -990,7 +1000,7 @@ void orApp::RenderState()
 
   {
     PERFTIMER("Render2D");
-    m_renderSystem.render2D(m_window, (screenMatrix * projMatrix * camMatrix).matrix());
+    m_renderSystem.render2D(m_window, screenMatrix, projMatrix, camMatrix.matrix());
   }
 
   {

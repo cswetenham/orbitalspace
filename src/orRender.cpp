@@ -117,7 +117,7 @@ void RenderSystem::renderPoints() const
 }
 
 
-void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
+void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
 {
   PERFTIMER("ProjectLabel3Ds");
   for (int li = 0; li < (int)m_label3Ds.size(); ++li) {
@@ -129,9 +129,36 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
     pos3d.z() = label3D.m_pos[2];
     pos3d.w() = 1.0;
 
-    Vector4d pos2d = projMatrix * pos3d;
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos3d.x(), pos3d.y(), pos3d.z(), pos3d.w());
+
+    pos3d = camMtx * pos3d;
+
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos3d.x(), pos3d.y(), pos3d.z(), pos3d.w());
+
+    pos3d /= pos3d.w();
+
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos3d.x(), pos3d.y(), pos3d.z(), pos3d.w());
+
+    Vector4d pos2d = projMtx * pos3d;
+
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos2d.x(), pos2d.y(), pos2d.z(), pos2d.w());
+
     pos2d /= pos2d.w();
+
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos2d.x(), pos2d.y(), pos2d.z(), pos2d.w());
+
+    pos2d = screenMtx * pos2d;
+
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos2d.x(), pos2d.y(), pos2d.z(), pos2d.w());
+
+    pos2d /= pos2d.w();
+
+    orLog("x: %3.3f y: %3.3f z: %3.3f w: %3.3f\n", pos2d.x(), pos2d.y(), pos2d.z(), pos2d.w());
+
+
     
+    orLog("------\n");
+
     float x = (float)pos2d.x();
     float y = (float)pos2d.y();
     
@@ -349,9 +376,9 @@ void RenderSystem::renderTrails() const
   }
 }
 
-void RenderSystem::render2D(sf::RenderWindow* window, Eigen::Matrix4d const& proj)
+void RenderSystem::render2D(sf::RenderWindow* window, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
 {
-  projectLabel3Ds(proj);
+  projectLabel3Ds(screenMtx, projMtx, camMtx);
   renderLabels(window);
 }
 

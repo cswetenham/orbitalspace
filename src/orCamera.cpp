@@ -17,7 +17,6 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
   screenMatrix.coeffRef(1, 3) = halfHeight;
   screenMatrix.coeffRef(3, 3) = 1.0;
 
-
   return screenMatrix;
 }
 
