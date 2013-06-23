@@ -66,12 +66,16 @@ public:
   
   static void StaticInit()
   {
+    s_startTime = Timer::GetPerfTime();
     s_stack.push(&s_parent);
   }
   
   static void StaticShutdown()
   {
+    s_parent.time += Timer::GetPerfTime() - s_startTime;
     s_stack.pop();
+
+    Print();
   }
   
   static void Print()
@@ -88,6 +92,7 @@ private:
   
   static std::stack<Entry*> s_stack;
   static Entry s_parent;
+  static Timer::PerfTime s_startTime;
 };
 
 #define PERFTIMER(_NAME) PerfTimer perfTimer##__LINE__(_NAME);

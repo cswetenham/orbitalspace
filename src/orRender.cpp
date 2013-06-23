@@ -7,6 +7,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
+#include "orProfile/perftimer.h"
+
 void RenderSystem::setDrawColour(Vector3f const& _c) const
 {
   glColor3f(_c.x(), _c.y(), _c.z());
@@ -86,6 +88,7 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
 
 void RenderSystem::renderPoints() const
 {
+  PERFTIMER("RenderPoints");
   for (int pi = 0; pi < (int)m_points.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
 
@@ -165,6 +168,7 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
 
 void RenderSystem::renderSpheres() const
 {
+  PERFTIMER("RenderSpheres");
   for (int si = 0; si < (int)m_spheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
     setDrawColour(Vector3f(sphere.m_col));
@@ -175,6 +179,7 @@ void RenderSystem::renderSpheres() const
 
 void RenderSystem::renderOrbits() const
 {
+  PERFTIMER("RenderOrbits");
   for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
     setDrawColour(Vector3f(orbit.m_col));
@@ -214,6 +219,7 @@ void RenderSystem::renderOrbits() const
 
 void RenderSystem::renderTrails() const
 {
+  PERFTIMER("RenderTrails");
   for (int ti = 0; ti < (int)m_trails.size(); ++ti) {
     Trail const& trail = getTrail(ti);
     glBegin(GL_LINE_STRIP);

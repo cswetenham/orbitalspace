@@ -93,8 +93,6 @@ void orApp::Init()
 
 void orApp::Shutdown()
 {
-  PerfTimer::Print();
-
   ShutdownRender();
   ShutdownState();
 }
@@ -931,6 +929,7 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 
 void orApp::RenderState()
 {
+  // TODO no timer here
   Eigen::Matrix4d screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.width, m_config.height );
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
@@ -947,6 +946,7 @@ void orApp::RenderState()
 
   // Render debug text
   {
+    PERFTIMER("PrepareDebugText");
     std::ostringstream str;
     str.precision(3);
     str.width(7);
@@ -984,39 +984,48 @@ void orApp::RenderState()
     debugTextLabel2D.m_text = str.str();
   }
 
-  m_renderSystem.render2D(m_window, (screenMatrix * projMatrix * camMatrix).matrix());
-
-  m_window->resetGLStates();
-
-  glViewport(0, 0, m_config.width, m_config.height);
-
-  sf::Vector3f clearCol = m_colG[0];
-  glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
-  glClearDepth(minZ);
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMultMatrix( projMatrix );
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glMultMatrix( camMatrix );
-
-  glEnable(GL_TEXTURE_2D);
-
-  glLineWidth(1);
-  glEnable(GL_POINT_SMOOTH);
-  glEnable(GL_LINE_SMOOTH);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // TODO clean up
-  if (m_wireframe) {
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  } else {
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  {
+    PERFTIMER("Render2D");
+    m_renderSystem.render2D(m_window, (screenMatrix * projMatrix * camMatrix).matrix());
   }
 
-  m_renderSystem.render3D(m_window);
+  {
+    PERFTIMER("Prepare3D");
+    m_window->resetGLStates();
 
-  printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
+    glViewport(0, 0, m_config.width, m_config.height);
+
+    sf::Vector3f clearCol = m_colG[0];
+    glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
+    glClearDepth(minZ);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMultMatrix( projMatrix );
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glMultMatrix( camMatrix );
+
+    glEnable(GL_TEXTURE_2D);
+
+    glLineWidth(1);
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // TODO clean up
+    if (m_wireframe) {
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    } else {
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    }
+  }
+
+  {
+    PERFTIMER("Render3D");
+    m_renderSystem.render3D(m_window);
+  }
+
+  // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
