@@ -28,8 +28,7 @@ add_definitions(-D__STDC_LIMIT_MACROS)
 
 add_executable(OrbitalSpace
   src/main.cpp
-  src/app.cpp
-  src/orbitalSpaceApp.cpp
+  src/orApp.cpp
   src/orCamera.cpp
   src/orEntity.cpp
   src/orPhysics.cpp

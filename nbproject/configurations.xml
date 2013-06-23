@@ -2,56 +2,42 @@
 <configurationDescriptor version="84">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df name="OrbitalSpace" root=".">
-      <df name="bin">
-      </df>
-      <df name="build">
-        <df name="CMakeFiles">
-          <df name="CMakeTmp">
-            <df name="CMakeFiles">
-              <df name="cmTryCompileExec.dir">
-              </df>
-            </df>
-          </df>
-          <df name="CompilerIdC">
-            <in>CMakeCCompilerId.c</in>
-          </df>
-          <df name="CompilerIdCXX">
-            <in>CMakeCXXCompilerId.cpp</in>
-          </df>
-          <df name="OrbitalSpace.dir">
-            <df name="src">
-            </df>
-          </df>
-          <df name="Progress">
-          </df>
-        </df>
-      </df>
       <df name="CMakeFiles">
         <df name="CMakeTmp">
           <df name="CMakeFiles">
+            <df name="cmTryCompileExec.dir">
+            </df>
           </df>
         </df>
         <df name="CompilerIdC">
           <in>CMakeCCompilerId.c</in>
+          <in>a.out</in>
         </df>
         <df name="CompilerIdCXX">
+          <in>CMakeCXXCompilerId.cpp</in>
+          <in>a.out</in>
         </df>
         <df name="OrbitalSpace.dir">
           <df name="src">
             <df name="orProfile">
             </df>
           </df>
+          <in>DependInfo.cmake</in>
+          <in>build.make</in>
+          <in>cmake_clean.cmake</in>
+          <in>depend.make</in>
+          <in>flags.make</in>
+          <in>link.txt</in>
+          <in>progress.make</in>
         </df>
-      </df>
-      <df name="Debug">
+        <in>CMakeCCompiler.cmake</in>
+        <in>CMakeCXXCompiler.cmake</in>
+        <in>CMakeDetermineCompilerABI_C.bin</in>
+        <in>CMakeDetermineCompilerABI_CXX.bin</in>
+        <in>CMakeOutput.log</in>
+        <in>CMakeSystem.cmake</in>
       </df>
       <df name="include">
-        <df name="orCore">
-        </df>
-        <df name="orDebug">
-        </df>
-        <df name="orGame">
-        </df>
         <df name="orPlatform">
           <df name="linux">
             <in>atomic_linux.h</in>
@@ -66,11 +52,19 @@
         <df name="orProfile">
           <in>perftimer.h</in>
         </df>
-        <in>app.h</in>
+        <df name="orTask">
+          <in>task.h</in>
+          <in>taskScheduler.h</in>
+          <in>taskSchedulerWorkStealing.h</in>
+          <in>terminationBarrier.h</in>
+          <in>victimPicker.h</in>
+          <in>workStealingQueue.h</in>
+        </df>
         <in>boost_begin.h</in>
         <in>boost_end.h</in>
         <in>constants.h</in>
         <in>geom.h</in>
+        <in>orApp.h</in>
         <in>orCamera.h</in>
         <in>orEntity.h</in>
         <in>orGfx.h</in>
@@ -78,17 +72,10 @@
         <in>orPhysics.h</in>
         <in>orRender.h</in>
         <in>orStd.h</in>
-        <in>orbitalSpaceApp.h</in>
         <in>refCount.h</in>
         <in>rnd.h</in>
-        <in>task.h</in>
-        <in>taskScheduler.h</in>
-        <in>taskSchedulerWorkStealing.h</in>
-        <in>terminationBarrier.h</in>
         <in>timer.h</in>
         <in>util.h</in>
-        <in>victimPicker.h</in>
-        <in>workStealingQueue.h</in>
       </df>
       <df name="Matlab">
         <df name="lambert">
@@ -101,20 +88,8 @@
       <df name="music">
       </df>
       <df name="Reference">
-        <df name="Hypothetical Planets_files">
-          <df name="send_data">
-          </df>
-        </df>
-      </df>
-      <df name="Release">
       </df>
       <df name="src">
-        <df name="orCore">
-        </df>
-        <df name="orDebug">
-        </df>
-        <df name="orGame">
-        </df>
         <df name="orPlatform">
           <df name="win32">
             <in>window_win32.cpp</in>
@@ -123,14 +98,15 @@
         <df name="orProfile">
           <in>perftimer.cpp</in>
         </df>
-        <in>app.cpp</in>
+        <df name="orTask">
+          <in>taskSchedulerWorkStealing.cpp</in>
+        </df>
         <in>main.cpp</in>
+        <in>orApp.cpp</in>
         <in>orCamera.cpp</in>
         <in>orEntity.cpp</in>
         <in>orPhysics.cpp</in>
         <in>orRender.cpp</in>
-        <in>orbitalSpaceApp.cpp</in>
-        <in>taskSchedulerWorkStealing.cpp</in>
         <in>timer.cpp</in>
         <in>util.cpp</in>
       </df>
@@ -171,6 +147,13 @@
         <cTool>
         </cTool>
       </item>
+      <item path="CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+        <ccTool>
+        </ccTool>
+      </item>
       <item path="Matlab/lagrange.m" ex="false" tool="0" flavor2="2">
         <cTool>
         </cTool>
@@ -187,39 +170,19 @@
         <cTool>
         </cTool>
       </item>
-      <item path="build/CMakeFiles/CompilerIdC/CMakeCCompilerId.c"
-            ex="false"
-            tool="0"
-            flavor2="2">
-        <cTool>
-        </cTool>
-      </item>
-      <item path="build/CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp"
-            ex="false"
-            tool="1"
-            flavor2="4">
-        <ccTool>
-        </ccTool>
-      </item>
-      <folder path="OrbitalSpace/src">
+      <folder path="OrbitalSpace/src/orProfile">
         <ccTool>
           <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
             <pElem>.</pElem>
-            <pElem>../../../Coding/SFML-2.0-rc/include</pElem>
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
-            <Elem>__STDC_LIMIT_MACROS</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="OrbitalSpace/src/orProfile">
-        <ccTool>
-          <preprocessorList>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -230,38 +193,83 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="src/app.cpp" ex="false" tool="1" flavor2="4">
+      <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
+      <item path="src/orApp.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="src/orCamera.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="src/orEntity.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="src/orPhysics.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
@@ -278,33 +286,56 @@
       </item>
       <item path="src/orRender.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orbitalSpaceApp.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_DEBUG</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
-      <item path="src/taskSchedulerWorkStealing.cpp" ex="false" tool="1" flavor2="4">
+      <item path="src/orTask/taskSchedulerWorkStealing.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
         <ccTool>
         </ccTool>
       </item>
       <item path="src/timer.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
       <item path="src/util.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
+          <incDir>
+            <pElem>../SFML-2.0-rc/include</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>include</pElem>
+          </incDir>
           <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
             <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </ccTool>
       </item>
