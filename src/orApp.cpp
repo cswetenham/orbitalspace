@@ -1,5 +1,4 @@
 #include "orStd.h"
-#include "orPlatform/window.h"
 
 #include "orApp.h"
 
@@ -27,8 +26,8 @@
 #include "util.h"
 
 #include "orGfx.h"
-#include "orProfile/perftimer.h"
 
+#include "orPlatform/window.h"
 
 orApp::orApp():
   m_lastFrameDuration(0),
@@ -59,25 +58,31 @@ orApp::orApp():
   m_window(NULL),
   m_music(NULL)
 {
+  orLog("Starting init\n");
+  
   PerfTimer::StaticInit(); // TODO terrible code
 
-  // m_music = new sf::Music();
+  Init();
+
+#if 1
+  m_music = new sf::Music();
   // m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
   // m_music->setLoop(true);
   // m_music->play();
-
-  Init();
+#endif
+  orLog("Init complete\n");
 }
 
 orApp::~orApp()
 {
+  orLog("Starting shutdown\n");
   Shutdown();
 
-  // delete m_music; m_music = NULL;
-
-  delete m_window; m_window = NULL;
+  delete m_music; m_music = NULL;
 
   PerfTimer::StaticShutdown(); // TODO terrible code
+
+  orLog("Shutdown complete\n");
 }
 
 void orApp::Init()
@@ -111,11 +116,11 @@ void runTests() {
 
 void orApp::PollEvents()
 {
-    sf::Event event;
-    while (m_window->pollEvent(event))
-    {
-      HandleEvent(event);
-    }
+  sf::Event event;
+  while (m_window->pollEvent(event))
+  {
+    HandleEvent(event);
+  }
 }
 
 void orApp::BeginRender()
@@ -192,8 +197,11 @@ void orApp::Run()
 void orApp::InitRender()
 {
   // TODO
-  m_config.width = 1280;
-  m_config.height = 768;
+  // m_config.width = 1280;
+  // m_config.height = 768;
+
+  m_config.width = 320;
+  m_config.height = 200;
 
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer

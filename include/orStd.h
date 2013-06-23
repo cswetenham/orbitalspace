@@ -20,6 +20,8 @@
 # include <stdlib.h>
 # include <stdarg.h>
 
+# include "timer.h"
+
 #ifdef _MSC_VER
 # define ENTRY_FN __cdecl
 #else
@@ -58,11 +60,31 @@
   #define CDECL __attribute__((__cdecl__))
 #endif
 
+#ifdef _MSC_VER
+extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA( char const* lpOutputString );
+extern "C" __declspec(dllimport) int _vsnprintf( char *buffer, size_t count, const char *format, va_list argptr );
+inline void orDbgPrintf(char const* lpszFormat, ...)
+{
+    va_list args;
+    va_start(args, lpszFormat);
+    int nBuf;
+    char szBuffer[512]; // TODO get rid of this hard-coded buffer
+    nBuf = _vsnprintf_s(szBuffer, 511, _TRUNCATE, lpszFormat, args);
+    ::OutputDebugStringA(szBuffer);
+    va_end(args);
+}
+# define orLogImpl orDbgPrintf
+# define orErrImpl orDbgPrintf
+#else
+# define orLogImpl(...) fprintf(stdout, ## __VA_ARGS__)
+# define orErrImpl(...) fprintf(stderr, ## __VA_ARGS__)
+#endif
+
 // orLog()
-#define orLog( _FMT, ... ) do { fprintf(stdout, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
+#define orLog( _FMT, ... ) do { orLogImpl("[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
 
 // orErr()
-#define orErr( _FMT, ... ) do { fprintf(stderr, "[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
+#define orErr( _FMT, ... ) do { orErrImpl("[%08d] " _FMT, (int)Timer::UptimeMillis(), ## __VA_ARGS__); } while (0)
 
 #define allocat( _T, _S ) (_T*)alloca(_S * sizeof(_T))
 
@@ -72,7 +94,7 @@ template <typename T> inline void ignore(T const&) {}; // To explicitly ignore r
 
 inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line) {
   if (!_cond) {
-    printf("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
+    orErr("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
     DEBUGBREAK;
     FATAL;
   }
@@ -80,8 +102,8 @@ inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int
 
 inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line, char const* _msg, ...) {
   if (!_cond) {
-    printf("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
-    printf("%s(%d): ", _file, _line);
+    orErr("%s(%d): Assertion failed: %s\n", _file, _line, _condStr);
+    orErr("%s(%d): ", _file, _line);
     va_list vargs;
     va_start(vargs, _msg);
     vprintf(_msg, vargs);

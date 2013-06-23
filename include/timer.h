@@ -1,8 +1,7 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include "orStd.h"
-#include "orMath.h"
+#include <stdint.h>
 
 class Timer
 {

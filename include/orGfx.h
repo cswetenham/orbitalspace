@@ -13,6 +13,10 @@
 # include "orStd.h"
 # include "orMath.h"
 
+#ifdef WINGDIAPI
+#error
+#endif
+
 # ifdef _MSC_VER
 #   define WINGDIAPI __declspec(dllimport)
 #   define APIENTRY __stdcall

@@ -12,6 +12,9 @@ Logging and verification utility macros and functions
 // for signal()
 #include <signal.h>
 
+// For glColor3f()
+#include <orGfx.h>
+
 #ifdef _WIN32
 // for Sleep()
 # include <Windows.h>
@@ -21,9 +24,6 @@ Logging and verification utility macros and functions
 // for usleep()
 # include <unistd.h>
 #endif
-
-// For glColor3f()
-#include <orGfx.h>
 
 static bool x_shouldExit;
 
