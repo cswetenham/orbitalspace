@@ -31,7 +31,6 @@
 
 
 orApp::orApp():
-  m_window(NULL),
   m_lastFrameDuration(0),
   m_running(true),
   m_rnd(1123LL),
@@ -55,11 +54,174 @@ orApp::orApp():
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
   m_thrusters(0),
   m_hasFocus(false),
-  m_music(),
-  m_timeScale(1.0)
+  m_timeScale(1.0),
+  
+  m_window(NULL),
+  m_music(NULL)
 {
   PerfTimer::StaticInit(); // TODO terrible code
 
+  // m_music = new sf::Music();
+  // m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
+  // m_music->setLoop(true);
+  // m_music->play();
+
+  Init();
+}
+
+orApp::~orApp()
+{
+  Shutdown();
+
+  // delete m_music; m_music = NULL;
+
+  delete m_window; m_window = NULL;
+
+  PerfTimer::StaticShutdown(); // TODO terrible code
+}
+
+void orApp::Init()
+{
+  InitState();
+  InitRender();
+}
+
+void orApp::Shutdown()
+{
+  PerfTimer::Print();
+
+  ShutdownRender();
+  ShutdownState();
+}
+
+// TODO put elsewhere
+void runTests() {
+  // Test FMod
+  double const a = Util::FMod(3.0, 2.0);
+  if ( a != 1.0 ) {
+    DEBUGBREAK;
+  }
+
+  // Test Wrap
+  double const b = Util::Wrap(3.5, 1.0, 2.0);
+  if (b != 1.5) {
+    DEBUGBREAK;
+  }
+}
+
+void orApp::PollEvents()
+{
+    sf::Event event;
+    while (m_window->pollEvent(event))
+    {
+      HandleEvent(event);
+    }
+}
+
+void orApp::BeginRender()
+{
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
+
+  m_renderSystem.beginRender();
+}
+
+void orApp::EndRender()
+{
+  m_renderSystem.endRender();
+  
+  m_window->display();
+}
+
+void orApp::Run()
+{
+  runTests();
+
+  while (m_running)
+  {
+    Timer::PerfTime const frameStart = Timer::GetPerfTime();
+
+    {
+      PERFTIMER("PollEvents");
+      PollEvents();
+    }
+
+    if (m_hasFocus) {
+      // Input handling
+      if (m_inputMode == InputMode_RotateCamera) {
+        sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+        sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
+        sf::Mouse::setPosition(centerPos, *m_window);
+
+        m_camTheta += mouseDelta.x * M_TAU / 300.0;
+        m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
+        m_camPhi += mouseDelta.y * M_TAU / 300.0;
+        m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
+      }
+    }
+
+    {
+      PERFTIMER("UpdateState");
+      enum { UPDATES_PER_FRAME_HACK = 1 };
+      for (int i = 0; i < UPDATES_PER_FRAME_HACK; ++i) {
+        UpdateState(Timer::PerfTimeToMillis(m_lastFrameDuration));
+      }
+    }
+
+    {
+      PERFTIMER("BeginRender");
+      BeginRender();
+    }
+
+    {
+      PERFTIMER("RenderState");
+      RenderState();
+    }
+
+    {
+      PERFTIMER("EndRender");
+      EndRender();
+    }
+
+    sf::sleep(sf::milliseconds(1)); // TODO sleep according to frame duration
+
+    m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
+  }
+}
+
+void orApp::InitRender()
+{
+  // TODO
+  m_config.width = 1280;
+  m_config.height = 768;
+
+  sf::ContextSettings settings;
+  settings.depthBits         = 24; // Request a 24 bits depth buffer
+  settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
+  settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
+  m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
+
+  GLenum err = glewInit();
+  if (GLEW_OK != err) {
+    /* Problem: glewInit failed, something is seriously wrong. */
+    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+  }
+
+  sf::WindowHandle winHandle = m_window->getSystemHandle();
+#ifdef WIN32 // TODO linux
+  orPlatform::FocusWindow(winHandle);
+#endif
+  m_hasFocus = true;
+}
+
+void orApp::ShutdownRender()
+{
+  m_window->close();
+  delete m_window; m_window = NULL;
+}
+
+void orApp::InitState()
+{
   // Create palette
   m_colG[0] = sf::Vector3f(41,42,34)/255.f;
   m_colG[1] = sf::Vector3f(77,82,50)/255.f;
@@ -427,166 +589,8 @@ orApp::orApp():
     shipBody.m_vel[2] += 1e2 * rnds[6*i+5];
   }
   delete[] rnds;
-
-  m_music.openFromFile("music/spacething3_mastered_fullq.ogg");
-  m_music.setLoop(true);
-  // m_music.play();
-
-  Init();
 }
 
-orApp::~orApp()
-{
-  Shutdown();
-
-  delete m_window; m_window = NULL;
-  PerfTimer::StaticShutdown(); // TODO terrible code
-}
-
-void orApp::Init()
-{
-  InitState();
-  InitRender();
-}
-
-void orApp::Shutdown()
-{
-  PerfTimer::Print();
-
-  ShutdownRender();
-  ShutdownState();
-}
-
-// TODO put elsewhere
-void runTests() {
-  // Test FMod
-  double const a = Util::FMod(3.0, 2.0);
-  if ( a != 1.0 ) {
-    DEBUGBREAK;
-  }
-
-  // Test Wrap
-  double const b = Util::Wrap(3.5, 1.0, 2.0);
-  if (b != 1.5) {
-    DEBUGBREAK;
-  }
-}
-
-void orApp::PollEvents()
-{
-    sf::Event event;
-    while (m_window->pollEvent(event))
-    {
-      HandleEvent(event);
-    }
-}
-
-void orApp::BeginRender()
-{
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
-
-  m_renderSystem.beginRender();
-}
-
-void orApp::EndRender()
-{
-  m_renderSystem.endRender();
-  
-  m_window->display();
-}
-
-void orApp::Run()
-{
-  runTests();
-
-  while (m_running)
-  {
-    Timer::PerfTime const frameStart = Timer::GetPerfTime();
-
-    {
-      PERFTIMER("PollEvents");
-      PollEvents();
-    }
-
-    if (m_hasFocus) {
-      // Input handling
-      if (m_inputMode == InputMode_RotateCamera) {
-        sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
-        sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
-        sf::Mouse::setPosition(centerPos, *m_window);
-
-        m_camTheta += mouseDelta.x * M_TAU / 300.0;
-        m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
-        m_camPhi += mouseDelta.y * M_TAU / 300.0;
-        m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
-      }
-    }
-
-    {
-      PERFTIMER("UpdateState");
-      enum { UPDATES_PER_FRAME_HACK = 1 };
-      for (int i = 0; i < UPDATES_PER_FRAME_HACK; ++i) {
-        UpdateState(Timer::PerfTimeToMillis(m_lastFrameDuration));
-      }
-    }
-
-    {
-      PERFTIMER("BeginRender");
-      BeginRender();
-    }
-
-    {
-      PERFTIMER("RenderState");
-      RenderState();
-    }
-
-    {
-      PERFTIMER("EndRender");
-      EndRender();
-    }
-
-    sf::sleep(sf::milliseconds(1)); // TODO sleep according to frame duration
-
-    m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
-  }
-}
-
-void orApp::InitRender()
-{
-  // TODO
-  m_config.width = 1280;
-  m_config.height = 768;
-
-  sf::ContextSettings settings;
-  settings.depthBits         = 24; // Request a 24 bits depth buffer
-  settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
-  settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
-  m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
-
-  GLenum err = glewInit();
-  if (GLEW_OK != err) {
-    /* Problem: glewInit failed, something is seriously wrong. */
-    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-  }
-
-  sf::WindowHandle winHandle = m_window->getSystemHandle();
-#ifdef WIN32 // TODO linux
-  orPlatform::FocusWindow(winHandle);
-#endif
-  m_hasFocus = true;
-
-}
-
-void orApp::ShutdownRender()
-{
-  m_window->close();
-  delete m_window; m_window = NULL;
-}
-
-void orApp::InitState()
-{
-}
 
 void orApp::ShutdownState()
 {

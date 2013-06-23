@@ -73,8 +73,6 @@ private:
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
 
 private:
-  sf::RenderWindow* m_window;
-  
   Timer::PerfTime m_lastFrameDuration;
   bool m_running;
   
@@ -176,7 +174,8 @@ private:
 
   bool m_hasFocus;
 
-  sf::Music m_music;
+  sf::RenderWindow* m_window;
+  sf::Music* m_music;
 };
 
 #endif	/* ORBITALSPACEAPP_H */
