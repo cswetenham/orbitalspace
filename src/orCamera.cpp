@@ -10,7 +10,8 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
   // Screen: 0 to +width or 0 to +height
   double const halfWidth = width / 2.0;
   double const halfHeight = height / 2.0;
-
+  
+  screenMatrix.setZero(4, 4);
   screenMatrix.coeffRef(0, 0) = halfWidth;
   screenMatrix.coeffRef(0, 3) = halfWidth;
   screenMatrix.coeffRef(1, 1) = -halfHeight;
