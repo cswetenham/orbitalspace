@@ -203,15 +203,46 @@ void RenderSystem::renderOrbits() const
     }
     double const mint = -range;
     double const maxt = range;
+    
+    Vector3d const orbit_x(orbit.x_dir);
+    Vector3d const orbit_y(orbit.y_dir);
+    Vector3d const orbit_pos(orbit.m_pos);
+    
     glBegin(GL_LINE_STRIP);
     for (int i = 0; i <= steps; ++i) {
+#if 0 // Original version (correct implementation)
         double const ct = Util::Lerp(mint, maxt, (double)i / steps);
         double const cr = orbit.p / (1 + orbit.e * cos(ct));
 
         double const x_len = cr * -cos(ct);
         double const y_len = cr * -sin(ct);
-        Vector3d pos = (Vector3d(orbit.x_dir) * x_len) + (Vector3d(orbit.y_dir) * y_len) + Vector3d(orbit.m_pos);
-        glVertex3d(pos.x(), pos.y(), pos.z());
+        Vector3d const pos = (orbit_x * x_len) + (orbit_y * y_len) + orbit_pos;
+        const double* const posData = pos.data();
+        glVertex3d(posData[0], posData[1], posData[2]);
+#elif 0 // No trig version (broken, for testing)
+        Vector3d const pos = (orbit_x * 1.0) + (orbit_y * 1.0) + orbit_pos;
+        const double* const posData = pos.data();
+        glVertex3d(posData[0], posData[1], posData[2]);
+#elif 1 // No vector version (correct implementation)
+        double const ct = Util::Lerp(mint, maxt, (double)i / steps);
+        double const cr = orbit.p / (1 + orbit.e * cos(ct));
+
+        double const x_len = cr * -cos(ct);
+        double const y_len = cr * -sin(ct);
+        double posData[3];
+        posData[0] = (orbit.x_dir[0] * x_len) + (orbit.y_dir[0] * y_len) + orbit_pos[0];
+        posData[1] = (orbit.x_dir[1] * x_len) + (orbit.y_dir[1] * y_len) + orbit_pos[1];
+        posData[2] = (orbit.x_dir[2] * x_len) + (orbit.y_dir[2] * y_len) + orbit_pos[2];
+        glVertex3d(posData[0], posData[1], posData[2]);
+#elif 0 // No vector no trig version (broken, for testing)
+        double posData[3];
+        posData[0] = (orbit.x_dir[0] * 1.0) + (orbit.y_dir[0] * 1.0) + orbit_pos[0];
+        posData[1] = (orbit.x_dir[1] * 1.0) + (orbit.y_dir[1] * 1.0) + orbit_pos[1];
+        posData[2] = (orbit.x_dir[2] * 1.0) + (orbit.y_dir[2] * 1.0) + orbit_pos[2];
+        glVertex3d(posData[0], posData[1], posData[2]);
+#else // glVertex3d only version (broken, for testing)
+        glVertex3d(orbit.m_pos[0], orbit.m_pos[2], orbit.m_pos[2]);
+#endif
     }
     glEnd();
   }
