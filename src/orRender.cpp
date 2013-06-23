@@ -9,6 +9,18 @@
 
 #include "orProfile/perftimer.h"
 
+RenderSystem::RenderSystem() :
+  m_font(new sf::Font)
+{
+  // *m_font = sf::Font::getDefaultFont();
+  m_font->loadFromFile("Fonts/m01/m01.ttf");
+}
+
+RenderSystem::~RenderSystem()
+{
+  delete m_font; m_font = NULL;
+}
+
 void RenderSystem::setDrawColour(Vector3f const& _c) const
 {
   glColor3f(_c.x(), _c.y(), _c.z());
@@ -107,6 +119,7 @@ void RenderSystem::renderPoints() const
 
 void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
 {
+  PERFTIMER("ProjectLabel3Ds");
   for (int li = 0; li < (int)m_label3Ds.size(); ++li) {
     RenderSystem::Label3D const& label3D = getLabel3D(li);
     
@@ -138,31 +151,65 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& projMatrix)
 
 void RenderSystem::renderLabels(sf::RenderWindow* window)
 {
-  sf::Font font(sf::Font::getDefaultFont());
-  uint32_t const fontSize = 14;
+  PERFTIMER("RenderLabels");
+  // uint32_t const fontSize = 14;
+  uint32_t const fontSize = 8;
 
   for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
     RenderSystem::Label2D const& label2D = getLabel2D(li);
-    sf::Text text(label2D.m_text, font, fontSize);
+    sf::Text text("", *m_font, fontSize);
 
-    Eigen::Matrix<sf::Uint8, 3, 1> ct = (Vector3f(label2D.m_col) * 255).cast<sf::Uint8>();
-    text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
+    PERFTIMER("ConfigText");
+    {
+      {
+        PERFTIMER("ConfigString");
+        text.setString(label2D.m_text);
+      }
 
-    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+      {
+        PERFTIMER("ConfigColor");
+        text.setColor(sf::Color(
+          uint8_t(label2D.m_col[0] * 255),
+          uint8_t(label2D.m_col[1] * 255),
+          uint8_t(label2D.m_col[2] * 255),
+          255
+        ));
+      }
 
-    window->draw(text);
+      {
+        PERFTIMER("ConfigPos");
+        text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+      }
+    }
+    
+    {
+      PERFTIMER("DrawText");
+      window->draw(text);
+    }
   }
 
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
-    sf::Text text(label2D.m_text, font, fontSize);
+    sf::Text text("", *m_font, fontSize);
 
-    Eigen::Matrix<sf::Uint8, 3, 1> ct = (Vector3f(label2D.m_col) * 255).cast<sf::Uint8>();
-    text.setColor(sf::Color(ct.x(), ct.y(), ct.z(), 255));
+    PERFTIMER("ConfigText");
+    {
+      text.setString(label2D.m_text);
 
-    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+      text.setColor(sf::Color(
+        uint8_t(label2D.m_col[0] * 255),
+        uint8_t(label2D.m_col[1] * 255),
+        uint8_t(label2D.m_col[2] * 255),
+        255
+      ));
 
-    window->draw(text);
+      text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+    }
+
+    {
+      PERFTIMER("DrawText");
+      window->draw(text);
+    }
   }
 }
 

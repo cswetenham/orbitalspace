@@ -6,11 +6,14 @@
 
 #include <vector>
 
-namespace sf { class RenderWindow; }
+namespace sf { class RenderWindow; class Font; }
 
 // TODO convert to floats
 class RenderSystem {
 public:
+  RenderSystem();
+  ~RenderSystem();
+  
   struct Point {
     double m_pos[3];
 
@@ -138,4 +141,6 @@ private:
   std::vector<Sphere> m_spheres;
   std::vector<Orbit> m_orbits;
   std::vector<Trail> m_trails;
+
+  sf::Font* m_font;
 }; // class RenderSystem
