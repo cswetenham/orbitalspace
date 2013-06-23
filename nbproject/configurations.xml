@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="84">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df name="OrbitalSpace" root=".">
+      <df name="bin">
+      </df>
+      <df name="build">
+        <df name="CMakeFiles">
+          <df name="CMakeTmp">
+            <df name="CMakeFiles">
+              <df name="cmTryCompileExec.dir">
+              </df>
+            </df>
+          </df>
+          <df name="CompilerIdC">
+            <in>CMakeCCompilerId.c</in>
+          </df>
+          <df name="CompilerIdCXX">
+            <in>CMakeCXXCompilerId.cpp</in>
+          </df>
+          <df name="OrbitalSpace.dir">
+            <df name="src">
+            </df>
+          </df>
+          <df name="Progress">
+          </df>
+        </df>
+      </df>
+      <df name="CMakeFiles">
+        <df name="CMakeTmp">
+          <df name="CMakeFiles">
+          </df>
+        </df>
+        <df name="CompilerIdC">
+          <in>CMakeCCompilerId.c</in>
+        </df>
+        <df name="CompilerIdCXX">
+        </df>
+        <df name="OrbitalSpace.dir">
+          <df name="src">
+            <df name="orProfile">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="Debug">
+      </df>
+      <df name="include">
+        <df name="orCore">
+        </df>
+        <df name="orDebug">
+        </df>
+        <df name="orGame">
+        </df>
+        <df name="orPlatform">
+          <df name="linux">
+            <in>atomic_linux.h</in>
+          </df>
+          <df name="win32">
+            <in>atomic_win32.h</in>
+            <in>window_win32.h</in>
+          </df>
+          <in>atomic.h</in>
+          <in>window.h</in>
+        </df>
+        <df name="orProfile">
+          <in>perftimer.h</in>
+        </df>
+        <in>app.h</in>
+        <in>boost_begin.h</in>
+        <in>boost_end.h</in>
+        <in>constants.h</in>
+        <in>geom.h</in>
+        <in>orCamera.h</in>
+        <in>orEntity.h</in>
+        <in>orGfx.h</in>
+        <in>orMath.h</in>
+        <in>orPhysics.h</in>
+        <in>orRender.h</in>
+        <in>orStd.h</in>
+        <in>orbitalSpaceApp.h</in>
+        <in>refCount.h</in>
+        <in>rnd.h</in>
+        <in>task.h</in>
+        <in>taskScheduler.h</in>
+        <in>taskSchedulerWorkStealing.h</in>
+        <in>terminationBarrier.h</in>
+        <in>timer.h</in>
+        <in>util.h</in>
+        <in>victimPicker.h</in>
+        <in>workStealingQueue.h</in>
+      </df>
+      <df name="Matlab">
+        <df name="lambert">
+          <in>lambert-test.m</in>
+          <in>lambert.m</in>
+        </df>
+        <in>lagrange.m</in>
+        <in>orbital.m</in>
+      </df>
+      <df name="music">
+      </df>
+      <df name="Reference">
+        <df name="Hypothetical Planets_files">
+          <df name="send_data">
+          </df>
+        </df>
+      </df>
+      <df name="Release">
+      </df>
+      <df name="src">
+        <df name="orCore">
+        </df>
+        <df name="orDebug">
+        </df>
+        <df name="orGame">
+        </df>
+        <df name="orPlatform">
+          <df name="win32">
+            <in>window_win32.cpp</in>
+          </df>
+        </df>
+        <df name="orProfile">
+          <in>perftimer.cpp</in>
+        </df>
+        <in>app.cpp</in>
+        <in>main.cpp</in>
+        <in>orCamera.cpp</in>
+        <in>orEntity.cpp</in>
+        <in>orPhysics.cpp</in>
+        <in>orRender.cpp</in>
+        <in>orbitalSpaceApp.cpp</in>
+        <in>taskSchedulerWorkStealing.cpp</in>
+        <in>timer.cpp</in>
+        <in>util.cpp</in>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>CMakeLists.txt</itemPath>
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath>OrbitalSpace</executablePath>
+        </makeTool>
+      </makefileType>
+      <item path="CMakeFiles/CompilerIdC/CMakeCCompilerId.c"
+            ex="false"
+            tool="0"
+            flavor2="2">
+        <cTool>
+        </cTool>
+      </item>
+      <item path="Matlab/lagrange.m" ex="false" tool="0" flavor2="2">
+        <cTool>
+        </cTool>
+      </item>
+      <item path="Matlab/lambert/lambert-test.m" ex="false" tool="0" flavor2="2">
+        <cTool>
+        </cTool>
+      </item>
+      <item path="Matlab/lambert/lambert.m" ex="false" tool="0" flavor2="2">
+        <cTool>
+        </cTool>
+      </item>
+      <item path="Matlab/orbital.m" ex="false" tool="0" flavor2="2">
+        <cTool>
+        </cTool>
+      </item>
+      <item path="build/CMakeFiles/CompilerIdC/CMakeCCompilerId.c"
+            ex="false"
+            tool="0"
+            flavor2="2">
+        <cTool>
+        </cTool>
+      </item>
+      <item path="build/CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+        <ccTool>
+        </ccTool>
+      </item>
+      <folder path="OrbitalSpace/src">
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>../../../Coding/SFML-2.0-rc/include</pElem>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>include</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="OrbitalSpace/src/orProfile">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <item path="include/geom.h" ex="true" tool="3" flavor2="0">
+      </item>
+      <item path="include/orPlatform/win32/atomic_win32.h"
+            ex="true"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/app.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/orCamera.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/orEntity.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/orPhysics.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/orPlatform/win32/window_win32.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+        <ccTool>
+        </ccTool>
+      </item>
+      <item path="src/orProfile/perftimer.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+        </ccTool>
+      </item>
+      <item path="src/orRender.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/orbitalSpaceApp.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/taskSchedulerWorkStealing.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+        </ccTool>
+      </item>
+      <item path="src/timer.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="src/util.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
