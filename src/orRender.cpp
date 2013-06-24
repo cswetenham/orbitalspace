@@ -106,7 +106,7 @@ void RenderSystem::renderPoints() const
 
     setDrawColour(Vector3f(point.m_col));
 
-    glPointSize(10.0);
+    glPointSize(3.0);
     glBegin(GL_POINTS);
     Vector3d p(point.m_pos);
     // TODO isn't there Eigen opengl support included?

@@ -195,10 +195,18 @@ void orApp::Run()
 void orApp::InitRender()
 {
   // TODO
+  
+#if 0
   m_config.windowWidth = 1280;
   m_config.windowHeight = 768;
   m_config.renderWidth = 320;
   m_config.renderHeight = 200;
+#else
+  m_config.windowWidth = 1024;
+  m_config.windowHeight = 960;
+  m_config.renderWidth = 256;
+  m_config.renderHeight = 240;
+#endif
 
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
@@ -264,7 +272,8 @@ void orApp::ShutdownRender()
 
 void orApp::InitState()
 {
-  // Create palette
+#if 0
+  // Create default palette
   m_colG[0] = sf::Vector3f(41,42,34)/255.f;
   m_colG[1] = sf::Vector3f(77,82,50)/255.f;
   m_colG[2] = sf::Vector3f(99,115,76)/255.f;
@@ -276,6 +285,26 @@ void orApp::InitState()
     m_colR[i] = sf::Vector3f(m_colG[i].y, m_colG[i].x, m_colG[i].z);
     m_colB[i] = sf::Vector3f(m_colG[i].x, m_colG[i].z, m_colG[i].y);
   }
+#else
+  // Create NES-ish palette
+  m_colR[0] = sf::Vector3f(0,0,0)/255.f;
+  m_colR[1] = sf::Vector3f(136,20,0)/255.f;
+  m_colR[2] = sf::Vector3f(228,92,16)/255.f;
+  m_colR[3] = sf::Vector3f(252,160,68)/255.f;
+  m_colR[4] = sf::Vector3f(252,224,168)/255.f;
+
+  m_colG[0] = sf::Vector3f(0,0,0)/255.f;
+  m_colG[1] = sf::Vector3f(0,120,0)/255.f;
+  m_colG[2] = sf::Vector3f(0,184,0)/255.f;
+  m_colG[3] = sf::Vector3f(184,248,24)/255.f;
+  m_colG[4] = sf::Vector3f(216,248,120)/255.f;
+
+  m_colB[0] = sf::Vector3f(0,0,0)/255.f;
+  m_colB[1] = sf::Vector3f(0,0,252)/255.f;
+  m_colB[2] = sf::Vector3f(0,120,248)/255.f;
+  m_colB[3] = sf::Vector3f(60,188,252)/255.f;
+  m_colB[4] = sf::Vector3f(164,228,252)/255.f;
+#endif
 
   Vector3d const lightDir = Vector3d(1.0, 1.0, 0.0).normalized();
   
@@ -513,6 +542,10 @@ void orApp::InitState()
     playerBody.m_vel[0] = 5e3;
     playerBody.m_vel[1] = 0.0;
     playerBody.m_vel[2] = 0.0;
+
+    playerBody.m_userAcc[0] = 0.0;
+    playerBody.m_userAcc[1] = 0.0;
+    playerBody.m_userAcc[2] = 0.0;
   }
 
   RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
@@ -568,6 +601,10 @@ void orApp::InitState()
     suspectBody.m_vel[0] = 5e3;
     suspectBody.m_vel[1] = 0.0;
     suspectBody.m_vel[2] = 0.0;
+
+    suspectBody.m_userAcc[0] = 0.0;
+    suspectBody.m_userAcc[1] = 0.0;
+    suspectBody.m_userAcc[2] = 0.0;
   }
 
   RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
@@ -928,7 +965,6 @@ void orApp::UpdateState(double const _dt)
 
   if (m_singleStep) {
     // Pause simulation after this step
-
     m_singleStep = false;
     m_paused = true;
   }
@@ -976,7 +1012,7 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 void orApp::RenderState()
 {
   // TODO no timer here
-  Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
+  
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
   double const minZ = 1.0; // meters
@@ -1016,8 +1052,10 @@ void orApp::RenderState()
     glEnable(GL_TEXTURE_2D);
 
     glLineWidth(1.0);
-    // glEnable(GL_POINT_SMOOTH);
-    // glEnable(GL_LINE_SMOOTH);
+#if 0
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
+#endif
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // TODO clean up
@@ -1033,6 +1071,35 @@ void orApp::RenderState()
     m_renderSystem.render3D(m_window);
   }
 
+  {
+    // Render from 2D framebuffer to screen
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    glEnable(GL_TEXTURE_2D);
+
+    float const scale = 1.0;
+    float const uv_scale = 128.0;
+
+    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(-scale, -scale, 0.0);
+    glTexCoord2f(uv_scale, 0.0);
+    glVertex3f(+scale, -scale, 0.0);
+    glTexCoord2f(uv_scale, uv_scale);
+    glVertex3f(+scale, +scale, 0.0);
+    glTexCoord2f(0.0, uv_scale);
+    glVertex3f(-scale, +scale, 0.0);
+    glEnd();
+  }
+  
   // Render debug text
   {
     PERFTIMER("Prepare2D");
@@ -1080,36 +1147,8 @@ void orApp::RenderState()
 
   {
     PERFTIMER("Render2D");
+    Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.windowWidth, m_config.windowHeight );
     m_renderSystem.render2D(m_window, screenMatrix, projMatrix, camMatrix.matrix());
-  }
-
-  {
-    // Render from 2D framebuffer to screen
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    glEnable(GL_TEXTURE_2D);
-
-    float const scale = 1.0;
-    float const uv_scale = 128.0;
-
-    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0, 0.0);
-    glVertex3f(-scale, -scale, 0.0);
-    glTexCoord2f(uv_scale, 0.0);
-    glVertex3f(+scale, -scale, 0.0);
-    glTexCoord2f(uv_scale, uv_scale);
-    glVertex3f(+scale, +scale, 0.0);
-    glTexCoord2f(0.0, uv_scale);
-    glVertex3f(-scale, +scale, 0.0);
-    glEnd();
   }
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
