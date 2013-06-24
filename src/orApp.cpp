@@ -194,7 +194,7 @@ void orApp::Run()
 
 void orApp::InitRender()
 {
-  // TODO
+  // TODO z-ordering seems bad. Do I need to enable Z writes somehow?
   
 #if 0
   m_config.windowWidth = 1280;
@@ -1015,7 +1015,8 @@ void orApp::RenderState()
   
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
-  double const minZ = 1.0; // meters
+  double const minZ = 1e6; // meters
+  // double const maxZ = 1e11; // meters
   double const maxZ = 1e11; // meters
 
   Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ );
@@ -1031,6 +1032,7 @@ void orApp::RenderState()
     // Render to our framebuffer
     // TODO do we need to do this again for the text?
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
     // Render on the whole framebuffer, complete from the lower left corner to the upper right
     glViewport(0, 0, m_config.renderWidth, m_config.renderHeight);
 
@@ -1056,6 +1058,7 @@ void orApp::RenderState()
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_LINE_SMOOTH);
 #endif
+    glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // TODO clean up
@@ -1086,6 +1089,7 @@ void orApp::RenderState()
 
     float const scale = 1.0;
     float const uv_scale = 128.0;
+    // TODO TEMP MYSTERY float const uv_scale = 1.0;
 
     glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
     glBegin(GL_QUADS);
@@ -1142,12 +1146,15 @@ void orApp::RenderState()
     // TODO: small visualisations for the angle etc values
 
     RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId);
-    debugTextLabel2D.m_text = str.str();
+    // debugTextLabel2D.m_text = str.str();
+    debugTextLabel2D.m_text = sf::String();
   }
 
   {
     PERFTIMER("Render2D");
+    // Used to translate a 3d position into a 2d screen position
     Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.windowWidth, m_config.windowHeight );
+    // TODO TEMP MYSTERY 
     m_renderSystem.render2D(m_window, screenMatrix, projMatrix, camMatrix.matrix());
   }
 

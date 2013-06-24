@@ -145,8 +145,8 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
     label2D.m_col[1] = label3D.m_col[1];
     label2D.m_col[2] = label3D.m_col[2];
 
-    label2D.m_pos[0] = x;
-    label2D.m_pos[1] = y;
+    label2D.m_pos[0] = (int)x;
+    label2D.m_pos[1] = (int)y;
   }
 }
 
@@ -154,7 +154,8 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
 {
   PERFTIMER("RenderLabels");
   // uint32_t const fontSize = 14;
-  uint32_t const fontSize = 8;
+  // uint32_t const fontSize = 8;
+  uint32_t const fontSize = 32;
 
   for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
     RenderSystem::Label2D const& label2D = getLabel2D(li);
@@ -185,7 +186,8 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
     
     {
       PERFTIMER("DrawText");
-      window->draw(text);
+      sf::RenderStates renderState;
+      window->draw(text, renderState);
     }
   }
 
