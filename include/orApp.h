@@ -81,8 +81,10 @@ private:
   double m_simTime;
 
   struct Config {
-    int width;
-    int height;
+    int windowWidth;
+    int windowHeight;
+    int renderWidth;
+    int renderHeight;
   };
 
   Config m_config;
@@ -173,6 +175,10 @@ private:
   double m_lightDir[3];
 
   bool m_hasFocus;
+
+  uint32_t m_frameBufferId;
+  uint32_t m_renderedTextureId;
+  uint32_t m_depthRenderBufferId;
 
   sf::RenderWindow* m_window;
   sf::Music* m_music;

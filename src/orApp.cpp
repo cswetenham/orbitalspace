@@ -1,4 +1,4 @@
-#include "orStd.h"
+﻿#include "orStd.h"
 
 #include "orApp.h"
 
@@ -54,7 +54,7 @@ orApp::orApp():
   m_thrusters(0),
   m_hasFocus(false),
   m_timeScale(1.0),
-  
+  m_frameBufferId(0),
   m_window(NULL),
   m_music(NULL)
 {
@@ -152,7 +152,7 @@ void orApp::Run()
     if (m_hasFocus) {
       // Input handling
       if (m_inputMode == InputMode_RotateCamera) {
-        sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+        sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
         sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
         sf::Mouse::setPosition(centerPos, *m_window);
 
@@ -195,24 +195,58 @@ void orApp::Run()
 void orApp::InitRender()
 {
   // TODO
-#if 1
-  m_config.width = 1280;
-  m_config.height = 768;
-#else
-  m_config.width = 320;
-  m_config.height = 200;
-#endif
+  m_config.windowWidth = 1280;
+  m_config.windowHeight = 768;
+  m_config.renderWidth = 320;
+  m_config.renderHeight = 200;
 
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
   settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
-  m_window = new sf::RenderWindow(sf::VideoMode(m_config.width, m_config.height, 32), "SFML OpenGL", sf::Style::Close, settings);
+  m_window = new sf::RenderWindow(sf::VideoMode(m_config.windowWidth, m_config.windowHeight, 32), "SFML OpenGL", sf::Style::Close, settings);
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     /* Problem: glewInit failed, something is seriously wrong. */
     fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+  }
+
+  {
+    // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    glGenFramebuffers(1, &m_frameBufferId);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
+
+    // The texture we're going to render to
+    glGenTextures(1, &m_renderedTextureId);
+ 
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
+ 
+    // Give an empty image to OpenGL ( the last "0" )
+    // TODO change this resolution independently
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_config.renderWidth, m_config.renderHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+ 
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // The depth buffer
+    glGenRenderbuffers(1, &m_depthRenderBufferId);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_config.renderWidth, m_config.renderHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBufferId);
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTextureId, 0);
+ 
+    // Set the list of draw buffers.
+    GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, drawBuffers); // "1" is the size of DrawBuffers
+
+    // Always check that our framebuffer is ok
+    ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   }
 
   sf::WindowHandle winHandle = m_window->getSystemHandle();
@@ -618,7 +652,7 @@ void orApp::HandleEvent(sf::Event const& _event)
       m_inputMode = InputMode_RotateCamera;
 
       // When rotating the camera, hide the mouse cursor and center it. We'll then track how far it's moved off center each frame.
-      sf::Vector2i const centerPos = sf::Vector2i(m_config.width/2, m_config.height/2);
+      sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
       m_savedMousePos = sf::Mouse::getPosition(*m_window);
       m_window->setMouseCursorVisible(false);
       sf::Mouse::setPosition(centerPos, *m_window);
@@ -942,13 +976,13 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 void orApp::RenderState()
 {
   // TODO no timer here
-  Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.width, m_config.height );
+  Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
   double const minZ = 1.0; // meters
   double const maxZ = 1e11; // meters
 
-  Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.width, m_config.height, minZ, maxZ );
+  Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ );
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up(0.0, 1.0, 0.0);
@@ -958,11 +992,18 @@ void orApp::RenderState()
     PERFTIMER("Prepare3D");
     m_window->resetGLStates();
 
-    glViewport(0, 0, m_config.width, m_config.height);
+    // Render to our framebuffer
+    // TODO do we need to do this again for the text?
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
+    // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glViewport(0, 0, m_config.renderWidth, m_config.renderHeight);
 
     sf::Vector3f clearCol = m_colG[0];
+    // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
     glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
     glClearDepth(minZ);
+    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -974,9 +1015,9 @@ void orApp::RenderState()
 
     glEnable(GL_TEXTURE_2D);
 
-    glLineWidth(1);
-    glEnable(GL_POINT_SMOOTH);
-    glEnable(GL_LINE_SMOOTH);
+    glLineWidth(1.0);
+    // glEnable(GL_POINT_SMOOTH);
+    // glEnable(GL_LINE_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // TODO clean up
@@ -1040,6 +1081,35 @@ void orApp::RenderState()
   {
     PERFTIMER("Render2D");
     m_renderSystem.render2D(m_window, screenMatrix, projMatrix, camMatrix.matrix());
+  }
+
+  {
+    // Render from 2D framebuffer to screen
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    glEnable(GL_TEXTURE_2D);
+
+    float const scale = 1.0;
+    float const uv_scale = 128.0;
+
+    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(-scale, -scale, 0.0);
+    glTexCoord2f(uv_scale, 0.0);
+    glVertex3f(+scale, -scale, 0.0);
+    glTexCoord2f(uv_scale, uv_scale);
+    glVertex3f(+scale, +scale, 0.0);
+    glTexCoord2f(0.0, uv_scale);
+    glVertex3f(-scale, +scale, 0.0);
+    glEnd();
   }
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
