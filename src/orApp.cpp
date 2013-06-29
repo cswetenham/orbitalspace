@@ -204,8 +204,8 @@ void orApp::InitRender()
   m_config.renderWidth = 320;
   m_config.renderHeight = 200;
 #else
-  m_config.windowWidth = 1280;
-  m_config.windowHeight = 1024;
+  m_config.windowWidth = 4 * 320;
+  m_config.windowHeight = 3 * 320;
   m_config.renderWidth = 256;
   m_config.renderHeight = 240;
 #endif
