@@ -115,8 +115,8 @@ public:
   void beginRender() { m_label2DBuffer.clear(); }
   void endRender() {}
 
-  void render2D(sf::RenderWindow* window, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best param...
-  void render3D(sf::RenderWindow* window);
+  void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best param...
+  void render3D();
 
 private:
   void setDrawColour(Vector3f const& _c) const;
@@ -128,7 +128,10 @@ private:
   void projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx);
   
   void renderPoints() const;
-  void renderLabels(sf::RenderWindow* window);
+  // TODO make available to renderer in a better way?
+  // Should we have a renderer which just knows about the offscreen texture,
+  // and then a screen effect which renders it to screen with scaling, scanlines etc?
+  void renderLabels( int w_px, int h_px );
   void renderSpheres() const;
   void renderOrbits() const;
   void renderTrails() const;

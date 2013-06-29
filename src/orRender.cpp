@@ -178,24 +178,34 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
   }
 }
 
-void RenderSystem::renderLabels(sf::RenderWindow* window)
+void RenderSystem::renderLabels( int w_px, int h_px )
 {
   PERFTIMER("RenderLabels");
     
-  // TODO
-
-  // Code taken from orApp.cpp and hacked at
-  // Render from 2D framebuffer to screen
-  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  // glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_TEXTURE_2D);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-    
+
+#if 0
+  float const x_left = -scale;
+  float const x_right = scale;
+
+  float const y_top = scale;
+  float const y_bottom = -scale;
+#else
+  glOrtho(0, w_px, h_px, 0, 0, 1.0);
+  
+  float const x_left = 0;
+  float const x_right = 128;
+
+  float const y_top = 0;
+  float const y_bottom = 128;
+#endif
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-    
-  glEnable(GL_TEXTURE_2D);
 
   float const scale = 1.0;
   float const uv_scale = 1.0;
@@ -209,30 +219,24 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
   float const u_left = 0.0;
   float const u_right = uv_scale;
 
-  float const x_left = -scale;
-  float const x_right = scale;
-  
   float const v_top = 0.0;
   float const v_bottom = uv_scale;
-
-  float const y_top = scale;
-  float const y_bottom = -scale;
   
   // TODO glColor
 
   glBegin(GL_QUADS);
   
   glTexCoord2f(u_left, v_top);
-  glVertex3f(x_left, y_top, 0.0);
+  glVertex3f(x_left, y_top, 0);
   
   glTexCoord2f(u_right, v_top);
-  glVertex3f(x_right, y_top, 0.0);
+  glVertex3f(x_right, y_top, 0);
 
   glTexCoord2f(u_right, v_bottom);
-  glVertex3f(x_right, y_bottom, 0.0);
+  glVertex3f(x_right, y_bottom, 0);
   
   glTexCoord2f(u_left, v_bottom);
-  glVertex3f(x_left, y_bottom, 0.0);
+  glVertex3f(x_left, y_bottom, 0);
   
   glEnd();
 
@@ -403,13 +407,13 @@ void RenderSystem::renderTrails() const
   }
 }
 
-void RenderSystem::render2D(sf::RenderWindow* window, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
+void RenderSystem::render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
 {
   projectLabel3Ds(screenMtx, projMtx, camMtx);
-  renderLabels(window);
+  renderLabels(w_px, h_px);
 }
 
-void RenderSystem::render3D(sf::RenderWindow* window)
+void RenderSystem::render3D()
 {
   renderPoints();
   renderSpheres();

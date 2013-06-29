@@ -1077,44 +1077,16 @@ void orApp::RenderState()
 
   {
     PERFTIMER("Render3D");
-    m_renderSystem.render3D(m_window);
+    m_renderSystem.render3D();
   }
 
-  {
-    // Render from 2D framebuffer to screen
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    glEnable(GL_TEXTURE_2D);
-
-    float const scale = 1.0;
-    // TODO TEMP MYSTERY float const uv_scale = 128.0;
-    float const uv_scale = 1.0;
-
-    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0, 0.0);
-    glVertex3f(-scale, -scale, 0.0);
-    glTexCoord2f(uv_scale, 0.0);
-    glVertex3f(+scale, -scale, 0.0);
-    glTexCoord2f(uv_scale, uv_scale);
-    glVertex3f(+scale, +scale, 0.0);
-    glTexCoord2f(0.0, uv_scale);
-    glVertex3f(-scale, +scale, 0.0);
-    glEnd();
-  }
-  
   // Render debug text
   {
     PERFTIMER("Prepare2D");
 
-    m_window->resetGLStates();
+    // TODO this should go in state not render
+
+    // m_window->resetGLStates();
     
     std::ostringstream str;
     str.precision(3);
@@ -1155,13 +1127,43 @@ void orApp::RenderState()
     // debugTextLabel2D.m_text = str.str();
     debugTextLabel2D.m_text = sf::String();
   }
+  
+  {
+    // Render from 2D framebuffer to screen
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    glEnable(GL_TEXTURE_2D);
+
+    float const scale = 1.0;
+    float const uv_scale = 1.0;
+
+    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(-scale, -scale, 0.0);
+    glTexCoord2f(uv_scale, 0.0);
+    glVertex3f(+scale, -scale, 0.0);
+    glTexCoord2f(uv_scale, uv_scale);
+    glVertex3f(+scale, +scale, 0.0);
+    glTexCoord2f(0.0, uv_scale);
+    glVertex3f(-scale, +scale, 0.0);
+    glEnd();
+  }
 
   {
     PERFTIMER("Render2D");
+    
     // Used to translate a 3d position into a 2d screen position
     Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.windowWidth, m_config.windowHeight );
     // TODO TEMP MYSTERY 
-    m_renderSystem.render2D(m_window, screenMatrix, projMatrix, camMatrix.matrix());
+    m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
   }
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
