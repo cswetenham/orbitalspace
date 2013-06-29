@@ -230,38 +230,52 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   float const char_w_tx = char_w_px * u_scale;
   float const char_h_tx = char_h_px * v_scale;
 
-  // TODO glColor
+  for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
+    RenderSystem::Label2D const& label2D = getLabel2D(li);
+    
+    // TODO we don't need to go via a Vector3f
+    setDrawColour(Vector3f(label2D.m_col));
+      
+    char const* labelString = label2D.m_text.c_str();
+    int32_t labelStringSize = label2D.m_text.length();
   
-  char const* testString = "The quick brown fox jumps over the lazy butt";
-  int32_t testStringSize = strlen(testString);
-  
-  for (int i = 0; i < testStringSize; ++i) {
-    int const char_idx = testString[i];
+    int char_x_px = label2D.m_pos[0];
+    int char_y_px = label2D.m_pos[1];
 
-    int const char_x_px = 0 + i * char_w_px;
-    int const char_y_px = 0;
+    for (int i = 0; i < labelStringSize; ++i) {
+      int const char_idx = labelString[i];
 
-    int const char_x_idx = char_idx % font_w_chars;
-    int const char_y_idx = char_idx / font_w_chars;
+      if (char_idx == '\n') {
+        char_x_px = label2D.m_pos[0];
+        char_y_px += char_h_px;
+        continue;
+      }
+      
+      int const char_x_idx = char_idx % font_w_chars;
+      int const char_y_idx = char_idx / font_w_chars;
 
-    int const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
-    int const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
+      int const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
+      int const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
         
-    float const char_l_tx = char_x_tex_px * u_scale;
-    float const char_t_tx = char_y_tex_px * v_scale;
+      float const char_l_tx = char_x_tex_px * u_scale;
+      float const char_t_tx = char_y_tex_px * v_scale;
         
-    glTexCoord2f( char_l_tx,             char_t_tx               );
-    glVertex3f(   char_x_px,             char_y_px,             0);
+      glTexCoord2f( char_l_tx,             char_t_tx               );
+      glVertex3f(   char_x_px,             char_y_px,             0);
   
-    glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
-    glVertex3f(   char_x_px + char_w_px, char_y_px,             0);
+      glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
+      glVertex3f(   char_x_px + char_w_px, char_y_px,             0);
 
-    glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
-    glVertex3f(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
+      glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
+      glVertex3f(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
   
-    glTexCoord2f( char_l_tx,             char_t_tx + char_h_tx   );
-    glVertex3f(   char_x_px,             char_y_px + char_h_px, 0);
+      glTexCoord2f( char_l_tx,             char_t_tx + char_h_tx   );
+      glVertex3f(   char_x_px,             char_y_px + char_h_px, 0);
+
+      char_x_px += char_w_px;
+    }
   }
+
 
   glEnd();
   
@@ -282,7 +296,8 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   
     window->draw(text, renderState);
   }
-
+#endif
+#if 0
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
     

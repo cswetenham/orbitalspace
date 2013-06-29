@@ -118,7 +118,8 @@ private:
 
   RenderSystem m_renderSystem;
 
-  int m_debugTextLabel2DId;
+  int m_uiTextTopLabel2DId;
+  int m_uiTextBottomLabel2DId;
 
   //// Physics ////
 

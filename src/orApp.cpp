@@ -328,15 +328,25 @@ void orApp::InitState()
   // Make debug text label3D
 
   // RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId = m_renderSystem.makeLabel2D());
-  m_debugTextLabel2DId = m_renderSystem.makeLabel2D();
-  RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId);
+  m_uiTextTopLabel2DId = m_renderSystem.makeLabel2D();
+  RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
     
-  debugTextLabel2D.m_pos[0] = 8;
-  debugTextLabel2D.m_pos[1] = 8;
+  m_uiTextTopLabel2D.m_pos[0] = 0;
+  m_uiTextTopLabel2D.m_pos[1] = 0;
   
-  debugTextLabel2D.m_col[0] =  m_colG[4].x;
-  debugTextLabel2D.m_col[1] =  m_colG[4].y;
-  debugTextLabel2D.m_col[2] =  m_colG[4].z;
+  m_uiTextTopLabel2D.m_col[0] =  m_colG[4].x;
+  m_uiTextTopLabel2D.m_col[1] =  m_colG[4].y;
+  m_uiTextTopLabel2D.m_col[2] =  m_colG[4].z;
+
+  m_uiTextBottomLabel2DId = m_renderSystem.makeLabel2D();
+  RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
+    
+  m_uiTextBottomLabel2D.m_pos[0] = 0;
+  m_uiTextBottomLabel2D.m_pos[1] = 240 - 8; // TODO HAX
+  
+  m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x;
+  m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y;
+  m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z;
 
   // For now, give the moon a circular orbit
 
@@ -754,11 +764,17 @@ void orApp::HandleEvent(sf::Event const& _event)
     if (_event.key.code == sf::Keyboard::Add || _event.key.code == sf::Keyboard::Equal)
     {
       m_timeScale *= 2;
+      if (m_timeScale > 1<<16) {
+        m_timeScale = 1<<16;
+      }
     }
 
     if (_event.key.code == sf::Keyboard::Subtract || _event.key.code == sf::Keyboard::Dash)
     {
       m_timeScale /= 2;
+      if (m_timeScale < 1) {
+        m_timeScale = 1;
+      }
     }
 
     if (_event.key.code == sf::Keyboard::A)
@@ -1085,47 +1101,52 @@ void orApp::RenderState()
     PERFTIMER("Prepare2D");
 
     // TODO this should go in state not render
-
-    // m_window->resetGLStates();
-    
-    std::ostringstream str;
-    str.precision(3);
-    str.width(7);
-    str.flags(std::ios::right | std::ios::fixed);
-
-    str << "FPS:       " << (1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
-
-    str << "Time Scale: " << m_timeScale << "\n";
-
     {
-      using namespace boost::posix_time;
-      using namespace boost::gregorian;
+      std::ostringstream str;
+      str.precision(3);
+      str.flags(std::ios::right | std::ios::fixed);
 
-      // Astronomical Epoch: 1200 hours, 1 January 2000
-      // Game start date:
-      ptime epoch(date(2000, Jan, 1), hours(12));
-      ptime gameStart(date(2025, Mar, 15), hours(1753));
-      // Note: the (long) here limits us to ~68 years game time. Should be enough, otherwise just need to keep adding seconds to the dateTime to match the simTime
-      ptime curDateTime = gameStart + seconds((long)m_simTime);
-      str << "UTC DateTime: " << to_simple_string(curDateTime) << "\n";
+      {
+        using namespace boost::posix_time;
+        using namespace boost::gregorian;
+
+        // Astronomical Epoch: 1200 hours, 1 January 2000
+        // Game start date:
+        ptime epoch(date(2000, Jan, 1), hours(12));
+        ptime gameStart(date(2025, Mar, 15), hours(1753));
+        // Note: the (long) here limits us to ~68 years game time. Should be enough, otherwise just need to keep adding seconds to the dateTime to match the simTime
+        ptime curDateTime = gameStart + seconds((long)m_simTime);
+        str << to_simple_string(curDateTime) << "\n";
+      }
+
+      str << "Time Scale: " << (int)m_timeScale << "\n";
+
+      // str << "FPS: " << (int)(1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
+      // str << "Cam Dist: " << m_camDist << "\n";
+      // str << "Cam Theta:" << m_camTheta << "\n";
+      // str << "Cam Phi:" << m_camPhi << "\n";
+      // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
+      // str << "Intership Distance:" << shipDist << "\n";
+      // str << "Intership Distance: TODO\n";
+      // str << "Integration Method: " << m_integrationMethod << "\n";
+
+      // TODO: better double value text formatting
+      // TODO: small visualisations for the angle etc values
+
+      RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
+      m_uiTextTopLabel2D.m_text = str.str();
     }
+    {
+      std::ostringstream str;
+      str.precision(3);
+      str.flags(std::ios::right | std::ios::fixed);
 
-    CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
-    str << "Cam Target: " << camTarget.m_name << "\n";
-    str << "Cam Dist: " << m_camDist << "\n";
-    str << "Cam Theta:" << m_camTheta << "\n";
-    str << "Cam Phi:" << m_camPhi << "\n";
-    // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
-    // str << "Intership Distance:" << shipDist << "\n";
-    str << "Intership Distance: TODO\n";
-    str << "Integration Method: " << m_integrationMethod << "\n";
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
+      str << "Cam Target: " << camTarget.m_name << "\n";
 
-    // TODO: better double value text formatting
-    // TODO: small visualisations for the angle etc values
-
-    RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId);
-    // debugTextLabel2D.m_text = str.str();
-    debugTextLabel2D.m_text = sf::String();
+      RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
+      m_uiTextBottomLabel2D.m_text = str.str();
+    }
   }
   
   {
