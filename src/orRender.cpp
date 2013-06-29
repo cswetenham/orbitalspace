@@ -187,61 +187,77 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-
-#if 0
-  float const x_left = -scale;
-  float const x_right = scale;
-
-  float const y_top = scale;
-  float const y_bottom = -scale;
-#else
   glOrtho(0, w_px, h_px, 0, 0, 1.0);
+  
+  // Font texture:
+  // 8x8 pixels per char
+  // 16x16 chars
+  // 128x128 pixels total
+    
+  int const char_w = 8;
+  int const char_h = 8;
+  int const font_tex_w_chars = 16;
+  int const font_tex_h_chars = 16;
   
   float const x_left = 0;
   float const x_right = 128;
 
   float const y_top = 0;
   float const y_bottom = 128;
-#endif
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  float const scale = 1.0;
-  float const uv_scale = 1.0;
-
-  char const* testString = "The quick brown fox jumps over the lazy butt";
-  int32_t testStringSize = strlen(testString);
-  
   glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
   
   // Have to invert Y coord?
   float const u_left = 0.0;
-  float const u_right = uv_scale;
+  float const u_right = 1.0;
 
   float const v_top = 0.0;
-  float const v_bottom = uv_scale;
-  
+  float const v_bottom = 1.0;
+
   // TODO glColor
 
   glBegin(GL_QUADS);
-  
-  glTexCoord2f(u_left, v_top);
-  glVertex3f(x_left, y_top, 0);
-  
-  glTexCoord2f(u_right, v_top);
-  glVertex3f(x_right, y_top, 0);
 
-  glTexCoord2f(u_right, v_bottom);
-  glVertex3f(x_right, y_bottom, 0);
+  char const* testString = "The quick brown fox jumps over the lazy butt";
+  int32_t testStringSize = strlen(testString);
   
-  glTexCoord2f(u_left, v_bottom);
-  glVertex3f(x_left, y_bottom, 0);
+  for (int i = 0; i < testStringSize; ++i) {
+    int const char_idx = testString[i];
+
+    int const char_tex_x_idx = char_idx % font_tex_w_chars;
+    int const char_tex_y_idx = char_idx / font_tex_w_chars;
+
+    int const char_tex_x = char_tex_x_idx * char_w;
+    int const char_tex_y = char_tex_y_idx * char_h;
+
+    float const char_u_left = (u_right - u_left) * (char_tex_x - x_left) / (x_right - x_left);
+    float const char_v_top = (v_bottom - v_top) * (char_tex_y - y_top) / (y_bottom - y_top);
+
+    float const char_u_right = (u_right - u_left) * (char_tex_x + char_w - x_left) / (x_right - x_left);
+    float const char_v_bottom = (v_bottom - v_top) * (char_tex_y + char_h - y_top) / (y_bottom - y_top);
+
+    int const x = 0 + i * char_w;
+    int const y = 0;
+    
+    glTexCoord2f(char_u_left, char_v_top);
+    glVertex3f(x, y, 0);
   
+    glTexCoord2f(char_u_right, char_v_top);
+    glVertex3f(x + char_w, y, 0);
+
+    glTexCoord2f(char_u_right, char_v_bottom);
+    glVertex3f(x + char_w, y + char_h, 0);
+  
+    glTexCoord2f(char_u_left, char_v_bottom);
+    glVertex3f(x, y + char_h, 0);
+  }
+    
   glEnd();
 
-  for (int i = 0; i < testStringSize; ++i) {
-  }
+  
 
 #if 0
   for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
