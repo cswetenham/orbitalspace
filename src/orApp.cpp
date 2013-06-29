@@ -1182,7 +1182,7 @@ void orApp::RenderState()
     PERFTIMER("Render2D");
     
     // Used to translate a 3d position into a 2d screen position
-    Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.windowWidth, m_config.windowHeight );
+    Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
     // TODO TEMP MYSTERY 
     m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
   }
