@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace sf { class RenderWindow; class Font; }
+namespace sf { class RenderWindow; class Font; class Image; }
 
 // TODO convert to floats
 class RenderSystem {
@@ -14,6 +14,9 @@ public:
   RenderSystem();
   ~RenderSystem();
   
+  void initRender();
+  void shutdownRender();
+
   struct Point {
     double m_pos[3];
 
@@ -31,7 +34,7 @@ public:
     std::string m_text;
 
     // Vector3d m_pos;
-    float m_pos[2];
+    int m_pos[2];
     
     float m_col[3];
   };
@@ -142,5 +145,6 @@ private:
   std::vector<Orbit> m_orbits;
   std::vector<Trail> m_trails;
 
-  sf::Font* m_font;
+  uint32_t m_fontTextureId;
+  sf::Image* m_fontImage;
 }; // class RenderSystem

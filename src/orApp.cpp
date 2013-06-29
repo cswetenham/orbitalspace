@@ -257,6 +257,8 @@ void orApp::InitRender()
     ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   }
 
+  m_renderSystem.initRender();
+
   sf::WindowHandle winHandle = m_window->getSystemHandle();
 #ifdef WIN32 // TODO linux
   orPlatform::FocusWindow(winHandle);
@@ -266,6 +268,10 @@ void orApp::InitRender()
 
 void orApp::ShutdownRender()
 {
+  m_renderSystem.shutdownRender();
+
+  // TODO free opengl resources
+
   m_window->close();
   delete m_window; m_window = NULL;
 }
@@ -1088,8 +1094,8 @@ void orApp::RenderState()
     glEnable(GL_TEXTURE_2D);
 
     float const scale = 1.0;
-    float const uv_scale = 128.0;
-    // TODO TEMP MYSTERY float const uv_scale = 1.0;
+    // TODO TEMP MYSTERY float const uv_scale = 128.0;
+    float const uv_scale = 1.0;
 
     glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
     glBegin(GL_QUADS);

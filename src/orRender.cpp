@@ -10,15 +10,43 @@
 #include "orProfile/perftimer.h"
 
 RenderSystem::RenderSystem() :
-  m_font(new sf::Font)
+  m_fontImage(new sf::Image)
 {
-  // *m_font = sf::Font::getDefaultFont();
-  m_font->loadFromFile("Fonts/m01/m01.ttf");
 }
 
 RenderSystem::~RenderSystem()
 {
-  delete m_font; m_font = NULL;
+  delete m_fontImage; m_fontImage = NULL;
+}
+
+void RenderSystem::initRender()
+{
+  if (!m_fontImage->loadFromFile("fonts/dos-ascii-8x8.png")) {
+    orErr("Could not load '%s'.", "fonts/dos-ascii-8x8.png");
+  }
+
+  sf::Vector2u const size = m_fontImage->getSize();
+
+  uint32_t width = size.x;
+  uint32_t height = size.x;
+
+  glGenTextures(1, &m_fontTextureId);
+  glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
+
+  glTexImage2D(
+    GL_TEXTURE_2D, 0, GL_RGBA,
+    width, height,
+    0,
+    GL_RGBA, GL_UNSIGNED_BYTE, m_fontImage->getPixelsPtr()
+  );
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+}
+
+void RenderSystem::shutdownRender()
+{
+  // TODO free opengl resources
 }
 
 void RenderSystem::setDrawColour(Vector3f const& _c) const
@@ -157,72 +185,43 @@ void RenderSystem::renderLabels(sf::RenderWindow* window)
   // uint32_t const fontSize = 8;
   uint32_t const fontSize = 32;
 
+  // TODO
+
+#if 0
   for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
     RenderSystem::Label2D const& label2D = getLabel2D(li);
-    sf::Text text("", *m_font, fontSize);
 
-    {
-      PERFTIMER("ConfigText");
-      {
-        PERFTIMER("ConfigString");
-        text.setString(label2D.m_text);
-      }
-
-      {
-        PERFTIMER("ConfigColor");
-        text.setColor(sf::Color(
-          uint8_t(label2D.m_col[0] * 255),
-          uint8_t(label2D.m_col[1] * 255),
-          uint8_t(label2D.m_col[2] * 255),
-          255
-        ));
-      }
-
-      {
-        PERFTIMER("ConfigPos");
-        text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
-      }
-    }
+    text.setString(label2D.m_text);
     
-    {
-      PERFTIMER("DrawText");
-      sf::RenderStates renderState;
-      window->draw(text, renderState);
-    }
+    text.setColor(sf::Color(
+      uint8_t(label2D.m_col[0] * 255),
+      uint8_t(label2D.m_col[1] * 255),
+      uint8_t(label2D.m_col[2] * 255),
+      255
+    ));
+      
+    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+  
+    window->draw(text, renderState);
   }
 
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
-    sf::Text text("", *m_font, fontSize);
-
-    {
-      PERFTIMER("ConfigText");
-      {
-        PERFTIMER("ConfigString");
-        text.setString(label2D.m_text);
-      }
-
-      {
-        PERFTIMER("ConfigColor");
-        text.setColor(sf::Color(
-          uint8_t(label2D.m_col[0] * 255),
-          uint8_t(label2D.m_col[1] * 255),
-          uint8_t(label2D.m_col[2] * 255),
-          255
-        ));
-      }
-
-      {
-        PERFTIMER("ConfigPos");
-        text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
-      }
-    }
-
-    {
-      PERFTIMER("DrawText");
-      window->draw(text);
-    }
+    
+    text.setString(label2D.m_text);
+    
+    text.setColor(sf::Color(
+      uint8_t(label2D.m_col[0] * 255),
+      uint8_t(label2D.m_col[1] * 255),
+      uint8_t(label2D.m_col[2] * 255),
+      255
+    ));
+      
+    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+  
+    window->draw(text, renderState);
   }
+#endif
 }
 
 void RenderSystem::renderSpheres() const
