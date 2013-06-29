@@ -22,13 +22,12 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
 }
 
 // Camera Space Coordinates -> Normalised Device Coordinates
-Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, double minZ, double maxZ)
+Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, double minZ, double maxZ, double aspect)
 {
   Camera& camera = getCamera( cameraId );
-  double const fov = camera.m_fov;
-  double const aspect = width / (double)height;
-
-  double const heightZ = tan(0.5 * M_TAU * fov / 360.0);
+  double const fov_y = camera.m_fov;
+  
+  double const heightZ = tan(0.5 * M_TAU * fov_y / 360.0);
   double const widthZ = heightZ * aspect;
 
   Eigen::Matrix4d projMatrix;

@@ -194,7 +194,9 @@ void orApp::Run()
 
 void orApp::InitRender()
 {
-  // TODO z-ordering seems bad. Do I need to enable Z writes somehow?
+  // TODO z-ordering seems bad on text labels.
+  // TODO 3d labels show when behind the camera.
+  // TODO trails are bugged when switching camera targets.
   
 #if 0
   m_config.windowWidth = 1280;
@@ -202,8 +204,8 @@ void orApp::InitRender()
   m_config.renderWidth = 320;
   m_config.renderHeight = 200;
 #else
-  m_config.windowWidth = 1024;
-  m_config.windowHeight = 960;
+  m_config.windowWidth = 1280;
+  m_config.windowHeight = 1024;
   m_config.renderWidth = 256;
   m_config.renderHeight = 240;
 #endif
@@ -1041,7 +1043,8 @@ void orApp::RenderState()
   // double const maxZ = 1e11; // meters
   double const maxZ = 1e11; // meters
 
-  Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ );
+  double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
+  Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up(0.0, 1.0, 0.0);
@@ -1186,8 +1189,6 @@ void orApp::RenderState()
     glVertex3f(-scale, +scale, 0.0);
     glEnd();
   }
-
   
-
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
