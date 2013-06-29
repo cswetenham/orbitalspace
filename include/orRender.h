@@ -125,6 +125,8 @@ private:
   void drawCircle(double const radius, int const steps) const;
   void drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
 
+  void drawString(std::string const& str, int pos_x, int pos_y);
+
   void projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx);
   
   void renderPoints() const;

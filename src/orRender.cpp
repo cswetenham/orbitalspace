@@ -34,7 +34,7 @@ void RenderSystem::initRender()
   glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
 
   glTexImage2D(
-    GL_TEXTURE_2D, 0, GL_RGBA,
+    GL_TEXTURE_2D, 0, GL_INTENSITY,
     width, height,
     0,
     GL_RGBA, GL_UNSIGNED_BYTE, m_fontImage->getPixelsPtr()
@@ -194,6 +194,8 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
 
+  // TODO set alpha from R or something
+
   glBegin(GL_QUADS);
 
   // Font texture:
@@ -207,6 +209,27 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   // thing_measure[_space]_unit?
   
+  for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
+    RenderSystem::Label2D const& label2D = getLabel2D(li);
+    
+    // TODO we don't need to go via a Vector3f
+    setDrawColour(Vector3f(label2D.m_col));
+    drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
+  }
+
+  for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
+    RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
+    
+    // TODO we don't need to go via a Vector3f
+    setDrawColour(Vector3f(label2D.m_col));
+    drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
+  }
+
+  glEnd();
+}
+
+void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
+{
   int const char_w_px = 8;
   int const char_h_px = 8;
   int const font_w_chars = 16;
@@ -230,91 +253,41 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   float const char_w_tx = char_w_px * u_scale;
   float const char_h_tx = char_h_px * v_scale;
 
-  for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
-    RenderSystem::Label2D const& label2D = getLabel2D(li);
-    
-    // TODO we don't need to go via a Vector3f
-    setDrawColour(Vector3f(label2D.m_col));
-      
-    char const* labelString = label2D.m_text.c_str();
-    int32_t labelStringSize = label2D.m_text.length();
-  
-    int char_x_px = label2D.m_pos[0];
-    int char_y_px = label2D.m_pos[1];
+  int char_x_px = pos_x;
+  int char_y_px = pos_y;
 
-    for (int i = 0; i < labelStringSize; ++i) {
-      int const char_idx = labelString[i];
+  for (int i = 0; i < str.length(); ++i) {
+    int const char_idx = str[i];
 
-      if (char_idx == '\n') {
-        char_x_px = label2D.m_pos[0];
-        char_y_px += char_h_px;
-        continue;
-      }
-      
-      int const char_x_idx = char_idx % font_w_chars;
-      int const char_y_idx = char_idx / font_w_chars;
-
-      int const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
-      int const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
-        
-      float const char_l_tx = char_x_tex_px * u_scale;
-      float const char_t_tx = char_y_tex_px * v_scale;
-        
-      glTexCoord2f( char_l_tx,             char_t_tx               );
-      glVertex3f(   char_x_px,             char_y_px,             0);
-  
-      glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
-      glVertex3f(   char_x_px + char_w_px, char_y_px,             0);
-
-      glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
-      glVertex3f(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
-  
-      glTexCoord2f( char_l_tx,             char_t_tx + char_h_tx   );
-      glVertex3f(   char_x_px,             char_y_px + char_h_px, 0);
-
-      char_x_px += char_w_px;
+    if (char_idx == '\n') {
+      char_x_px = pos_x;
+      char_y_px += char_h_px;
+      continue;
     }
-  }
-
-
-  glEnd();
-  
-#if 0
-  for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
-    RenderSystem::Label2D const& label2D = getLabel2D(li);
-
-    text.setString(label2D.m_text);
-    
-    text.setColor(sf::Color(
-      uint8_t(label2D.m_col[0] * 255),
-      uint8_t(label2D.m_col[1] * 255),
-      uint8_t(label2D.m_col[2] * 255),
-      255
-    ));
       
-    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+    int const char_x_idx = char_idx % font_w_chars;
+    int const char_y_idx = char_idx / font_w_chars;
+
+    int const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
+    int const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
+        
+    float const char_l_tx = char_x_tex_px * u_scale;
+    float const char_t_tx = char_y_tex_px * v_scale;
+        
+    glTexCoord2f( char_l_tx,             char_t_tx               );
+    glVertex3f(   char_x_px,             char_y_px,             0);
   
-    window->draw(text, renderState);
-  }
-#endif
-#if 0
-  for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
-    RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
-    
-    text.setString(label2D.m_text);
-    
-    text.setColor(sf::Color(
-      uint8_t(label2D.m_col[0] * 255),
-      uint8_t(label2D.m_col[1] * 255),
-      uint8_t(label2D.m_col[2] * 255),
-      255
-    ));
-      
-    text.setPosition(label2D.m_pos[0], label2D.m_pos[1]);
+    glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
+    glVertex3f(   char_x_px + char_w_px, char_y_px,             0);
+
+    glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
+    glVertex3f(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
   
-    window->draw(text, renderState);
+    glTexCoord2f( char_l_tx,             char_t_tx + char_h_tx   );
+    glVertex3f(   char_x_px,             char_y_px + char_h_px, 0);
+
+    char_x_px += char_w_px;
   }
-#endif
 }
 
 void RenderSystem::renderSpheres() const
