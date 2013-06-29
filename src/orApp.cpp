@@ -1150,6 +1150,15 @@ void orApp::RenderState()
   }
   
   {
+    PERFTIMER("Render2D");
+    
+    // Used to translate a 3d position into a 2d screen position
+    Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
+    // TODO TEMP MYSTERY 
+    m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
+  }
+
+  {
     // Render from 2D framebuffer to screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
@@ -1178,14 +1187,7 @@ void orApp::RenderState()
     glEnd();
   }
 
-  {
-    PERFTIMER("Render2D");
-    
-    // Used to translate a 3d position into a 2d screen position
-    Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
-    // TODO TEMP MYSTERY 
-    m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
-  }
+  
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
