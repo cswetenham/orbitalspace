@@ -119,9 +119,6 @@ public:
   void render3D();
 
 private:
-  void setDrawColour(Vector3f const& _c) const;
-  void setDrawColour(Vector3d const& _c) const;
-
   void drawCircle(double const radius, int const steps) const;
   void drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
 

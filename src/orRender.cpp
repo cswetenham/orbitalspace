@@ -49,16 +49,6 @@ void RenderSystem::shutdownRender()
   // TODO free opengl resources
 }
 
-void RenderSystem::setDrawColour(Vector3f const& _c) const
-{
-  glColor3f(_c.x(), _c.y(), _c.z());
-}
-
-void RenderSystem::setDrawColour(Vector3d const& _c) const
-{
-  glColor3d(_c.x(), _c.y(), _c.z());
-}
-
 void RenderSystem::drawCircle(double const radius, int const steps) const
 {
     /* Adjust z and radius as stacks and slices are drawn. */
@@ -84,7 +74,7 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
   int curStack, curSlice;
 
   glPushMatrix();
-  glTranslatef(pos.x(), pos.y(), pos.z());
+  glTranslated(pos.x(), pos.y(), pos.z());
 
   /* Adjust z and radius as stacks and slices are drawn. */
 
@@ -141,7 +131,7 @@ void RenderSystem::renderPoints() const
   for (int pi = 0; pi < (int)m_points.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
 
-    setDrawColour(Vector3f(point.m_col));
+    glColor3f(point.m_col[0], point.m_col[1], point.m_col[2]);
 
     glPointSize(3.0);
     glBegin(GL_POINTS);
@@ -221,16 +211,16 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
     RenderSystem::Label2D const& label2D = getLabel2D(li);
     
-    // TODO we don't need to go via a Vector3f
-    setDrawColour(Vector3f(label2D.m_col));
+    glColor3f(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
+
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
 
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
     
-    // TODO we don't need to go via a Vector3f
-    setDrawColour(Vector3f(label2D.m_col));
+    glColor3f(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
+
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
 
@@ -265,7 +255,7 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
   int char_x_px = pos_x;
   int char_y_px = pos_y;
 
-  for (int i = 0; i < str.length(); ++i) {
+  for (int i = 0; i < (int)str.length(); ++i) {
     int const char_idx = str[i];
 
     if (char_idx == '\n') {
@@ -277,8 +267,8 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
     int const char_x_idx = char_idx % font_w_chars;
     int const char_y_idx = char_idx / font_w_chars;
 
-    int const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
-    int const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
+    float const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
+    float const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
         
     float const char_l_tx = char_x_tex_px * u_scale;
     float const char_t_tx = char_y_tex_px * v_scale;
@@ -304,7 +294,8 @@ void RenderSystem::renderSpheres() const
   PERFTIMER("RenderSpheres");
   for (int si = 0; si < (int)m_spheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
-    setDrawColour(Vector3f(sphere.m_col));
+    
+    glColor3f(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
 
     drawWireSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
@@ -315,7 +306,8 @@ void RenderSystem::renderOrbits() const
   PERFTIMER("RenderOrbits");
   for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
-    setDrawColour(Vector3f(orbit.m_col));
+    
+    glColor3f(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
     int const steps = 1000;
     // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
@@ -397,7 +389,8 @@ void RenderSystem::renderTrails() const
 
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
       Vector3f c = Util::Lerp(Vector3f(trail.m_colNew), Vector3f(trail.m_colOld), l);
-      setDrawColour(c);
+      
+      glColor3f(c.x(), c.y(), c.z());
 
       glVertex3d(v.x(),v.y(),v.z());
     }
@@ -407,7 +400,7 @@ void RenderSystem::renderTrails() const
 
     // Debugging trail: show the trail points
 #if 0
-    setDrawColour(Vector3f(0.0, 0.0, 1.0));
+    glColor3f(0.0, 0.0, 1.0);
 
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
     {
