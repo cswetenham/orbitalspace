@@ -81,49 +81,58 @@ void RenderSystem::drawCircle(double const radius, int const steps) const
 
 void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
 {
-    int curStack, curSlice;
+  int curStack, curSlice;
 
-    /* Adjust z and radius as stacks and slices are drawn. */
+  glPushMatrix();
+  glTranslatef(pos.x(), pos.y(), pos.z());
 
-    double r;
-    double x,y,z;
+  /* Adjust z and radius as stacks and slices are drawn. */
 
-    double const sliceInc = M_TAU / (-slices);
-    double const stackInc = M_TAU / (2*stacks);
+  double r;
+  double x,y,z;
 
-    /* Draw a line loop for each stack */
+  double const sliceInc = M_TAU / (-slices);
+  double const stackInc = M_TAU / (2*stacks);
+
+  /* Draw a line loop for each stack */
+  for (curStack = 1; curStack < stacks; curStack++) {
+    y = cos( curStack * stackInc );
+    r = sin( curStack * stackInc );
+
+    glBegin(GL_LINE_LOOP);
+
+    for(curSlice = 0; curSlice <= slices; curSlice++) {
+      x = cos( curSlice * sliceInc );
+      z = sin( curSlice * sliceInc );
+
+      glNormal3d(x,y,z);
+      glVertex3d(x*r*radius, y*radius, z*r*radius);
+    }
+
+    glEnd();
+  }
+
+  /* Draw a line loop for each slice */
+  for (curSlice = 0; curSlice < slices; curSlice++) {
+    double cosSlice = cos( curSlice * sliceInc );
+    double sinSlice = sin( curSlice * sliceInc );
+
+    glBegin(GL_LINE_STRIP);
+
     for (curStack = 1; curStack < stacks; curStack++) {
-        y = cos( curStack * stackInc );
-        r = sin( curStack * stackInc );
+      double sinStack = sin( curStack * stackInc );
+      x = cosSlice * sinStack;
+      z = sinSlice * sinStack;
+      y = cos( curStack * stackInc );
 
-        glBegin(GL_LINE_LOOP);
-
-            for(curSlice = 0; curSlice <= slices; curSlice++) {
-                x = cos( curSlice * sliceInc );
-                z = sin( curSlice * sliceInc );
-
-                glNormal3d(x,y,z);
-                glVertex3d(x*r*radius + pos.x(), y*radius + pos.y(), z*r*radius + pos.z());
-            }
-
-        glEnd();
+      glNormal3d(x,y,z);
+      glVertex3d(x*radius, y*radius, z*radius);
     }
 
-    /* Draw a line loop for each slice */
-    for (curSlice = 0; curSlice < slices; curSlice++) {
-        glBegin(GL_LINE_STRIP);
+    glEnd();
+  }
 
-            for (curStack = 1; curStack < stacks; curStack++) {
-                x = cos( curSlice * sliceInc ) * sin( curStack * stackInc );
-                z = sin( curSlice * sliceInc ) * sin( curStack * stackInc );
-                y = cos( curStack * stackInc );
-
-                glNormal3d(x,y,z);
-                glVertex3d(x*radius + pos.x(), y*radius + pos.y(), z*radius + pos.z());
-            }
-
-        glEnd();
-    }
+  glPopMatrix();
 }
 
 void RenderSystem::renderPoints() const
@@ -297,7 +306,7 @@ void RenderSystem::renderSpheres() const
     RenderSystem::Sphere const& sphere = getSphere(si);
     setDrawColour(Vector3f(sphere.m_col));
 
-    drawWireSphere(Vector3d(sphere.m_pos), sphere.m_radius, 32, 32);
+    drawWireSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
 }
 
@@ -308,7 +317,7 @@ void RenderSystem::renderOrbits() const
     RenderSystem::Orbit const& orbit = getOrbit(oi);
     setDrawColour(Vector3f(orbit.m_col));
 
-    int const steps = 10000;
+    int const steps = 1000;
     // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
     // restrict the range of theta?
     double const delta = .0001;
