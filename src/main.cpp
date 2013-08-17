@@ -98,7 +98,21 @@
 
 int CDECL main()
 {
-  orApp app;
+  orApp::Config appConfig;
+
+#if 0
+  appConfig.windowWidth = 1280;
+  appConfig.windowHeight = 768;
+  appConfig.renderWidth = 320;
+  appConfig.renderHeight = 200;
+#else
+  appConfig.windowWidth = 4 * 320;
+  appConfig.windowHeight = 3 * 320;
+  appConfig.renderWidth = 256;
+  appConfig.renderHeight = 240;
+#endif
+
+  orApp app(appConfig);
   app.Run();
 
   return 0;

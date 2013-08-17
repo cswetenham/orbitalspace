@@ -29,11 +29,12 @@
 
 #include "orPlatform/window.h"
 
-orApp::orApp():
+orApp::orApp(Config const& config):
   m_lastFrameDuration(0),
   m_running(true),
   m_rnd(1123LL),
   m_simTime(0.0),
+  m_config(config),
   m_paused(false),
   m_singleStep(false),
   m_wireframe(false),
@@ -197,18 +198,6 @@ void orApp::InitRender()
   // TODO z-ordering seems bad on text labels (Moon label appears in front of everything else - not sure if this is what I want, would be good to have the option)
   // TODO 3d labels show when behind the camera.
   // TODO trails are bugged when switching camera targets.
-  
-#if 0
-  m_config.windowWidth = 1280;
-  m_config.windowHeight = 768;
-  m_config.renderWidth = 320;
-  m_config.renderHeight = 200;
-#else
-  m_config.windowWidth = 4 * 320;
-  m_config.windowHeight = 3 * 320;
-  m_config.renderWidth = 256;
-  m_config.renderHeight = 240;
-#endif
 
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
@@ -344,7 +333,7 @@ void orApp::InitState()
   RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
     
   m_uiTextBottomLabel2D.m_pos[0] = 0;
-  m_uiTextBottomLabel2D.m_pos[1] = 240 - 8; // TODO HAX
+  m_uiTextBottomLabel2D.m_pos[1] = m_config.renderHeight - 8; // TODO HAX - 8 is the bitmap font height, shouldn't be hardcoded
   
   m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x;
   m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y;

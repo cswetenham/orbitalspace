@@ -42,7 +42,14 @@
 class orApp
 {
 public:
-  orApp();
+  struct Config {
+    int windowWidth;
+    int windowHeight;
+    int renderWidth;
+    int renderHeight;
+  };
+  
+  orApp(Config const& config);
   ~orApp();
 
 public:
@@ -77,13 +84,6 @@ private:
   Rnd64 m_rnd;
 
   double m_simTime;
-
-  struct Config {
-    int windowWidth;
-    int windowHeight;
-    int renderWidth;
-    int renderHeight;
-  };
 
   Config m_config;
 
