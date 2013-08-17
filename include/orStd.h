@@ -68,8 +68,9 @@ inline void orDbgPrintf(char const* lpszFormat, ...)
     va_list args;
     va_start(args, lpszFormat);
     int nBuf;
-    char szBuffer[512]; // TODO get rid of this hard-coded buffer
-    nBuf = _vsnprintf_s(szBuffer, 511, _TRUNCATE, lpszFormat, args);
+    enum { BufSize = 1024 };
+    char szBuffer[BufSize];
+    nBuf = _vsnprintf_s(szBuffer, BufSize-1, _TRUNCATE, lpszFormat, args);
     ::OutputDebugStringA(szBuffer);
     va_end(args);
 }
@@ -89,8 +90,6 @@ inline void orDbgPrintf(char const* lpszFormat, ...)
 #define allocat( _T, _S ) (_T*)alloca(_S * sizeof(_T))
 
 template <typename T> inline void ignore(T const&) {}; // To explicitly ignore return values without warning
-
-// TODO portable implementations
 
 inline void ensure_impl(bool _cond, char const* _condStr, char const* _file, int _line) {
   if (!_cond) {

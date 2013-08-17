@@ -39,8 +39,6 @@
 
 // Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
 
-// TODO make the opaque IDs into strong typedefs for safety? (enum - not perfect. struct containing just an int?)
-
 class orApp
 {
 public:
@@ -164,8 +162,6 @@ private:
 
   uint32_t m_thrusters;
 
-  // TODO make into a palette array.
-  // TODO Convert to HSV so can modify the hue to make new palettes.
   enum {PALETTE_SIZE = 5};
   
   // Lazy

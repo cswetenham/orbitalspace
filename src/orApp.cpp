@@ -60,15 +60,15 @@ orApp::orApp():
 {
   orLog("Starting init\n");
   
-  PerfTimer::StaticInit(); // TODO terrible code
+  PerfTimer::StaticInit();
 
   Init();
 
-#if 1
+#if 0
   m_music = new sf::Music();
-  // m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
-  // m_music->setLoop(true);
-  // m_music->play();
+  m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
+  m_music->setLoop(true);
+  m_music->play();
 #endif
   orLog("Init complete\n");
 }
@@ -194,7 +194,7 @@ void orApp::Run()
 
 void orApp::InitRender()
 {
-  // TODO z-ordering seems bad on text labels.
+  // TODO z-ordering seems bad on text labels (Moon label appears in front of everything else - not sure if this is what I want, would be good to have the option)
   // TODO 3d labels show when behind the camera.
   // TODO trails are bugged when switching camera targets.
   
@@ -294,7 +294,7 @@ void orApp::InitState()
     m_colB[i] = sf::Vector3f(m_colG[i].x, m_colG[i].z, m_colG[i].y);
   }
 #else
-  // Create NES-ish palette
+  // Create NES-ish palette (selected colour sets from the NES palettes, taken from Wikipedia)
   m_colR[0] = sf::Vector3f(0,0,0)/255.f;
   m_colR[1] = sf::Vector3f(136,20,0)/255.f;
   m_colR[2] = sf::Vector3f(228,92,16)/255.f;

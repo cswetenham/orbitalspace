@@ -12,8 +12,6 @@
 #define MOON_MASS  7.3477e22
 
 // meters
-// TODO give moon, earth correct orbit, inclination, rotation period, axial tilt.
-// TODO give earth, moon rotation and orbit correct phase for J2000.
 // #define MOON_APOGEE   3.6257e8
 // #define MOON_PERIGEE  4.0541e8
 // degrees

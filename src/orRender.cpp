@@ -135,9 +135,7 @@ void RenderSystem::renderPoints() const
 
     glPointSize(3.0);
     glBegin(GL_POINTS);
-    Vector3d p(point.m_pos);
-    // TODO isn't there Eigen opengl support included?
-    glVertex3d(p.x(), p.y(), p.z());
+    glVertex3d(point.m_pos[0], point.m_pos[1], point.m_pos[2]);
     glEnd();
     glPointSize(1.0);
   }
@@ -192,8 +190,6 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   glLoadIdentity();
 
   glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
-
-  // TODO set alpha from R or something
 
   glBegin(GL_QUADS);
 

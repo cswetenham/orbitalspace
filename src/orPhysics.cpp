@@ -6,7 +6,6 @@
 #include "constants.h"
 
 void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const dt) {
-  // TODO try these with floats instead of double?
 
   int numParticles = (int)m_particleBodies.size();
   int numGravs = (int)m_gravBodies.size();

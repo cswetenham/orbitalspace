@@ -6,10 +6,6 @@
 
 #include "constants.h"
 
-// TODO want ability to record past simulation states and extrapolate future ones...
-// Ideally will need to support entities being created or destroyed...
-// Will want to support AI; we'll want to 
-
 void EntitySystem::update(double const _dt, double const _origin[3])
 {
   // Update Planets
