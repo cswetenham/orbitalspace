@@ -130,8 +130,8 @@ private:
 
   EntitySystem m_entitySystem;
 
-  int m_playerShipId;
-  int m_suspectShipId;
+  EntitySystem::ShipId m_playerShipId;
+  EntitySystem::ShipId m_suspectShipId;
 
   int m_earthPlanetId;
   int m_moonMoonId;

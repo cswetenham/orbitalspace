@@ -58,7 +58,7 @@ void EntitySystem::update(double const _dt, double const _origin[3])
 
   // Update ships
   for (int i = 0; i < (int)m_ships.size(); ++i) {
-    Ship& ship = getShip(i);
+    Ship& ship = m_ships[i];
 
     PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
      

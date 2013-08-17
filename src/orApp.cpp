@@ -50,7 +50,7 @@ orApp::orApp(Config const& config):
   m_cameraTargetId(0),
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
-  m_playerShipId(0),
+  m_playerShipId(),
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
   m_thrusters(0),
   m_hasFocus(false),
