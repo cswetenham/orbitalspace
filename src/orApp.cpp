@@ -30,6 +30,7 @@
 #include "orPlatform/window.h"
 
 orApp::orApp(Config const& config):
+  m_appScreen(Screen_Title),
   m_lastFrameDuration(0),
   m_running(true),
   m_rnd(1123LL),
@@ -65,7 +66,7 @@ orApp::orApp(Config const& config):
 
   Init();
 
-#if 0
+#if 1
   m_music = new sf::Music();
   m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music->setLoop(true);
@@ -145,51 +146,61 @@ void orApp::Run()
   {
     Timer::PerfTime const frameStart = Timer::GetPerfTime();
 
-    {
-      PERFTIMER("PollEvents");
-      PollEvents();
-    }
-
-    if (m_hasFocus) {
-      // Input handling
-      if (m_inputMode == InputMode_RotateCamera) {
-        sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
-        sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
-        sf::Mouse::setPosition(centerPos, *m_window);
-
-        m_camTheta += mouseDelta.x * M_TAU / 300.0;
-        m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
-        m_camPhi += mouseDelta.y * M_TAU / 300.0;
-        m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
-      }
-    }
-
-    {
-      PERFTIMER("UpdateState");
-      enum { UPDATES_PER_FRAME_HACK = 1 };
-      for (int i = 0; i < UPDATES_PER_FRAME_HACK; ++i) {
-        UpdateState(Timer::PerfTimeToMillis(m_lastFrameDuration));
-      }
-    }
-
-    {
-      PERFTIMER("BeginRender");
-      BeginRender();
-    }
-
-    {
-      PERFTIMER("RenderState");
-      RenderState();
-    }
-
-    {
-      PERFTIMER("EndRender");
-      EndRender();
-    }
+    RunOneStep();
 
     sf::sleep(sf::milliseconds(1)); // TODO sleep according to frame duration
 
     m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
+  }
+}
+
+void orApp::RunOneStep()
+{
+  {
+    PERFTIMER("PollEvents");
+    PollEvents();
+  }
+
+  {
+    PERFTIMER("HandleInput");
+    HandleInput();
+  }
+
+  {
+    PERFTIMER("UpdateState");
+    UpdateState();
+  }
+
+  {
+    PERFTIMER("BeginRender");
+    BeginRender();
+  }
+
+  {
+    PERFTIMER("RenderState");
+    RenderState();
+  }
+
+  {
+    PERFTIMER("EndRender");
+    EndRender();
+  }
+}
+
+void orApp::HandleInput()
+{
+  if (m_hasFocus) {
+    // Input handling
+    if (m_inputMode == InputMode_RotateCamera) {
+      sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
+      sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
+      sf::Mouse::setPosition(centerPos, *m_window);
+
+      m_camTheta += mouseDelta.x * M_TAU / 300.0;
+      m_camTheta = Util::Wrap(m_camTheta, 0.0, M_TAU);
+      m_camPhi += mouseDelta.y * M_TAU / 300.0;
+      m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
+    }
   }
 }
 
@@ -873,13 +884,11 @@ Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
   return a_thrust;
 }
 
-void orApp::UpdateState(double const _dt)
+void orApp::UpdateState()
 {
+  double const dt = m_timeScale * Util::Min((double)Timer::PerfTimeToMillis(m_lastFrameDuration), 100.0) / 1000.0; // seconds
+
   if (!m_paused) {
-    // Update Simulation
-
-    double dt = m_timeScale * Util::Min(_dt, 100.0) / 1000.0; // seconds
-
     // Update player thrust
     PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId);
     Vector3d const userAcc = CalcPlayerThrust(playerShipBody);
@@ -892,7 +901,7 @@ void orApp::UpdateState(double const _dt)
 
     m_physicsSystem.update(m_integrationMethod, dt);
 
-    m_entitySystem.update(_dt, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
+    m_entitySystem.update(dt, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
 
     // TODO eaghghgh not clear where these should live
 

@@ -65,19 +65,37 @@ private:
   void InitState();
   void ShutdownState();
 
+  void RunOneStep();
+  
+  void PollEvents();
   void HandleEvent(sf::Event const& _event);
-  void UpdateState(double const _dt);
+
+  void HandleInput();
+
+  void UpdateState();
+  
+  void BeginRender();
 
   void RenderState();
-
-  void PollEvents();
-  void BeginRender();
+   
   void EndRender();
 
 private:
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
 
 private:
+  enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
+
+  class TitleScreen {
+    void Init();
+    void Shutdown();
+  } m_titleScreen;
+
+  class MainLevel {
+    void Init();
+    void Shutdown();
+  } m_mainLevel;
+
   Timer::PerfTime m_lastFrameDuration;
   bool m_running;
   
