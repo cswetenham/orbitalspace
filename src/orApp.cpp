@@ -659,6 +659,7 @@ void orApp::InitState()
   // Perturb all the ship orbits
   // TODO this should update all the other positions too, or happen earlier!
   // TODO shouldn't iterate through IDs outside a system.
+#if 0
   float* rnds = new float[6 * m_entitySystem.numShips()];
   UniformDistribution<float> dist(-1, +1);
   dist.Generate(&m_rnd, 6 * m_entitySystem.numShips(), &rnds[0]);
@@ -675,6 +676,7 @@ void orApp::InitState()
     shipBody.m_vel[2] += 1e2 * rnds[6*i+5];
   }
   delete[] rnds;
+#endif
 }
 
 
