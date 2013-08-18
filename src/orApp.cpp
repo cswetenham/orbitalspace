@@ -53,7 +53,6 @@ orApp::orApp(Config const& config):
   m_inputMode(InputMode_Default),
   m_playerShipId(0),
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
-  m_thrusters(0),
   m_hasFocus(false),
   m_timeScale(1.0),
   m_frameBufferId(0),
@@ -768,60 +767,7 @@ void orApp::HandleEvent(sf::Event const& _event)
         m_timeScale = 1;
       }
     }
-
-    if (_event.key.code == sf::Keyboard::A)
-    {
-      m_thrusters |= ThrustLeft;
-    }
-    if (_event.key.code == sf::Keyboard::D)
-    {
-      m_thrusters |= ThrustRight;
-    }
-    if (_event.key.code == sf::Keyboard::W)
-    {
-      m_thrusters |= ThrustFwd;
-    }
-    if (_event.key.code == sf::Keyboard::S)
-    {
-      m_thrusters |= ThrustBack;
-    }
-    if (_event.key.code == sf::Keyboard::Up)
-    {
-      m_thrusters |= ThrustUp;
-    }
-    if (_event.key.code == sf::Keyboard::Down)
-    {
-      m_thrusters |= ThrustDown;
-    }
-  }
-
-  if (_event.type == sf::Event::KeyReleased)
-  {
-    if (_event.key.code == sf::Keyboard::A)
-    {
-      m_thrusters &= ~ThrustLeft;
-    }
-    if (_event.key.code == sf::Keyboard::D)
-    {
-      m_thrusters &= ~ThrustRight;
-    }
-    if (_event.key.code == sf::Keyboard::W)
-    {
-      m_thrusters &= ~ThrustFwd;
-    }
-    if (_event.key.code == sf::Keyboard::S)
-    {
-      m_thrusters &= ~ThrustBack;
-    }
-    if (_event.key.code == sf::Keyboard::Up)
-    {
-      m_thrusters &= ~ThrustUp;
-    }
-    if (_event.key.code == sf::Keyboard::Down)
-    {
-      m_thrusters &= ~ThrustDown;
-    }
-  }
+  } // if (_event.type == sf::Event::KeyPressed)
 
   if (_event.type == sf::Event::Closed)
   {
@@ -862,12 +808,13 @@ Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
   Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
   Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
 
-  if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
-  if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
-  if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
-  if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
-  if (m_thrusters & ThrustLeft)  { thrustVec += left; }
-  if (m_thrusters & ThrustRight) { thrustVec -= left; }
+  // TODO currently reaching into m_mainScreen, this is an intermediate step of refactoring
+  if (m_mainScreen.m_thrusters & MainScreen::ThrustFwd)  { thrustVec += fwd; }
+  if (m_mainScreen.m_thrusters & MainScreen::ThrustBack) { thrustVec -= fwd; }
+  if (m_mainScreen.m_thrusters & MainScreen::ThrustDown)  { thrustVec += dwn; }
+  if (m_mainScreen.m_thrusters & MainScreen::ThrustUp) { thrustVec -= dwn; }
+  if (m_mainScreen.m_thrusters & MainScreen::ThrustLeft)  { thrustVec += left; }
+  if (m_mainScreen.m_thrusters & MainScreen::ThrustRight) { thrustVec -= left; }
 
   Vector3d a_thrust = thrustAccel * thrustVec;
 
@@ -1189,4 +1136,39 @@ void orApp::RenderState()
   m_renderSystem.endRender();
 
   m_window->display();
+}
+
+void orApp::MainScreen::HandleEvent(sf::Event const& _event)
+{
+  if (_event.type == sf::Event::KeyPressed) {
+    if (_event.key.code == sf::Keyboard::A) {
+      m_thrusters |= ThrustLeft;
+    } else if (_event.key.code == sf::Keyboard::D) {
+      m_thrusters |= ThrustRight;
+    } else if (_event.key.code == sf::Keyboard::W) {
+      m_thrusters |= ThrustFwd;
+    } else if (_event.key.code == sf::Keyboard::S) {
+      m_thrusters |= ThrustBack;
+    } else if (_event.key.code == sf::Keyboard::Up) {
+      m_thrusters |= ThrustUp;
+    } else if (_event.key.code == sf::Keyboard::Down) {
+      m_thrusters |= ThrustDown;
+    }
+  } // if (_event.type == sf::Event::KeyPressed)
+
+  if (_event.type == sf::Event::KeyReleased) {
+    if (_event.key.code == sf::Keyboard::A) {
+      m_thrusters &= ~ThrustLeft;
+    } else if (_event.key.code == sf::Keyboard::D) {
+      m_thrusters &= ~ThrustRight;
+    } else if (_event.key.code == sf::Keyboard::W) {
+      m_thrusters &= ~ThrustFwd;
+    } else if (_event.key.code == sf::Keyboard::S) {
+      m_thrusters &= ~ThrustBack;
+    } else if (_event.key.code == sf::Keyboard::Up) {
+      m_thrusters &= ~ThrustUp;
+    } else if (_event.key.code == sf::Keyboard::Down) {
+      m_thrusters &= ~ThrustDown;
+    }
+  } // if (_event.type == sf::Event::KeyReleased)
 }

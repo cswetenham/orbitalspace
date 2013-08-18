@@ -107,12 +107,26 @@ private:
 
   class MainScreen : public IScreen {
   public:
+    MainScreen() : m_thrusters(0) {}
     // virtual void Init();
     // virtual void Shutdown();
-    // virtual void HandleEvent(sf::Event const& _event);
+    virtual void HandleEvent(sf::Event const& _event);
     // virtual void HandleInput();
     // virtual void UpdateState();
     // virtual void RenderState();
+  
+  public: // TODO
+    enum Thrusters
+    {
+      ThrustFwd = 1 << 0,
+      ThrustBack = 1 << 1,
+      ThrustLeft = 1 << 2,
+      ThrustRight = 1 << 3,
+      ThrustUp = 1 << 4,
+      ThrustDown = 1 << 5
+    };
+
+    uint32_t m_thrusters;
   private:
   } m_mainScreen;
   
@@ -126,15 +140,19 @@ private:
 
   Config m_config;
 
-  // Simulation
+  CameraSystem m_cameraSystem;
+  RenderSystem m_renderSystem;
+  PhysicsSystem m_physicsSystem;
+  EntitySystem m_entitySystem;
+
+  ////  Simulation ////
+
   double m_simTime;
   bool m_paused;
   bool m_singleStep;
 
   //// Camera ////
-
-  CameraSystem m_cameraSystem;
-
+  
   enum CameraMode {
     CameraMode_FirstPerson = 0,
     CameraMode_ThirdPerson = 1
@@ -149,23 +167,19 @@ private:
   double m_camPhi;
 
   //// Rendering ////
-
-  RenderSystem m_renderSystem;
+  
+  double m_lightDir[3];
 
   int m_uiTextTopLabel2DId;
   int m_uiTextBottomLabel2DId;
 
   //// Physics ////
-
-  PhysicsSystem m_physicsSystem;
-
+  
   double m_timeScale;
   PhysicsSystem::IntegrationMethod m_integrationMethod;
 
   //// Entities ////
-
-  EntitySystem m_entitySystem;
-
+  
   int m_playerShipId;
   int m_suspectShipId;
 
@@ -175,27 +189,15 @@ private:
   int m_comPoiId;
   int m_lagrangePoiIds[5];
 
-  // Input
+  //// Input ////
 
   enum InputMode {
     InputMode_Default = 0,
     InputMode_RotateCamera = 1
   };
   InputMode m_inputMode;
-  
-  enum Thrusters
-  {
-    ThrustFwd = 1 << 0,
-    ThrustBack = 1 << 1,
-    ThrustLeft = 1 << 2,
-    ThrustRight = 1 << 3,
-    ThrustUp = 1 << 4,
-    ThrustDown = 1 << 5
-  };
-
-  uint32_t m_thrusters;
-
-  double m_lightDir[3];
+   
+  //// Rendering (Global) ////
 
   // Lazy
   enum {PALETTE_SIZE = 5};
@@ -212,6 +214,8 @@ private:
   sf::Vector2i m_savedMousePos;
 
   bool m_hasFocus;
+
+  //// Music ////
 
   sf::Music* m_music;
 };
