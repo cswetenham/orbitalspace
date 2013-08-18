@@ -38,12 +38,10 @@ orApp::orApp(Config const& config):
   m_config(config),
   m_paused(false),
   m_singleStep(false),
-  m_wireframe(false),
   m_cameraSystem(),
   m_renderSystem(),
   m_physicsSystem(),
   m_entitySystem(m_cameraSystem, m_renderSystem, m_physicsSystem),
-  m_camOrig(true),
   m_camDist(-3.1855e7),
   m_camTheta(0.0),
   m_camPhi(0.0),
@@ -116,26 +114,13 @@ void runTests() {
 
 void orApp::PollEvents()
 {
+  PERFTIMER("PollEvents");
+
   sf::Event event;
   while (m_window->pollEvent(event))
   {
     HandleEvent(event);
   }
-}
-
-void orApp::BeginRender()
-{
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
-
-  m_renderSystem.beginRender();
-}
-
-void orApp::EndRender()
-{
-  m_renderSystem.endRender();
-
-  m_window->display();
 }
 
 void orApp::Run()
@@ -156,39 +141,16 @@ void orApp::Run()
 
 void orApp::RunOneStep()
 {
-  {
-    PERFTIMER("PollEvents");
-    PollEvents();
-  }
-
-  {
-    PERFTIMER("HandleInput");
-    HandleInput();
-  }
-
-  {
-    PERFTIMER("UpdateState");
-    UpdateState();
-  }
-
-  {
-    PERFTIMER("BeginRender");
-    BeginRender();
-  }
-
-  {
-    PERFTIMER("RenderState");
-    RenderState();
-  }
-
-  {
-    PERFTIMER("EndRender");
-    EndRender();
-  }
+  PollEvents();
+  HandleInput();
+  UpdateState();
+  RenderState();
 }
 
 void orApp::HandleInput()
 {
+  PERFTIMER("HandleInput");
+
   if (m_hasFocus) {
     // Input handling
     if (m_inputMode == InputMode_RotateCamera) {
@@ -783,11 +745,6 @@ void orApp::HandleEvent(sf::Event const& _event)
       m_integrationMethod = PhysicsSystem::IntegrationMethod((m_integrationMethod + 1) % PhysicsSystem::IntegrationMethod_Count);
     }
 
-    if (_event.key.code == sf::Keyboard::R)
-    {
-      m_camOrig = !m_camOrig;
-    }
-
     if (_event.key.code == sf::Keyboard::Add || _event.key.code == sf::Keyboard::Equal)
     {
       m_timeScale *= 2;
@@ -909,6 +866,8 @@ Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 
 void orApp::UpdateState()
 {
+  PERFTIMER("UpdateState");
+
   double const dt = m_timeScale * Util::Min((double)Timer::PerfTimeToMillis(m_lastFrameDuration), 100.0) / 1000.0; // seconds
 
   if (!m_paused) {
@@ -1058,7 +1017,12 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 
 void orApp::RenderState()
 {
-  // TODO no timer here
+  PERFTIMER("RenderState()");
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
+
+  m_renderSystem.beginRender();
 
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
@@ -1109,12 +1073,7 @@ void orApp::RenderState()
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // TODO clean up
-    if (m_wireframe) {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    } else {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    }
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   }
 
   {
@@ -1213,5 +1172,7 @@ void orApp::RenderState()
     glEnd();
   }
 
-  // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
+  m_renderSystem.endRender();
+
+  m_window->display();
 }

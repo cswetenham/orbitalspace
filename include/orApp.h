@@ -73,49 +73,45 @@ private:
   void HandleInput();
 
   void UpdateState();
-  
-  void BeginRender();
 
   void RenderState();
-   
-  void EndRender();
-
+  
 private:
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
 
 private:
+  // App
+
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
 
   class TitleScreen {
     void Init();
     void Shutdown();
+
+    void HandleEvent(sf::Event const& _event);
+    void HandleInput();
   } m_titleScreen;
 
   class MainLevel {
     void Init();
     void Shutdown();
+    
+    void HandleEvent(sf::Event const& _event);
+    void HandleInput();
   } m_mainLevel;
-
-  Timer::PerfTime m_lastFrameDuration;
+  
   bool m_running;
   
+  Timer::PerfTime m_lastFrameDuration;
+    
   Rnd64 m_rnd;
-
-  double m_simTime;
 
   Config m_config;
 
-  // Simulation options
+  // Simulation
+  double m_simTime;
   bool m_paused;
   bool m_singleStep;
-
-  // Rendering options
-  bool m_wireframe;
-  bool m_camOrig;
-
-  double m_camDist;
-  double m_camTheta;
-  double m_camPhi;
 
   //// Camera ////
 
@@ -129,6 +125,10 @@ private:
 
   int m_cameraId;
   int m_cameraTargetId;
+
+  double m_camDist;
+  double m_camTheta;
+  double m_camPhi;
 
   //// Rendering ////
 
@@ -164,10 +164,7 @@ private:
     InputMode_RotateCamera = 1
   };
   InputMode m_inputMode;
-
-  // sf::Vectors are just plain old data. Eigen::Vectors are SSE magic.
-  sf::Vector2i m_savedMousePos;
-
+  
   enum Thrusters
   {
     ThrustFwd = 1 << 0,
@@ -180,22 +177,24 @@ private:
 
   uint32_t m_thrusters;
 
-  enum {PALETTE_SIZE = 5};
-  
+  double m_lightDir[3];
+
   // Lazy
+  enum {PALETTE_SIZE = 5};
   sf::Vector3f m_colG[PALETTE_SIZE];
   sf::Vector3f m_colR[PALETTE_SIZE];
   sf::Vector3f m_colB[PALETTE_SIZE];
-
-  double m_lightDir[3];
-
-  bool m_hasFocus;
 
   uint32_t m_frameBufferId;
   uint32_t m_renderedTextureId;
   uint32_t m_depthRenderBufferId;
 
   sf::RenderWindow* m_window;
+  // sf::Vectors are just plain old data. Eigen::Vectors are SSE magic.
+  sf::Vector2i m_savedMousePos;
+
+  bool m_hasFocus;
+
   sf::Music* m_music;
 };
 
