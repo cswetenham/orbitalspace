@@ -15,4 +15,4 @@ UPDATE LOG_
 2008.12.20 : New font [M51_SLEEPEN SADNESS] added.
 
 
-(Terms of use translate to: freeware, not for commercial or large-scale distribution, contact me for commercial etc use.)
+(Note by Chris Swetenham: I understand the terms of use translate to: freeware, not for commercial or large-scale distribution, contact author for commercial etc use.)
