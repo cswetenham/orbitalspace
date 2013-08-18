@@ -82,24 +82,42 @@ private:
 private:
   // App
 
-  enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
+  // TODO this doesn't feel very DOD but it'll do for now
+  class IScreen {
+  public:
+    virtual ~IScreen() {}
+    virtual void Init() {};
+    virtual void Shutdown() {};
+    virtual void HandleEvent(sf::Event const& _event) {}
+    virtual void HandleInput() {};
+    virtual void UpdateState() {};
+    virtual void RenderState() {};
+  };
 
-  class TitleScreen {
-    void Init();
-    void Shutdown();
-
-    void HandleEvent(sf::Event const& _event);
-    void HandleInput();
+  class TitleScreen : public IScreen {
+  public:
+    // virtual void Init();
+    // virtual void Shutdown();
+    // virtual void HandleEvent(sf::Event const& _event);
+    // virtual void HandleInput();
+    // virtual void UpdateState();
+    // virtual void RenderState();
+  private:
   } m_titleScreen;
 
-  class MainLevel {
-    void Init();
-    void Shutdown();
-    
-    void HandleEvent(sf::Event const& _event);
-    void HandleInput();
-  } m_mainLevel;
+  class MainScreen : public IScreen {
+  public:
+    // virtual void Init();
+    // virtual void Shutdown();
+    // virtual void HandleEvent(sf::Event const& _event);
+    // virtual void HandleInput();
+    // virtual void UpdateState();
+    // virtual void RenderState();
+  private:
+  } m_mainScreen;
   
+  IScreen* m_curScreen;
+
   bool m_running;
   
   Timer::PerfTime m_lastFrameDuration;

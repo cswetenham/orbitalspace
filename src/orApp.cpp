@@ -30,7 +30,9 @@
 #include "orPlatform/window.h"
 
 orApp::orApp(Config const& config):
-  m_appScreen(Screen_Title),
+  m_titleScreen(),
+  m_mainScreen(),
+  m_curScreen(&m_mainScreen),
   m_lastFrameDuration(0),
   m_running(true),
   m_rnd(1123LL),
@@ -89,10 +91,14 @@ void orApp::Init()
 {
   InitState();
   InitRender();
+
+  m_curScreen->Init();
 }
 
 void orApp::Shutdown()
 {
+  m_curScreen->Shutdown();
+
   ShutdownRender();
   ShutdownState();
 }
@@ -164,6 +170,8 @@ void orApp::HandleInput()
       m_camPhi = Util::Clamp(m_camPhi, -.249 * M_TAU, .249 * M_TAU);
     }
   }
+
+  m_curScreen->HandleInput();
 }
 
 void checkGLErrors()
@@ -829,6 +837,8 @@ void orApp::HandleEvent(sf::Event const& _event)
   {
     m_hasFocus = true;
   }
+
+  m_curScreen->HandleEvent(_event);
 }
 
 Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
@@ -1009,6 +1019,8 @@ void orApp::UpdateState()
     camera.m_pos[1] = camPosData[1];
     camera.m_pos[2] = camPosData[2];
   }
+
+  m_curScreen->UpdateState();
 }
 
 Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
@@ -1171,6 +1183,8 @@ void orApp::RenderState()
     glVertex3f(-scale, +scale, 0.0);
     glEnd();
   }
+
+  m_curScreen->RenderState();
 
   m_renderSystem.endRender();
 
