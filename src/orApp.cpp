@@ -61,7 +61,7 @@ orApp::orApp(Config const& config):
   m_music(NULL)
 {
   orLog("Starting init\n");
-  
+
   PerfTimer::StaticInit();
 
   Init();
@@ -134,7 +134,7 @@ void orApp::BeginRender()
 void orApp::EndRender()
 {
   m_renderSystem.endRender();
-  
+
   m_window->display();
 }
 
@@ -204,6 +204,15 @@ void orApp::HandleInput()
   }
 }
 
+void checkGLErrors()
+{
+  int gl_err = glGetError();
+  if(gl_err != GL_NO_ERROR) {
+    fprintf(stderr, "Error: %d %s", gl_err, "");
+  // TODO gluErrorString(gl_err) doesn't link?
+  }
+}
+
 void orApp::InitRender()
 {
   // TODO z-ordering seems bad on text labels (Moon label appears in front of everything else - not sure if this is what I want, would be good to have the option)
@@ -223,37 +232,51 @@ void orApp::InitRender()
   }
 
   {
+    checkGLErrors();
+
     // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
     // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
     glGenFramebuffers(1, &m_frameBufferId);
+    checkGLErrors();
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
+    checkGLErrors();
 
     // The texture we're going to render to
     glGenTextures(1, &m_renderedTextureId);
- 
+    checkGLErrors();
+
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
- 
+    checkGLErrors();
     // Give an empty image to OpenGL ( the last "0" )
     // TODO change this resolution independently
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_config.renderWidth, m_config.renderHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
- 
+    checkGLErrors();
+
     // Poor filtering. Needed !
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    checkGLErrors();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    checkGLErrors();
 
     // The depth buffer
     glGenRenderbuffers(1, &m_depthRenderBufferId);
+    checkGLErrors();
     glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
+    checkGLErrors();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_config.renderWidth, m_config.renderHeight);
+    checkGLErrors();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBufferId);
+    checkGLErrors();
 
     // Set "renderedTexture" as our colour attachement #0
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTextureId, 0);
- 
+    checkGLErrors();
+
     // Set the list of draw buffers.
     GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, drawBuffers); // "1" is the size of DrawBuffers
+    checkGLErrors();
 
     // Always check that our framebuffer is ok
     ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
@@ -315,9 +338,9 @@ void orApp::InitState()
 #endif
 
   Vector3d const lightDir = Vector3d(1.0, 1.0, 0.0).normalized();
-  
+
   const double* const lightDirData = lightDir.data();
-  
+
   m_lightDir[0] = lightDirData[0];
   m_lightDir[1] = lightDirData[1];
   m_lightDir[2] = lightDirData[2];
@@ -332,20 +355,20 @@ void orApp::InitState()
   // RenderSystem::Label2D& debugTextLabel2D = m_renderSystem.getLabel2D(m_debugTextLabel2DId = m_renderSystem.makeLabel2D());
   m_uiTextTopLabel2DId = m_renderSystem.makeLabel2D();
   RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
-    
+
   m_uiTextTopLabel2D.m_pos[0] = 0;
   m_uiTextTopLabel2D.m_pos[1] = 0;
-  
+
   m_uiTextTopLabel2D.m_col[0] =  m_colG[4].x;
   m_uiTextTopLabel2D.m_col[1] =  m_colG[4].y;
   m_uiTextTopLabel2D.m_col[2] =  m_colG[4].z;
 
   m_uiTextBottomLabel2DId = m_renderSystem.makeLabel2D();
   RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
-    
+
   m_uiTextBottomLabel2D.m_pos[0] = 0;
   m_uiTextBottomLabel2D.m_pos[1] = m_config.renderHeight - 8; // TODO HAX - 8 is the bitmap font height, shouldn't be hardcoded
-  
+
   m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x;
   m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y;
   m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z;
@@ -388,7 +411,7 @@ void orApp::InitState()
     earthGravBody.m_pos[0] = earthPosData[0];
     earthGravBody.m_pos[1] = earthPosData[1];
     earthGravBody.m_pos[2] = earthPosData[2];
-    
+
     earthGravBody.m_vel[0] = earthVelData[0];
     earthGravBody.m_vel[1] = earthVelData[1];
     earthGravBody.m_vel[2] = earthVelData[2];
@@ -471,7 +494,7 @@ void orApp::InitState()
     moonTrail.m_colOld[0] = m_colG[0].x;
     moonTrail.m_colOld[1] = m_colG[0].y;
     moonTrail.m_colOld[2] = m_colG[0].z;
-    
+
     moonTrail.m_colNew[0] = m_colG[4].x;
     moonTrail.m_colNew[1] = m_colG[4].y;
     moonTrail.m_colNew[2] = m_colG[4].z;
@@ -495,7 +518,7 @@ void orApp::InitState()
     moonLabel3D.m_col[0] = m_colG[4].x;
     moonLabel3D.m_col[1] = m_colG[4].y;
     moonLabel3D.m_col[2] = m_colG[4].z;
-    
+
     moonLabel3D.m_text = std::string("Moon");
   }
 
@@ -538,11 +561,11 @@ void orApp::InitState()
     }
 
     CameraSystem::Target& lagrangeCamTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId = m_cameraSystem.makeTarget());
-    
+
     lagrangeCamTarget.m_pos[0] = lagrangePoint.m_pos[0];
     lagrangeCamTarget.m_pos[1] = lagrangePoint.m_pos[1];
     lagrangeCamTarget.m_pos[2] = lagrangePoint.m_pos[2];
-    
+
     std::stringstream builder;
     builder << "Earth-Moon L" << (i + 1);
     lagrangeCamTarget.m_name = builder.str();
@@ -582,7 +605,7 @@ void orApp::InitState()
     playerTrail.m_colOld[0] = m_colB[0].x;
     playerTrail.m_colOld[1] = m_colB[0].y;
     playerTrail.m_colOld[2] = m_colB[0].z;
-    
+
     playerTrail.m_colNew[0] = m_colB[4].x;
     playerTrail.m_colNew[1] = m_colB[4].y;
     playerTrail.m_colNew[2] = m_colB[4].z;
@@ -641,7 +664,7 @@ void orApp::InitState()
     suspectTrail.m_colOld[0] = m_colR[0].x;
     suspectTrail.m_colOld[1] = m_colR[0].y;
     suspectTrail.m_colOld[2] = m_colR[0].z;
-    
+
     suspectTrail.m_colNew[0] = m_colR[4].x;
     suspectTrail.m_colNew[1] = m_colR[4].y;
     suspectTrail.m_colNew[2] = m_colR[4].z;
@@ -681,7 +704,7 @@ void orApp::InitState()
     shipBody.m_pos[0] += 6e4 * rnds[6*i  ];
     shipBody.m_pos[1] += 6e4 * rnds[6*i+1];
     shipBody.m_pos[2] += 6e4 * rnds[6*i+2];
-    
+
     shipBody.m_vel[0] += 1e2 * rnds[6*i+3];
     shipBody.m_vel[1] += 1e2 * rnds[6*i+4];
     shipBody.m_vel[2] += 1e2 * rnds[6*i+5];
@@ -892,9 +915,9 @@ void orApp::UpdateState()
     // Update player thrust
     PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId);
     Vector3d const userAcc = CalcPlayerThrust(playerShipBody);
-    
+
     const double* const userAccData = userAcc.data();
-    
+
     playerShipBody.m_userAcc[0] = userAccData[0];
     playerShipBody.m_userAcc[1] = userAccData[1];
     playerShipBody.m_userAcc[2] = userAccData[2];
@@ -908,7 +931,7 @@ void orApp::UpdateState()
     PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_earthPlanetId).m_gravBodyId);
     EntitySystem::Moon& moon = m_entitySystem.getMoon(m_moonMoonId);
     PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(moon.m_gravBodyId);
-    
+
     Vector3d const earthPos(earthBody.m_pos);
     Vector3d const earthVel(earthBody.m_vel);
     Vector3d const moonPos(moonBody.m_pos);
@@ -924,19 +947,19 @@ void orApp::UpdateState()
 
     // Update the earth-moon COM
     double const totalMass = earthBody.m_mass + moonBody.m_mass;
-    
+
     Vector3d const comPos = (earthPos * earthBody.m_mass / totalMass) + (moonPos * moonBody.m_mass / totalMass);
     const double* const comPosData = comPos.data();
 
     EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId);
-    
+
     RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId);
     {
       comPoint.m_pos[0] = comPosData[0];
       comPoint.m_pos[1] = comPosData[1];
       comPoint.m_pos[2] = comPosData[2];
     }
-    
+
     CameraSystem::Target& comTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId);
     {
       comTarget.m_pos[0] = comPosData[0];
@@ -978,7 +1001,7 @@ void orApp::UpdateState()
       lagrangePoint.m_pos[0] = lagrangePos_data[0];
       lagrangePoint.m_pos[1] = lagrangePos_data[1];
       lagrangePoint.m_pos[2] = lagrangePos_data[2];
-      
+
       lagrangeTarget.m_pos[0] = lagrangePos_data[0];
       lagrangeTarget.m_pos[1] = lagrangePos_data[1];
       lagrangeTarget.m_pos[2] = lagrangePos_data[2];
@@ -1020,9 +1043,9 @@ void orApp::UpdateState()
     }
 
     CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId);
-    
+
     const double* const camPosData = camPos.data();
-    
+
     camera.m_pos[0] = camPosData[0];
     camera.m_pos[1] = camPosData[1];
     camera.m_pos[2] = camPosData[2];
@@ -1036,7 +1059,7 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 void orApp::RenderState()
 {
   // TODO no timer here
-  
+
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
   double const minZ = 1e6; // meters
@@ -1065,7 +1088,7 @@ void orApp::RenderState()
     // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
     glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
     glClearDepth(minZ);
-    
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -1151,13 +1174,13 @@ void orApp::RenderState()
       m_uiTextBottomLabel2D.m_text = str.str();
     }
   }
-  
+
   {
     PERFTIMER("Render2D");
-    
+
     // Used to translate a 3d position into a 2d screen position
     Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
-    // TODO TEMP MYSTERY 
+    // TODO TEMP MYSTERY
     m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
   }
 
@@ -1168,10 +1191,10 @@ void orApp::RenderState()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    
+
     glEnable(GL_TEXTURE_2D);
 
     float const scale = 1.0;
@@ -1189,6 +1212,6 @@ void orApp::RenderState()
     glVertex3f(-scale, +scale, 0.0);
     glEnd();
   }
-  
+
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
