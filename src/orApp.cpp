@@ -1,4 +1,4 @@
-﻿#include "orStd.h"
+#include "orStd.h"
 
 #include "orApp.h"
 
@@ -57,6 +57,8 @@ orApp::orApp(Config const& config):
   m_hasFocus(false),
   m_timeScale(1.0),
   m_frameBufferId(0),
+  m_renderedTextureId(0),
+  m_depthRenderBufferId(0),
   m_window(NULL),
   m_music(NULL)
 {
@@ -231,6 +233,7 @@ void orApp::InitRender()
     fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
   }
 
+  #if ENABLE_FRAMEBUFFER
   {
     checkGLErrors();
 
@@ -281,6 +284,7 @@ void orApp::InitRender()
     // Always check that our framebuffer is ok
     ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   }
+  #endif // ENABLE_FRAMEBUFFER
 
   m_renderSystem.initRender();
 
@@ -1079,8 +1083,10 @@ void orApp::RenderState()
 
     // Render to our framebuffer
     // TODO do we need to do this again for the text?
+#if ENABLE_FRAMEBUFFER
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
     glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
+#endif
     // Render on the whole framebuffer, complete from the lower left corner to the upper right
     glViewport(0, 0, m_config.renderWidth, m_config.renderHeight);
 
@@ -1184,6 +1190,7 @@ void orApp::RenderState()
     m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
   }
 
+  #if ENABLE_FRAMEBUFFER
   {
     // Render from 2D framebuffer to screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1212,6 +1219,7 @@ void orApp::RenderState()
     glVertex3f(-scale, +scale, 0.0);
     glEnd();
   }
+  #endif // ENABLE_FRAMEBUFFER
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }

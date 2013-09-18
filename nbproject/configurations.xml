@@ -1,41 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="84">
+<configurationDescriptor version="89">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <df name="OrbitalSpace" root=".">
+    <df root="." name="OrbitalSpace">
       <df name="CMakeFiles">
-        <df name="CMakeTmp">
-          <df name="CMakeFiles">
-            <df name="cmTryCompileExec.dir">
-            </df>
-          </df>
-        </df>
         <df name="CompilerIdC">
           <in>CMakeCCompilerId.c</in>
-          <in>a.out</in>
         </df>
         <df name="CompilerIdCXX">
           <in>CMakeCXXCompilerId.cpp</in>
-          <in>a.out</in>
         </df>
-        <df name="OrbitalSpace.dir">
-          <df name="src">
-            <df name="orProfile">
-            </df>
-          </df>
-          <in>DependInfo.cmake</in>
-          <in>build.make</in>
-          <in>cmake_clean.cmake</in>
-          <in>depend.make</in>
-          <in>flags.make</in>
-          <in>link.txt</in>
-          <in>progress.make</in>
-        </df>
-        <in>CMakeCCompiler.cmake</in>
-        <in>CMakeCXXCompiler.cmake</in>
-        <in>CMakeDetermineCompilerABI_C.bin</in>
-        <in>CMakeDetermineCompilerABI_CXX.bin</in>
-        <in>CMakeOutput.log</in>
-        <in>CMakeSystem.cmake</in>
       </df>
       <df name="include">
         <df name="orPlatform">
@@ -43,7 +16,6 @@
             <in>atomic_linux.h</in>
           </df>
           <df name="win32">
-            <in>atomic_win32.h</in>
             <in>window_win32.h</in>
           </df>
           <in>atomic.h</in>
@@ -63,7 +35,6 @@
         <in>boost_begin.h</in>
         <in>boost_end.h</in>
         <in>constants.h</in>
-        <in>geom.h</in>
         <in>orApp.h</in>
         <in>orCamera.h</in>
         <in>orEntity.h</in>
@@ -84,10 +55,6 @@
         </df>
         <in>lagrange.m</in>
         <in>orbital.m</in>
-      </df>
-      <df name="music">
-      </df>
-      <df name="Reference">
       </df>
       <df name="src">
         <df name="orPlatform">
@@ -129,6 +96,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <codeAssistance>
       </codeAssistance>
@@ -186,21 +155,77 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <item path="include/geom.h" ex="true" tool="3" flavor2="0">
+      <item path="include/boost_begin.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="include/orPlatform/win32/atomic_win32.h"
-            ex="true"
+      <item path="include/boost_end.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/constants.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orApp.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orCamera.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orEntity.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orGfx.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orMath.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orPhysics.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orPlatform/atomic.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orPlatform/linux/atomic_linux.h"
+            ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="include/orPlatform/win32/window_win32.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="include/orPlatform/window.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orProfile/perftimer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orRender.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orStd.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orTask/task.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orTask/taskScheduler.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orTask/taskSchedulerWorkStealing.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="include/orTask/terminationBarrier.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="include/orTask/victimPicker.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/orTask/workStealingQueue.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/refCount.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/rnd.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/timer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/util.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -212,11 +237,10 @@
       <item path="src/orApp.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>

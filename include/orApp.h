@@ -48,7 +48,7 @@ public:
     int renderWidth;
     int renderHeight;
   };
-  
+
   orApp(Config const& config);
   ~orApp();
 
@@ -66,18 +66,18 @@ private:
   void ShutdownState();
 
   void RunOneStep();
-  
+
   void PollEvents();
   void HandleEvent(sf::Event const& _event);
 
   void HandleInput();
 
   void UpdateState();
-  
+
   void BeginRender();
 
   void RenderState();
-   
+
   void EndRender();
 
 private:
@@ -98,7 +98,7 @@ private:
 
   Timer::PerfTime m_lastFrameDuration;
   bool m_running;
-  
+
   Rnd64 m_rnd;
 
   double m_simTime;
@@ -181,7 +181,7 @@ private:
   uint32_t m_thrusters;
 
   enum {PALETTE_SIZE = 5};
-  
+
   // Lazy
   sf::Vector3f m_colG[PALETTE_SIZE];
   sf::Vector3f m_colR[PALETTE_SIZE];
@@ -198,6 +198,8 @@ private:
   sf::RenderWindow* m_window;
   sf::Music* m_music;
 };
+
+#define ENABLE_FRAMEBUFFER 0
 
 #endif	/* ORBITALSPACEAPP_H */
 

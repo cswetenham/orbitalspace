@@ -105,11 +105,16 @@ int CDECL main()
   appConfig.windowHeight = 768;
   appConfig.renderWidth = 320;
   appConfig.renderHeight = 200;
-#else
+#elif ENABLE_FRAMEBUFFER
   appConfig.windowWidth = 4 * 320;
   appConfig.windowHeight = 3 * 320;
   appConfig.renderWidth = 256;
   appConfig.renderHeight = 240;
+#else
+  appConfig.windowWidth = 4 * 320;
+  appConfig.windowHeight = 3 * 320;
+  appConfig.renderWidth = appConfig.windowWidth;
+  appConfig.renderHeight = appConfig.windowHeight;
 #endif
 
   orApp app(appConfig);
