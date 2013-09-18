@@ -111,8 +111,8 @@ int CDECL main()
   appConfig.renderWidth = 256;
   appConfig.renderHeight = 240;
 #else
-  appConfig.windowWidth = 4 * 320;
-  appConfig.windowHeight = 3 * 320;
+  appConfig.windowWidth = 4 * 240;
+  appConfig.windowHeight = 3 * 240;
   appConfig.renderWidth = appConfig.windowWidth;
   appConfig.renderHeight = appConfig.windowHeight;
 #endif
