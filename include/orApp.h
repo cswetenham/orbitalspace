@@ -77,9 +77,6 @@ private:
   void RenderState();
   
 private:
-  Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
-
-private:
   // App
 
   // TODO this doesn't feel very DOD but it'll do for now
@@ -107,7 +104,18 @@ private:
 
   class MainScreen : public IScreen {
   public:
-    MainScreen() : m_thrusters(0) {}
+    MainScreen() :
+      m_thrusters(0),
+      m_playerShipId(0),
+      m_suspectShipId(0),
+      m_earthPlanetId(0),
+      m_moonMoonId(0),
+      m_comPoiId(0)
+    {
+      for (int i = 0; i < 5; ++i) {
+        m_lagrangePoiIds[i] = 0;
+      }
+    }
     // virtual void Init();
     // virtual void Shutdown();
     virtual void HandleEvent(sf::Event const& _event);
@@ -115,7 +123,12 @@ private:
     // virtual void UpdateState();
     // virtual void RenderState();
   
-  public: // TODO
+  public: // TODO make private
+    Vector3d CalcPlayerThrust(PhysicsSystem const& physicsSystem, PhysicsSystem::ParticleBody const& playerBody);
+
+  public: // TODO make private
+
+    //// Input ////
     enum Thrusters
     {
       ThrustFwd = 1 << 0,
@@ -127,6 +140,16 @@ private:
     };
 
     uint32_t m_thrusters;
+
+    //// Entities ////
+    int m_playerShipId;
+    int m_suspectShipId;
+
+    int m_earthPlanetId;
+    int m_moonMoonId;
+
+    int m_comPoiId;
+    int m_lagrangePoiIds[5];
   private:
   } m_mainScreen;
   
@@ -177,17 +200,6 @@ private:
   
   double m_timeScale;
   PhysicsSystem::IntegrationMethod m_integrationMethod;
-
-  //// Entities ////
-  
-  int m_playerShipId;
-  int m_suspectShipId;
-
-  int m_earthPlanetId;
-  int m_moonMoonId;
-
-  int m_comPoiId;
-  int m_lagrangePoiIds[5];
 
   //// Input ////
 

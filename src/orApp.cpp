@@ -51,7 +51,6 @@ orApp::orApp(Config const& config):
   m_cameraTargetId(0),
   m_camMode(CameraMode_ThirdPerson),
   m_inputMode(InputMode_Default),
-  m_playerShipId(0),
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
   m_hasFocus(false),
   m_timeScale(1.0),
@@ -370,7 +369,7 @@ void orApp::InitState()
 
   // Create Earth
 
-  EntitySystem::Planet& earthPlanet = m_entitySystem.getPlanet(m_earthPlanetId = m_entitySystem.makePlanet());
+  EntitySystem::Planet& earthPlanet = m_entitySystem.getPlanet(m_mainScreen.m_earthPlanetId = m_entitySystem.makePlanet());
 
   PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthPlanet.m_gravBodyId = m_physicsSystem.makeGravBody());
   {
@@ -414,7 +413,7 @@ void orApp::InitState()
 
   // Create Moon
 
-  EntitySystem::Moon& moonMoon = m_entitySystem.getMoon(m_moonMoonId = m_entitySystem.makeMoon());
+  EntitySystem::Moon& moonMoon = m_entitySystem.getMoon(m_mainScreen.m_moonMoonId = m_entitySystem.makeMoon());
 
   PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonMoon.m_gravBodyId = m_physicsSystem.makeGravBody());
   {
@@ -493,7 +492,7 @@ void orApp::InitState()
 
   // Create Earth-Moon COM
 
-  EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
+  EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_mainScreen.m_comPoiId = m_entitySystem.makePoi());
 
   RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId = m_renderSystem.makePoint());
   {
@@ -516,7 +515,7 @@ void orApp::InitState()
   }
 
   for (int i = 0; i < 5; ++i) {
-    EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i] = m_entitySystem.makePoi());
+    EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_mainScreen.m_lagrangePoiIds[i] = m_entitySystem.makePoi());
 
     RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId = m_renderSystem.makePoint());
     {
@@ -541,7 +540,7 @@ void orApp::InitState()
   }
 
   // Create ships
-  EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
+  EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_mainScreen.m_playerShipId = m_entitySystem.makeShip());
 
   PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
   {
@@ -600,7 +599,7 @@ void orApp::InitState()
     playerCamTarget.m_name = std::string("Player");
   }
 
-  EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_suspectShipId = m_entitySystem.makeShip());
+  EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_mainScreen.m_suspectShipId = m_entitySystem.makeShip());
 
   PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
   {
@@ -787,40 +786,6 @@ void orApp::HandleEvent(sf::Event const& _event)
   m_curScreen->HandleEvent(_event);
 }
 
-Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
-{
-  Vector3d const origin(m_physicsSystem.findSOIGravBody(playerBody).m_pos);
-  Vector3d const playerPos(playerBody.m_pos);
-  Vector3d const playerVel(playerBody.m_vel);
-
-  // Calc acceleration due to gravity
-  Vector3d const r = origin - playerPos;
-  double const r_mag = r.norm();
-
-  Vector3d const r_dir = r / r_mag;
-
-  // Calc acceleration due to thrust
-  double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
-
-  Vector3d thrustVec(0.0,0.0,0.0);
-
-  Vector3d const fwd = playerVel.normalized(); // Prograde
-  Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
-  Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
-
-  // TODO currently reaching into m_mainScreen, this is an intermediate step of refactoring
-  if (m_mainScreen.m_thrusters & MainScreen::ThrustFwd)  { thrustVec += fwd; }
-  if (m_mainScreen.m_thrusters & MainScreen::ThrustBack) { thrustVec -= fwd; }
-  if (m_mainScreen.m_thrusters & MainScreen::ThrustDown)  { thrustVec += dwn; }
-  if (m_mainScreen.m_thrusters & MainScreen::ThrustUp) { thrustVec -= dwn; }
-  if (m_mainScreen.m_thrusters & MainScreen::ThrustLeft)  { thrustVec += left; }
-  if (m_mainScreen.m_thrusters & MainScreen::ThrustRight) { thrustVec -= left; }
-
-  Vector3d a_thrust = thrustAccel * thrustVec;
-
-  return a_thrust;
-}
-
 void orApp::UpdateState()
 {
   PERFTIMER("UpdateState");
@@ -829,8 +794,9 @@ void orApp::UpdateState()
 
   if (!m_paused) {
     // Update player thrust
-    PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId);
-    Vector3d const userAcc = CalcPlayerThrust(playerShipBody);
+    PhysicsSystem::ParticleBody& playerShipBody = m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_mainScreen.m_playerShipId).m_particleBodyId);
+    // TODO reaching into m_mainScreen
+    Vector3d const userAcc = m_mainScreen.CalcPlayerThrust(m_physicsSystem, playerShipBody);
 
     const double* const userAccData = userAcc.data();
 
@@ -844,8 +810,8 @@ void orApp::UpdateState()
 
     // TODO eaghghgh not clear where these should live
 
-    PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_earthPlanetId).m_gravBodyId);
-    EntitySystem::Moon& moon = m_entitySystem.getMoon(m_moonMoonId);
+    PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_mainScreen.m_earthPlanetId).m_gravBodyId);
+    EntitySystem::Moon& moon = m_entitySystem.getMoon(m_mainScreen.m_moonMoonId);
     PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(moon.m_gravBodyId);
 
     Vector3d const earthPos(earthBody.m_pos);
@@ -867,7 +833,7 @@ void orApp::UpdateState()
     Vector3d const comPos = (earthPos * earthBody.m_mass / totalMass) + (moonPos * moonBody.m_mass / totalMass);
     const double* const comPosData = comPos.data();
 
-    EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId);
+    EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_mainScreen.m_comPoiId);
 
     RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId);
     {
@@ -908,7 +874,7 @@ void orApp::UpdateState()
     lagrangePos[4] = rotation.inverse() * earthMoonVector;
 
     for (int i = 0; i < 5; ++i) {
-      EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i]);
+      EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_mainScreen.m_lagrangePoiIds[i]);
       RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId);
       CameraSystem::Target& lagrangeTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId);
 
@@ -941,7 +907,7 @@ void orApp::UpdateState()
     Vector3d camPos;
 
     if (m_camMode == CameraMode_FirstPerson) {
-      camPos = Vector3d(m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos);
+      camPos = Vector3d(m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_mainScreen.m_playerShipId).m_particleBodyId).m_pos);
     } else if (m_camMode == CameraMode_ThirdPerson) {
       camPos = Vector3d(0.0, 0.0, m_camDist);
 
@@ -1171,4 +1137,37 @@ void orApp::MainScreen::HandleEvent(sf::Event const& _event)
       m_thrusters &= ~ThrustDown;
     }
   } // if (_event.type == sf::Event::KeyReleased)
+}
+
+Vector3d orApp::MainScreen::CalcPlayerThrust(PhysicsSystem const& physicsSystem, PhysicsSystem::ParticleBody const& playerBody)
+{
+  Vector3d const origin(physicsSystem.findSOIGravBody(playerBody).m_pos);
+  Vector3d const playerPos(playerBody.m_pos);
+  Vector3d const playerVel(playerBody.m_vel);
+
+  // Calc acceleration due to gravity
+  Vector3d const r = origin - playerPos;
+  double const r_mag = r.norm();
+
+  Vector3d const r_dir = r / r_mag;
+
+  // Calc acceleration due to thrust
+  double const thrustAccel = 10.0; // meters per second squared - TODO what is a realistic value?
+
+  Vector3d thrustVec(0.0,0.0,0.0);
+
+  Vector3d const fwd = playerVel.normalized(); // Prograde
+  Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
+  Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
+
+  if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
+  if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
+  if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
+  if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
+  if (m_thrusters & ThrustLeft)  { thrustVec += left; }
+  if (m_thrusters & ThrustRight) { thrustVec -= left; }
+
+  Vector3d a_thrust = thrustAccel * thrustVec;
+
+  return a_thrust;
 }
