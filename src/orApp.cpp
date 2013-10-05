@@ -269,6 +269,76 @@ void orApp::ShutdownRender()
   delete m_window; m_window = NULL;
 }
 
+int orApp::createShip(
+  std::string const& shipName,
+  sf::Vector3<double> const& pos,
+  sf::Vector3<double> const& vel,
+  sf::Vector3<double> const& parent_pos,
+  sf::Vector3f const* palette
+) {
+  int shipId;
+  EntitySystem::Ship& ship = m_entitySystem.getShip(shipId = m_entitySystem.makeShip());
+
+  PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId = m_physicsSystem.makeParticleBody());
+  {
+    body.m_pos[0] = pos.x;
+    body.m_pos[1] = pos.y;
+    body.m_pos[2] = pos.z;
+
+    body.m_vel[0] = vel.x;
+    body.m_vel[1] = vel.y;
+    body.m_vel[2] = vel.z;
+
+    body.m_userAcc[0] = 0.0;
+    body.m_userAcc[1] = 0.0;
+    body.m_userAcc[2] = 0.0;
+  }
+
+  RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId = m_renderSystem.makeOrbit());
+  {
+    orbit.m_pos[0] = parent_pos.x;
+    orbit.m_pos[1] = parent_pos.y;
+    orbit.m_pos[2] = parent_pos.z;
+
+    orbit.m_col[0] = palette[2].x;
+    orbit.m_col[1] = palette[2].y;
+    orbit.m_col[2] = palette[2].z;
+  }
+
+  RenderSystem::Trail& trail = m_renderSystem.getTrail(ship.m_trailId = m_renderSystem.makeTrail(5000.0, body.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
+  {
+    trail.m_colOld[0] = palette[0].x;
+    trail.m_colOld[1] = palette[0].y;
+    trail.m_colOld[2] = palette[0].z;
+
+    trail.m_colNew[0] = palette[4].x;
+    trail.m_colNew[1] = palette[4].y;
+    trail.m_colNew[2] = palette[4].z;
+  }
+
+  RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId = m_renderSystem.makePoint());
+  {
+    point.m_pos[0] = body.m_pos[0];
+    point.m_pos[1] = body.m_pos[1];
+    point.m_pos[2] = body.m_pos[2];
+
+    point.m_col[0] = palette[4].x;
+    point.m_col[1] = palette[4].y;
+    point.m_col[2] = palette[4].z;
+  }
+
+  CameraSystem::Target& camTarget = m_cameraSystem.getTarget(ship.m_cameraTargetId = m_cameraSystem.makeTarget());
+  {
+    camTarget.m_pos[0] = body.m_pos[0];
+    camTarget.m_pos[1] = body.m_pos[1];
+    camTarget.m_pos[2] = body.m_pos[2];
+
+    camTarget.m_name = shipName;
+  }
+
+  return shipId;
+}
+
 void orApp::InitState()
 {
 #if 0
@@ -540,124 +610,20 @@ void orApp::InitState()
   }
 
   // Create ships
-  EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_mainScreen.m_playerShipId = m_entitySystem.makeShip());
-
-  PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
   {
-    playerBody.m_pos[0] = 0.0;
-    playerBody.m_pos[1] = 0.0;
-    playerBody.m_pos[2] = 1.3e7;
-
-    playerBody.m_vel[0] = 5e3;
-    playerBody.m_vel[1] = 0.0;
-    playerBody.m_vel[2] = 0.0;
-
-    playerBody.m_userAcc[0] = 0.0;
-    playerBody.m_userAcc[1] = 0.0;
-    playerBody.m_userAcc[2] = 0.0;
+    sf::Vector3<double> pos(0.0, 0.0, 1.3e7);
+    sf::Vector3<double> vel(5e3, 0.0, 0.0);
+    sf::Vector3<double> parent_pos(earthPosData[0], earthPosData[1], earthPosData[2]);
+    m_mainScreen.m_playerShipId = createShip(std::string("Player"), pos, vel, parent_pos, m_colB);
   }
 
-  RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
   {
-    playerOrbit.m_pos[0] = earthPosData[0];
-    playerOrbit.m_pos[1] = earthPosData[1];
-    playerOrbit.m_pos[2] = earthPosData[2];
-
-    playerOrbit.m_col[0] = m_colB[2].x;
-    playerOrbit.m_col[1] = m_colB[2].y;
-    playerOrbit.m_col[2] = m_colB[2].z;
+    sf::Vector3<double> pos(0.0, 0.0, 1.3e7);
+    sf::Vector3<double> vel(5e3, 0.0, 0.0);
+    sf::Vector3<double> parent_pos(earthPosData[0], earthPosData[1], earthPosData[2]);
+    m_mainScreen.m_suspectShipId = createShip(std::string("Suspect"), pos, vel, parent_pos, m_colR);
   }
-
-  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
-  {
-    playerTrail.m_colOld[0] = m_colB[0].x;
-    playerTrail.m_colOld[1] = m_colB[0].y;
-    playerTrail.m_colOld[2] = m_colB[0].z;
-
-    playerTrail.m_colNew[0] = m_colB[4].x;
-    playerTrail.m_colNew[1] = m_colB[4].y;
-    playerTrail.m_colNew[2] = m_colB[4].z;
-  }
-
-  RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
-  {
-    playerPoint.m_pos[0] = playerBody.m_pos[0];
-    playerPoint.m_pos[1] = playerBody.m_pos[1];
-    playerPoint.m_pos[2] = playerBody.m_pos[2];
-
-    playerPoint.m_col[0] = m_colB[4].x;
-    playerPoint.m_col[1] = m_colB[4].y;
-    playerPoint.m_col[2] = m_colB[4].z;
-  }
-
-  CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
-  {
-    playerCamTarget.m_pos[0] = playerBody.m_pos[0];
-    playerCamTarget.m_pos[1] = playerBody.m_pos[1];
-    playerCamTarget.m_pos[2] = playerBody.m_pos[2];
-
-    playerCamTarget.m_name = std::string("Player");
-  }
-
-  EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_mainScreen.m_suspectShipId = m_entitySystem.makeShip());
-
-  PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
-  {
-    suspectBody.m_pos[0] = 0.0;
-    suspectBody.m_pos[1] = 0.0;
-    suspectBody.m_pos[2] = 1.3e7;
-
-    suspectBody.m_vel[0] = 5e3;
-    suspectBody.m_vel[1] = 0.0;
-    suspectBody.m_vel[2] = 0.0;
-
-    suspectBody.m_userAcc[0] = 0.0;
-    suspectBody.m_userAcc[1] = 0.0;
-    suspectBody.m_userAcc[2] = 0.0;
-  }
-
-  RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
-  {
-    suspectOrbit.m_pos[0] = earthPosData[0];
-    suspectOrbit.m_pos[1] = earthPosData[1];
-    suspectOrbit.m_pos[2] = earthPosData[2];
-
-    suspectOrbit.m_col[0] = m_colR[2].x;
-    suspectOrbit.m_col[1] = m_colR[2].y;
-    suspectOrbit.m_col[2] = m_colR[2].z;
-  }
-
-  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
-  {
-    suspectTrail.m_colOld[0] = m_colR[0].x;
-    suspectTrail.m_colOld[1] = m_colR[0].y;
-    suspectTrail.m_colOld[2] = m_colR[0].z;
-
-    suspectTrail.m_colNew[0] = m_colR[4].x;
-    suspectTrail.m_colNew[1] = m_colR[4].y;
-    suspectTrail.m_colNew[2] = m_colR[4].z;
-  }
-
-  RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
-  {
-    suspectPoint.m_pos[0] = suspectBody.m_pos[0];
-    suspectPoint.m_pos[1] = suspectBody.m_pos[1];
-    suspectPoint.m_pos[2] = suspectBody.m_pos[2];
-
-    suspectPoint.m_col[0] = m_colR[4].x;
-    suspectPoint.m_col[1] = m_colR[4].y;
-    suspectPoint.m_col[2] = m_colR[4].z;
-  }
-
-  CameraSystem::Target& suspectCamTarget = m_cameraSystem.getTarget(suspectShip.m_cameraTargetId = m_cameraSystem.makeTarget());
-  {
-    suspectCamTarget.m_pos[0] = suspectBody.m_pos[0];
-    suspectCamTarget.m_pos[1] = suspectBody.m_pos[1];
-    suspectCamTarget.m_pos[2] = suspectBody.m_pos[2];
-
-    suspectCamTarget.m_name = std::string("Suspect");
-  }
-
+  
   // Perturb all the ship orbits
   // TODO this should update all the other positions too, or happen earlier!
   // TODO shouldn't iterate through IDs outside a system.

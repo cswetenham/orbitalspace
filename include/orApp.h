@@ -168,6 +168,16 @@ private:
   PhysicsSystem m_physicsSystem;
   EntitySystem m_entitySystem;
 
+  //// Game ////
+
+  int createShip(
+    std::string const& shipName,
+    sf::Vector3<double> const& pos,
+    sf::Vector3<double> const& vel,
+    sf::Vector3<double> const& parent_pos,
+    sf::Vector3f const* palette
+  );
+
   ////  Simulation ////
 
   double m_simTime;
