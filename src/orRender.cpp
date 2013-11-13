@@ -69,6 +69,17 @@ void RenderSystem::drawCircle(double const radius, int const steps) const
     glEnd();
 }
 
+void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
+{
+  glPushMatrix();
+  glTranslated(pos.x(), pos.y(), pos.z());
+  GLUquadric* quad = gluNewQuadric();
+  gluQuadricDrawStyle(quad, GLU_FILL);
+  gluSphere(quad, radius, slices, stacks);
+  gluDeleteQuadric(quad);
+  glPopMatrix();
+}
+
 void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
 {
   int curStack, curSlice;
@@ -147,7 +158,7 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
   PERFTIMER("ProjectLabel3Ds");
   for (int li = 0; li < (int)m_label3Ds.size(); ++li) {
     RenderSystem::Label3D const& label3D = getLabel3D(li);
-    
+
     Vector4d pos3d;
     pos3d.x() = label3D.m_pos[0]; // is this really the best way?
     pos3d.y() = label3D.m_pos[1];
@@ -160,7 +171,7 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
 
     float x = (float)pos2d.x();
     float y = (float)pos2d.y();
-    
+
     m_label2DBuffer.push_back(Label2D());
     Label2D& label2D = m_label2DBuffer.back();
 
@@ -178,14 +189,14 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
 void RenderSystem::renderLabels( int w_px, int h_px )
 {
   PERFTIMER("RenderLabels");
-    
+
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_TEXTURE_2D);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(0, w_px, h_px, 0, 0, 1.0);
-  
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -203,10 +214,10 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   // Need a better naming scheme!
 
   // thing_measure[_space]_unit?
-  
+
   for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
     RenderSystem::Label2D const& label2D = getLabel2D(li);
-    
+
     glColor3f(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
 
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
@@ -214,7 +225,7 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
-    
+
     glColor3f(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
 
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
@@ -229,7 +240,7 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
   int const char_h_px = 8;
   int const font_w_chars = 16;
   int const font_h_chars = 16;
-  
+
   float const font_l_px = 0;
   float const font_r_px = 128;
 
@@ -259,25 +270,25 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
       char_y_px += char_h_px;
       continue;
     }
-      
+
     int const char_x_idx = char_idx % font_w_chars;
     int const char_y_idx = char_idx / font_w_chars;
 
     float const char_x_tex_px = char_x_idx * char_w_px - font_l_px;
     float const char_y_tex_px = char_y_idx * char_h_px - font_t_px;
-        
+
     float const char_l_tx = char_x_tex_px * u_scale;
     float const char_t_tx = char_y_tex_px * v_scale;
-        
+
     glTexCoord2f( char_l_tx,             char_t_tx               );
     glVertex3f(   char_x_px,             char_y_px,             0);
-  
+
     glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
     glVertex3f(   char_x_px + char_w_px, char_y_px,             0);
 
     glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
     glVertex3f(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
-  
+
     glTexCoord2f( char_l_tx,             char_t_tx + char_h_tx   );
     glVertex3f(   char_x_px,             char_y_px + char_h_px, 0);
 
@@ -290,10 +301,10 @@ void RenderSystem::renderSpheres() const
   PERFTIMER("RenderSpheres");
   for (int si = 0; si < (int)m_spheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
-    
+
     glColor3f(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
 
-    drawWireSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
+    drawSolidSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
 }
 
@@ -302,7 +313,7 @@ void RenderSystem::renderOrbits() const
   PERFTIMER("RenderOrbits");
   for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
-    
+
     glColor3f(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
     int const steps = 1000;
@@ -324,11 +335,11 @@ void RenderSystem::renderOrbits() const
     }
     double const mint = -range;
     double const maxt = range;
-    
+
     Vector3d const orbit_x(orbit.x_dir);
     Vector3d const orbit_y(orbit.y_dir);
     Vector3d const orbit_pos(orbit.m_pos);
-    
+
     glBegin(GL_LINE_STRIP);
     for (int i = 0; i <= steps; ++i) {
 #if 0 // Original version (correct implementation)
@@ -385,7 +396,7 @@ void RenderSystem::renderTrails() const
 
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
       Vector3f c = Util::Lerp(Vector3f(trail.m_colNew), Vector3f(trail.m_colOld), l);
-      
+
       glColor3f(c.x(), c.y(), c.z());
 
       glVertex3d(v.x(),v.y(),v.z());

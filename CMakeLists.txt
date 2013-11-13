@@ -51,8 +51,9 @@ add_executable(OrbitalSpace
   src/timer.cpp
 )
 target_link_libraries(OrbitalSpace ${CMAKE_THREAD_LIBS_INIT}) # special case because pthread isn't always called pthread
-target_link_libraries(OrbitalSpace ${Boost_LIBRARIES}) 
+target_link_libraries(OrbitalSpace ${Boost_LIBRARIES})
 target_link_libraries(OrbitalSpace ${OpenGL_LIBRARIES})
+target_link_libraries(OrbitalSpace GLU)
 target_link_libraries(OrbitalSpace ${GLUT_LIBRARIES})
 target_link_libraries(OrbitalSpace GLEW) # TODO
 target_link_libraries(OrbitalSpace ${SFML_LIBRARIES})

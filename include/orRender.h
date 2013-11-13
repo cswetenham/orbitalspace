@@ -12,7 +12,7 @@ class RenderSystem {
 public:
   RenderSystem();
   ~RenderSystem();
-  
+
   void initRender();
   void shutdownRender();
 
@@ -27,12 +27,12 @@ public:
   Point&       getPoint(int i)       { return m_points[i]; }
   Point const& getPoint(int i) const { return m_points[i]; }
 
-  
+
   struct Label2D {
     std::string m_text;
 
     int m_pos[2];
-    
+
     float m_col[3];
   };
 
@@ -45,7 +45,7 @@ public:
     std::string m_text;
 
     double m_pos[3];
-    
+
     float m_col[3];
   };
 
@@ -116,12 +116,13 @@ public:
 
 private:
   void drawCircle(double const radius, int const steps) const;
+  void drawSolidSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
   void drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
 
   void drawString(std::string const& str, int pos_x, int pos_y);
 
   void projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx);
-  
+
   void renderPoints() const;
   void renderLabels( int w_px, int h_px );
   void renderSpheres() const;
