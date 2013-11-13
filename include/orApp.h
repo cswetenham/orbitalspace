@@ -199,7 +199,7 @@ private:
   sf::Music* m_music;
 };
 
-#define ENABLE_FRAMEBUFFER 0
+#define ENABLE_FRAMEBUFFER 1
 
 #endif	/* ORBITALSPACEAPP_H */
 

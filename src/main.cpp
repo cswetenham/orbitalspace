@@ -106,13 +106,16 @@ int CDECL main()
   appConfig.renderWidth = 320;
   appConfig.renderHeight = 200;
 #elif ENABLE_FRAMEBUFFER
-  appConfig.windowWidth = 4 * 320;
-  appConfig.windowHeight = 3 * 320;
-  appConfig.renderWidth = 256;
-  appConfig.renderHeight = 240;
+  appConfig.windowWidth = 640;
+  appConfig.windowHeight = 400;
+  appConfig.renderWidth = 640;
+  appConfig.renderHeight = 200;
 #else
-  appConfig.windowWidth = 4 * 240;
-  appConfig.windowHeight = 3 * 240;
+  // appConfig.windowWidth = 4 * 240;
+  // appConfig.windowHeight = 3 * 240;
+  // PC-9801 resolution
+  appConfig.windowWidth = 640;
+  appConfig.windowHeight = 400;
   appConfig.renderWidth = appConfig.windowWidth;
   appConfig.renderHeight = appConfig.windowHeight;
 #endif

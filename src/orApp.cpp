@@ -273,7 +273,8 @@ void orApp::InitRender()
     checkGLErrors();
 
     // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTextureId, 0);
+    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTextureId, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_renderedTextureId, 0);
     checkGLErrors();
 
     // Set the list of draw buffers.
