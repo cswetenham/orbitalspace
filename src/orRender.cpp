@@ -71,13 +71,107 @@ void RenderSystem::drawCircle(double const radius, int const steps) const
 
 void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
 {
+#if 0
   glPushMatrix();
-  glTranslated(pos.x(), pos.y(), pos.z());
   GLUquadric* quad = gluNewQuadric();
   gluQuadricDrawStyle(quad, GLU_FILL);
+  gluQuadricNormals(quad, GLU_SMOOTH);
+  gluQuadricOrientation(quad, GLU_OUTSIDE);
+  gluQuadricTexture(quad, GL_TRUE);
+  glTranslated(pos.x(), pos.y(), pos.z());
   gluSphere(quad, radius, slices, stacks);
   gluDeleteQuadric(quad);
   glPopMatrix();
+#else
+  Vector3f const center(pos.x(), pos.y(), pos.z());
+  float const off_H = ( M_PI ) / float(stacks);
+  float const off_R = ( M_PI * 2.0 ) / float(slices);
+
+  // draw the tips as tri_fans
+  {
+    glBegin( GL_TRIANGLE_FAN );
+    Vector3f n(
+      sin( 0.0 ) * sin( 0.0 ),
+      cos( 0.0 ) * sin( 0.0 ),
+      cos( 0.0 )
+    );
+    Vector3f p = center + n * radius;
+    glNormal3fv( n.data() );
+    glVertex3fv( p.data() );
+
+    for ( int sl=0; sl<slices+1; sl++ )
+    {
+      float a = float(sl)*off_R;
+      Vector3f n(
+        sin( a ) * sin( off_H ),
+        cos( a ) * sin( off_H ),
+        cos( off_H )
+      );
+      Vector3f p = center + n * radius;
+      glNormal3fv( n.data() );
+      glVertex3fv( p.data() );
+    }
+    glEnd();
+  }
+
+  {
+    glBegin( GL_TRIANGLE_FAN );
+    Vector3f n(
+      sin( 0.0 ) * sin( M_PI ),
+      cos( 0.0 ) * sin( M_PI ),
+      cos( M_PI )
+    );
+    Vector3f p = center + n * radius;
+    glNormal3fv( n.data() );
+    glVertex3fv( p.data() );
+
+    for ( int sl=slices; sl>=0; sl-- )
+    {
+      float a = float(sl)*off_R;
+      Vector3f n(
+        sin( a ) * sin( M_PI-off_H ),
+        cos( a ) * sin( M_PI-off_H ),
+        cos( M_PI-off_H )
+      );
+      Vector3f p = center + n * radius;
+      glNormal3fv( n.data() );
+      glVertex3fv( p.data() );
+    }
+    glEnd();
+  }
+
+  for ( int st=1; st<stacks-1; st++ )
+  {
+    float b = float(st)*off_H;
+    glBegin( GL_QUAD_STRIP );
+    for ( int sl=0; sl<slices+1; sl++ )
+    {
+      float a = float(sl)*off_R;
+      {
+        Vector3f n(
+          sin( a ) * sin( b ),
+          cos( a ) * sin( b ),
+          cos( b )
+        );
+        Vector3f p = center + n * radius;
+        glNormal3fv( n.data() );
+        glVertex3fv( p.data() );
+      }
+
+      {
+        Vector3f n(
+          sin( a ) * sin( b+off_H ),
+          cos( a ) * sin( b+off_H ),
+          cos( b+off_H )
+        );
+        Vector3f p = center + n * radius;
+        glNormal3fv( n.data() );
+        glVertex3fv( p.data() );
+      }
+    }
+    glEnd();
+  }
+#endif
 }
 
 void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const

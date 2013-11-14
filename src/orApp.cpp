@@ -1108,6 +1108,32 @@ void orApp::RenderState()
 
     glEnable(GL_TEXTURE_2D);
 
+    GLfloat ambient[] = { 0.0, 0.5, 0.0, 1.0 };
+    GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+    // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
+    // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
+    // lights the sphere when the w is 1.0, but not the other way around.
+    // Even when the sphere is lit, the light position doesn't seem to matter
+    // but the sphere is lit from behind from certain camera positions
+    // and not lit at all otherwise.
+    // Possibly something to do with normals? gluSphere code is setting normals
+    // of some kind, and my orbit-drawing code too.
+    GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 0.0 };
+    GLfloat mat_ones[]={ 1.0, 1.0, 1.0, 1.0 };
+    // GLfloat mat_shininess[] = { 50.0 };
+
+    glShadeModel( GL_SMOOTH );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
+    glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
+    // glLightfv( GL_LIGHT0, GL_SPECULAR, &specular[0] );
+    // glMaterialfv(GL_FRONT, GL_SHININESS, &mat_shininess[0] );
+    glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
+    glEnable( GL_LIGHT0 );
+    glEnable( GL_LIGHTING );
+
+    glNormal3f(0,0,1);
+
     glLineWidth(1.0);
 #if 0
     glEnable(GL_POINT_SMOOTH);
@@ -1117,7 +1143,7 @@ void orApp::RenderState()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // TODO clean up
-    if (m_wireframe) {
+    if (m_wireframe && 0) {
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     } else {
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -1126,6 +1152,7 @@ void orApp::RenderState()
 
   {
     PERFTIMER("Render3D");
+    glDisable(GL_TEXTURE_2D);
     m_renderSystem.render3D();
   }
 
@@ -1218,6 +1245,8 @@ void orApp::RenderState()
     glTexCoord2f(0.0, uv_scale);
     glVertex3f(-scale, +scale, 0.0);
     glEnd();
+
+    glDisable(GL_TEXTURE_2D);
   }
   #endif // ENABLE_FRAMEBUFFER
 
