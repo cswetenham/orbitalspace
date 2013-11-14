@@ -142,11 +142,10 @@
       <folder path="OrbitalSpace/src/orProfile">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -252,11 +251,10 @@
       <item path="src/orCamera.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -268,11 +266,10 @@
       <item path="src/orEntity.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -284,11 +281,10 @@
       <item path="src/orPhysics.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -311,11 +307,10 @@
       <item path="src/orRender.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -334,11 +329,10 @@
       <item path="src/timer.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -350,11 +344,10 @@
       <item path="src/util.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
-            <pElem>../SFML-2.0-rc/include</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
