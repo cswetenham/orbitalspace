@@ -1123,7 +1123,7 @@ void orApp::RenderState()
     glShadeModel( GL_SMOOTH );
     glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
-    glLightfv( GL_LIGHT0, GL_SPECULAR, &specular[0] );
+    // glLightfv( GL_LIGHT0, GL_SPECULAR, &specular[0] );
     glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
     glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHTING );
@@ -1226,6 +1226,7 @@ void orApp::RenderState()
     glLoadIdentity();
 
     glEnable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
 
     float const scale = 1.0;
     float const uv_scale = 1.0;

@@ -73,6 +73,7 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
 {
   GLfloat mat_ones[]={ 1.0, 1.0, 1.0, 1.0 };
   glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
+  // glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, &mat_ones[0] );
 #if 0
   glPushMatrix();
   GLUquadric* quad = gluNewQuadric();
