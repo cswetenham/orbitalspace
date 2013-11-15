@@ -1108,9 +1108,10 @@ void orApp::RenderState()
 
     glEnable(GL_TEXTURE_2D);
 
-    GLfloat ambient[] = { 0.0, 0.5, 0.0, 1.0 };
+    GLfloat ambient[] = { 0.0, 0.2, 0.0, 1.0 };
     GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
     GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
+
     // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
     // lights the sphere when the w is 1.0, but not the other way around.
     // Even when the sphere is lit, the light position doesn't seem to matter
@@ -1118,7 +1119,14 @@ void orApp::RenderState()
     // and not lit at all otherwise.
     // Possibly something to do with normals? gluSphere code is setting normals
     // of some kind, and my orbit-drawing code too.
-    GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 0.0 };
+    // The polygon-based sphere I copy-pasted from the internet gives the same
+    // results!
+
+    // Seems to be related to normals and lighting, made some fixes...
+
+    // TODO clean up mode changes, move more into the Render system
+
+    GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 1.0 };
 
     glShadeModel( GL_SMOOTH );
     glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
