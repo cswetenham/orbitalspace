@@ -445,11 +445,7 @@ void RenderSystem::renderOrbits() const
         Vector3d const pos = (orbit_x * x_len) + (orbit_y * y_len) + orbit_pos;
         const double* const posData = pos.data();
         glVertex3d(posData[0], posData[1], posData[2]);
-#elif 0 // No trig version (broken, for testing)
-        Vector3d const pos = (orbit_x * 1.0) + (orbit_y * 1.0) + orbit_pos;
-        const double* const posData = pos.data();
-        glVertex3d(posData[0], posData[1], posData[2]);
-#elif 1 // No vector version (correct implementation)
+#else // No vector version (correct implementation, faster...)
         double const ct = Util::Lerp(mint, maxt, (double)i / steps);
         double const cr = orbit.p / (1 + orbit.e * cos(ct));
 
@@ -460,15 +456,8 @@ void RenderSystem::renderOrbits() const
         posData[1] = (orbit.x_dir[1] * x_len) + (orbit.y_dir[1] * y_len) + orbit_pos[1];
         posData[2] = (orbit.x_dir[2] * x_len) + (orbit.y_dir[2] * y_len) + orbit_pos[2];
         glVertex3d(posData[0], posData[1], posData[2]);
-#elif 0 // No vector no trig version (broken, for testing)
-        double posData[3];
-        posData[0] = (orbit.x_dir[0] * 1.0) + (orbit.y_dir[0] * 1.0) + orbit_pos[0];
-        posData[1] = (orbit.x_dir[1] * 1.0) + (orbit.y_dir[1] * 1.0) + orbit_pos[1];
-        posData[2] = (orbit.x_dir[2] * 1.0) + (orbit.y_dir[2] * 1.0) + orbit_pos[2];
-        glVertex3d(posData[0], posData[1], posData[2]);
-#else // glVertex3d only version (broken, for testing)
-        glVertex3d(orbit.m_pos[0], orbit.m_pos[2], orbit.m_pos[2]);
 #endif
+        // TODO normals? If we want lighting. Otherwise, disable lighting.
     }
     glEnd();
   }
