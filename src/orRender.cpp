@@ -174,7 +174,6 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
     glEnd();
   }
 #endif
-  glMaterialfv( 0, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
   glNormal3f( 0.0, 0.0, 1.0 );
 }
 
