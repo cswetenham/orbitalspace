@@ -237,6 +237,7 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
 void RenderSystem::renderPoints() const
 {
   PERFTIMER("RenderPoints");
+  glDisable(GL_LIGHTING);
   for (int pi = 0; pi < (int)m_points.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
 
@@ -288,7 +289,8 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 {
   PERFTIMER("RenderLabels");
 
-  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_TEXTURE_2D);
 
   glMatrixMode(GL_PROJECTION);
@@ -396,6 +398,8 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
 
 void RenderSystem::renderSpheres() const
 {
+  glEnable(GL_LIGHTING);
+
   PERFTIMER("RenderSpheres");
   for (int si = 0; si < (int)m_spheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
@@ -409,6 +413,7 @@ void RenderSystem::renderSpheres() const
 void RenderSystem::renderOrbits() const
 {
   PERFTIMER("RenderOrbits");
+  glDisable(GL_LIGHTING);
   for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
 
