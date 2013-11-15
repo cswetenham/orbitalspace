@@ -100,25 +100,11 @@ int CDECL main()
 {
   orApp::Config appConfig;
 
-#if 0
-  appConfig.windowWidth = 1280;
-  appConfig.windowHeight = 768;
-  appConfig.renderWidth = 320;
-  appConfig.renderHeight = 200;
-#elif ENABLE_FRAMEBUFFER
-  appConfig.windowWidth = 640;
-  appConfig.windowHeight = 400;
+  appConfig.windowWidth = 2*640;
+  appConfig.windowHeight = 2*400;
+
   appConfig.renderWidth = 640;
   appConfig.renderHeight = 200;
-#else
-  // appConfig.windowWidth = 4 * 240;
-  // appConfig.windowHeight = 3 * 240;
-  // PC-9801 resolution
-  appConfig.windowWidth = 640;
-  appConfig.windowHeight = 400;
-  appConfig.renderWidth = appConfig.windowWidth;
-  appConfig.renderHeight = appConfig.windowHeight;
-#endif
 
   orApp app(appConfig);
   app.Run();

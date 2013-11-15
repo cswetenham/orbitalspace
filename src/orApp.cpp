@@ -68,7 +68,7 @@ orApp::orApp(Config const& config):
 
   Init();
 
-#if 1
+#if 0
   m_music = new sf::Music();
   m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music->setLoop(true);
@@ -233,7 +233,6 @@ void orApp::InitRender()
     fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
   }
 
-  #if ENABLE_FRAMEBUFFER
   {
     checkGLErrors();
 
@@ -285,7 +284,6 @@ void orApp::InitRender()
     // Always check that our framebuffer is ok
     ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   }
-  #endif // ENABLE_FRAMEBUFFER
 
   m_renderSystem.initRender();
 
@@ -1068,7 +1066,6 @@ void orApp::RenderState()
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
   double const minZ = 1e6; // meters
-  // double const maxZ = 1e11; // meters
   double const maxZ = 1e11; // meters
 
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
@@ -1083,11 +1080,9 @@ void orApp::RenderState()
     m_window->resetGLStates();
 
     // Render to our framebuffer
-    // TODO do we need to do this again for the text?
-#if ENABLE_FRAMEBUFFER
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
     glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
-#endif
+
     // Render on the whole framebuffer, complete from the lower left corner to the upper right
     glViewport(0, 0, m_config.renderWidth, m_config.renderHeight);
 
@@ -1131,7 +1126,6 @@ void orApp::RenderState()
     glShadeModel( GL_SMOOTH );
     glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
-    // glLightfv( GL_LIGHT0, GL_SPECULAR, &specular[0] );
     glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
     glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHTING );
@@ -1221,7 +1215,6 @@ void orApp::RenderState()
     m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
   }
 
-  #if ENABLE_FRAMEBUFFER
   {
     // Render from 2D framebuffer to screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1253,7 +1246,6 @@ void orApp::RenderState()
 
     glDisable(GL_TEXTURE_2D);
   }
-  #endif // ENABLE_FRAMEBUFFER
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }
