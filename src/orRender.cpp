@@ -71,6 +71,8 @@ void RenderSystem::drawCircle(double const radius, int const steps) const
 
 void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
 {
+  GLfloat mat_ones[]={ 1.0, 1.0, 1.0, 1.0 };
+  glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
 #if 0
   glPushMatrix();
   GLUquadric* quad = gluNewQuadric();
@@ -172,6 +174,8 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
     glEnd();
   }
 #endif
+  glMaterialfv( 0, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
+  glNormal3f( 0.0, 0.0, 1.0 );
 }
 
 void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const

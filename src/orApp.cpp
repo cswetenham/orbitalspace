@@ -1119,10 +1119,8 @@ void orApp::RenderState()
     // Possibly something to do with normals? gluSphere code is setting normals
     // of some kind, and my orbit-drawing code too.
     GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 0.0 };
-    GLfloat mat_ones[]={ 1.0, 1.0, 1.0, 1.0 };
 
     glShadeModel( GL_SMOOTH );
-    glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
     glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
     glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
