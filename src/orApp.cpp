@@ -1110,7 +1110,7 @@ void orApp::RenderState()
 
     GLfloat ambient[] = { 0.0, 0.5, 0.0, 1.0 };
     GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
-    // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
+    GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
     // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
     // lights the sphere when the w is 1.0, but not the other way around.
     // Even when the sphere is lit, the light position doesn't seem to matter
@@ -1123,6 +1123,7 @@ void orApp::RenderState()
     glShadeModel( GL_SMOOTH );
     glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
+    glLightfv( GL_LIGHT0, GL_SPECULAR, &specular[0] );
     glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
     glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHTING );
