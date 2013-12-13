@@ -1072,7 +1072,6 @@ void orApp::RenderState()
 
   {
     PERFTIMER("Prepare3D");
-    m_window->resetGLStates();
 
     // Render to our framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer.frameBufferId);
