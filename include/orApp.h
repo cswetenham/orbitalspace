@@ -57,27 +57,25 @@ public:
 
 private:
   void Init();
+    void InitRender();
+    void InitState();
+
   void Shutdown();
-
-  void InitRender();
-  void ShutdownRender();
-
-  void InitState();
-  void ShutdownState();
+    void ShutdownState();
+    void ShutdownRender();
 
   void RunOneStep();
 
   void PollEvents();
-  void HandleEvent(sf::Event const& _event);
+    void HandleEvent(sf::Event const& _event);
 
   void HandleInput();
 
   void UpdateState();
+    void UpdateState_Bodies(double const dt);
 
   void BeginRender();
-
-  void RenderState();
-
+    void RenderState();
   void EndRender();
 
 private:
@@ -109,14 +107,6 @@ private:
   bool m_paused;
   bool m_singleStep;
 
-  // Rendering options
-  bool m_wireframe;
-  bool m_camOrig;
-
-  double m_camDist;
-  double m_camTheta;
-  double m_camPhi;
-
   //// Camera ////
 
   CameraSystem m_cameraSystem;
@@ -130,12 +120,46 @@ private:
   int m_cameraId;
   int m_cameraTargetId;
 
+  struct OrbitalCamParams {
+    OrbitalCamParams(double _dist) : dist(_dist), theta(0), phi(0) {}
+    double dist;
+    double theta;
+    double phi;
+  };
+
+  OrbitalCamParams m_camParams;
+
+  Vector3d CamPosFromCamParams(OrbitalCamParams const& params);
+
   //// Rendering ////
 
   RenderSystem m_renderSystem;
 
   int m_uiTextTopLabel2DId;
   int m_uiTextBottomLabel2DId;
+
+  enum {PALETTE_SIZE = 5};
+
+  // Lazy
+  sf::Vector3f m_colG[PALETTE_SIZE];
+  sf::Vector3f m_colR[PALETTE_SIZE];
+  sf::Vector3f m_colB[PALETTE_SIZE];
+
+  double m_lightDir[3];
+
+  struct FrameBuffer {
+    FrameBuffer() : frameBufferId(0), renderedTextureId(0), depthRenderBufferId(0) {}
+    uint32_t frameBufferId;
+    uint32_t renderedTextureId;
+    uint32_t depthRenderBufferId;
+  };
+  FrameBuffer m_frameBuffer;
+
+  FrameBuffer makeFrameBuffer(int width, int height);
+  void freeFrameBuffer(FrameBuffer&) { /* TODO */ }
+
+  // Rendering options
+  bool m_wireframe;
 
   //// Physics ////
 
@@ -165,9 +189,6 @@ private:
   };
   InputMode m_inputMode;
 
-  // sf::Vectors are just plain old data. Eigen::Vectors are SSE magic.
-  sf::Vector2i m_savedMousePos;
-
   enum Thrusters
   {
     ThrustFwd = 1 << 0,
@@ -180,28 +201,10 @@ private:
 
   uint32_t m_thrusters;
 
-  enum {PALETTE_SIZE = 5};
-
-  // Lazy
-  sf::Vector3f m_colG[PALETTE_SIZE];
-  sf::Vector3f m_colR[PALETTE_SIZE];
-  sf::Vector3f m_colB[PALETTE_SIZE];
-
-  double m_lightDir[3];
-
-  bool m_hasFocus;
-
-  struct FrameBuffer {
-    FrameBuffer() : frameBufferId(0), renderedTextureId(0), depthRenderBufferId(0) {}
-    uint32_t frameBufferId;
-    uint32_t renderedTextureId;
-    uint32_t depthRenderBufferId;
-  };
-  FrameBuffer m_frameBuffer;
-
-  FrameBuffer makeFrameBuffer(int width, int height);
-
   sf::RenderWindow* m_window;
+  bool m_hasFocus;
+  // sf::Vectors are just plain old data. Eigen::Vectors are SSE magic.
+  sf::Vector2i m_savedMousePos;
   sf::Music* m_music;
 };
 
