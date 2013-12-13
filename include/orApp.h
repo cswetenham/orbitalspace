@@ -191,9 +191,15 @@ private:
 
   bool m_hasFocus;
 
-  uint32_t m_frameBufferId;
-  uint32_t m_renderedTextureId;
-  uint32_t m_depthRenderBufferId;
+  struct FrameBuffer {
+    FrameBuffer() : frameBufferId(0), renderedTextureId(0), depthRenderBufferId(0) {}
+    uint32_t frameBufferId;
+    uint32_t renderedTextureId;
+    uint32_t depthRenderBufferId;
+  };
+  FrameBuffer m_frameBuffer;
+
+  FrameBuffer makeFrameBuffer(int width, int height);
 
   sf::RenderWindow* m_window;
   sf::Music* m_music;

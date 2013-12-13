@@ -61,9 +61,7 @@ orApp::orApp(Config const& config):
   m_inputMode(InputMode_Default),
   m_thrusters(0),
   m_hasFocus(false),
-  m_frameBufferId(0),
-  m_renderedTextureId(0),
-  m_depthRenderBufferId(0),
+  m_frameBuffer(),
   m_window(NULL),
   m_music(NULL)
 {
@@ -219,6 +217,64 @@ void checkGLErrors()
   }
 }
 
+orApp::FrameBuffer orApp::makeFrameBuffer(int width, int height)
+{
+  FrameBuffer result;
+
+  {
+    checkGLErrors();
+
+    // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    glGenFramebuffers(1, &result.frameBufferId);
+    checkGLErrors();
+    glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId);
+    checkGLErrors();
+
+    // The texture we're going to render to
+    glGenTextures(1, &result.renderedTextureId);
+    checkGLErrors();
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, result.renderedTextureId);
+    checkGLErrors();
+    // Give an empty image to OpenGL ( the last "0" )
+    // TODO change this resolution independently
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    checkGLErrors();
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    checkGLErrors();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    checkGLErrors();
+
+    // The depth buffer
+    glGenRenderbuffers(1, &result.depthRenderBufferId);
+    checkGLErrors();
+    glBindRenderbuffer(GL_RENDERBUFFER, result.depthRenderBufferId);
+    checkGLErrors();
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    checkGLErrors();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthRenderBufferId);
+    checkGLErrors();
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.renderedTextureId, 0);
+    checkGLErrors();
+
+    // Set the list of draw buffers.
+    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
+    checkGLErrors();
+
+    // Always check that our framebuffer is ok
+    ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  }
+
+  return result;
+}
+
 void orApp::InitRender()
 {
   // TODO z-ordering seems bad on text labels (Moon label appears in front of everything else - not sure if this is what I want, would be good to have the option)
@@ -237,57 +293,7 @@ void orApp::InitRender()
     fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
   }
 
-  {
-    checkGLErrors();
-
-    // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-    glGenFramebuffers(1, &m_frameBufferId);
-    checkGLErrors();
-    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
-    checkGLErrors();
-
-    // The texture we're going to render to
-    glGenTextures(1, &m_renderedTextureId);
-    checkGLErrors();
-
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
-    checkGLErrors();
-    // Give an empty image to OpenGL ( the last "0" )
-    // TODO change this resolution independently
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_config.renderWidth, m_config.renderHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-    checkGLErrors();
-
-    // Poor filtering. Needed !
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    checkGLErrors();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    checkGLErrors();
-
-    // The depth buffer
-    glGenRenderbuffers(1, &m_depthRenderBufferId);
-    checkGLErrors();
-    glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
-    checkGLErrors();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_config.renderWidth, m_config.renderHeight);
-    checkGLErrors();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBufferId);
-    checkGLErrors();
-
-    // Set "renderedTexture" as our colour attachement #0
-    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTextureId, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_renderedTextureId, 0);
-    checkGLErrors();
-
-    // Set the list of draw buffers.
-    GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, drawBuffers); // "1" is the size of DrawBuffers
-    checkGLErrors();
-
-    // Always check that our framebuffer is ok
-    ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-  }
+  m_frameBuffer = makeFrameBuffer(m_config.renderWidth, m_config.renderHeight);
 
   m_renderSystem.initRender();
 
@@ -310,20 +316,6 @@ void orApp::ShutdownRender()
 
 void orApp::InitState()
 {
-#if 0
-  // Create default palette
-  m_colG[0] = sf::Vector3f(41,42,34)/255.f;
-  m_colG[1] = sf::Vector3f(77,82,50)/255.f;
-  m_colG[2] = sf::Vector3f(99,115,76)/255.f;
-  m_colG[3] = sf::Vector3f(151,168,136)/255.f;
-  m_colG[4] = sf::Vector3f(198,222,172)/255.f;
-
-  for (int i = 0; i < PALETTE_SIZE; ++i)
-  {
-    m_colR[i] = sf::Vector3f(m_colG[i].y, m_colG[i].x, m_colG[i].z);
-    m_colB[i] = sf::Vector3f(m_colG[i].x, m_colG[i].z, m_colG[i].y);
-  }
-#else
   // Create NES-ish palette (selected colour sets from the NES palettes, taken from Wikipedia)
   m_colR[0] = sf::Vector3f(0,0,0)/255.f;
   m_colR[1] = sf::Vector3f(136,20,0)/255.f;
@@ -342,7 +334,6 @@ void orApp::InitState()
   m_colB[2] = sf::Vector3f(0,120,248)/255.f;
   m_colB[3] = sf::Vector3f(60,188,252)/255.f;
   m_colB[4] = sf::Vector3f(164,228,252)/255.f;
-#endif
 
   Vector3d const lightDir = Vector3d(1.0, 1.0, 0.0).normalized();
 
@@ -1084,8 +1075,8 @@ void orApp::RenderState()
     m_window->resetGLStates();
 
     // Render to our framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBufferId);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBufferId);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer.frameBufferId);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_frameBuffer.depthRenderBufferId);
 
     // Render on the whole framebuffer, complete from the lower left corner to the upper right
     glViewport(0, 0, m_config.renderWidth, m_config.renderHeight);
@@ -1236,7 +1227,7 @@ void orApp::RenderState()
     float const scale = 1.0;
     float const uv_scale = 1.0;
 
-    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
+    glBindTexture(GL_TEXTURE_2D, m_frameBuffer.renderedTextureId);
     glBegin(GL_QUADS);
     glTexCoord2f(0.0, 0.0);
     glVertex3f(-scale, -scale, 0.0);
