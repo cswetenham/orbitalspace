@@ -210,8 +210,7 @@ void checkGLErrors()
 {
   int gl_err = glGetError();
   if(gl_err != GL_NO_ERROR) {
-    fprintf(stderr, "Error: %d %s", gl_err, "");
-  // TODO gluErrorString(gl_err) doesn't link?
+    fprintf(stderr, "Error: %d %s", gl_err, (char const*)gluErrorString(gl_err));
   }
 }
 
