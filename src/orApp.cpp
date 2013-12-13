@@ -39,23 +39,28 @@ orApp::orApp(Config const& config):
   m_paused(false),
   m_singleStep(false),
   m_wireframe(false),
-  m_cameraSystem(),
-  m_renderSystem(),
-  m_physicsSystem(),
-  m_entitySystem(m_cameraSystem, m_renderSystem, m_physicsSystem),
+
   m_camOrig(true),
   m_camDist(-3.1855e7),
   m_camTheta(0.0),
   m_camPhi(0.0),
+  m_cameraSystem(),
+  m_camMode(CameraMode_ThirdPerson),
   m_cameraId(0),
   m_cameraTargetId(0),
-  m_camMode(CameraMode_ThirdPerson),
-  m_inputMode(InputMode_Default),
-  m_playerShipId(0),
+
+  m_renderSystem(),
+
+  m_physicsSystem(),
+  m_timeScale(1.0),
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
+
+  m_entitySystem(m_cameraSystem, m_renderSystem, m_physicsSystem),
+  m_playerShipId(0),
+
+  m_inputMode(InputMode_Default),
   m_thrusters(0),
   m_hasFocus(false),
-  m_timeScale(1.0),
   m_frameBufferId(0),
   m_renderedTextureId(0),
   m_depthRenderBufferId(0),
@@ -286,8 +291,8 @@ void orApp::InitRender()
 
   m_renderSystem.initRender();
 
-  sf::WindowHandle winHandle = m_window->getSystemHandle();
 #ifdef WIN32 // TODO linux
+  sf::WindowHandle winHandle = m_window->getSystemHandle();
   orPlatform::FocusWindow(winHandle);
 #endif
   m_hasFocus = true;
@@ -1104,7 +1109,7 @@ void orApp::RenderState()
 
     GLfloat ambient[] = { 0.0, 0.2, 0.0, 1.0 };
     GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
-    GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
+    // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
 
     // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
     // lights the sphere when the w is 1.0, but not the other way around.
