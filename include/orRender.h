@@ -121,9 +121,6 @@ public:
   Trail&       getTrail(int i)       { return m_trails[i]; }
   Trail const& getTrail(int i) const { return m_trails[i]; }
 
-  void beginRender() { m_label2DBuffer.clear(); }
-  void endRender() {}
-
   void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
   void render3D();
 

@@ -125,21 +125,6 @@ void orApp::PollEvents()
   }
 }
 
-void orApp::BeginRender()
-{
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
-
-  m_renderSystem.beginRender();
-}
-
-void orApp::EndRender()
-{
-  m_renderSystem.endRender();
-
-  m_window->display();
-}
-
 void orApp::Run()
 {
   runTests();
@@ -174,18 +159,8 @@ void orApp::RunOneStep()
   }
 
   {
-    PERFTIMER("BeginRender");
-    BeginRender();
-  }
-
-  {
     PERFTIMER("RenderState");
     RenderState();
-  }
-
-  {
-    PERFTIMER("EndRender");
-    EndRender();
   }
 }
 
@@ -1191,6 +1166,8 @@ void orApp::RenderState()
 
     glDisable(GL_TEXTURE_2D);
   }
+
+  m_window->display();
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }

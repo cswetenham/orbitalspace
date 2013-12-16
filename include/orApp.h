@@ -74,9 +74,7 @@ private:
   void UpdateState();
     void UpdateState_Bodies(double const dt);
 
-  void BeginRender();
-    void RenderState();
-  void EndRender();
+  void RenderState();
 
 private:
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);

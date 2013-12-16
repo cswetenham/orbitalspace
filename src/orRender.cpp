@@ -602,6 +602,26 @@ void RenderSystem::checkGLErrors()
   }
 }
 
+#if 0
+void RenderSystem::clearBuffer(
+  FrameBuffer const& frameBuffer,
+  sf::Vector3f clearCol,
+  float clearDepth
+) {
+  // Render to our framebuffer
+  glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId);
+  glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthRenderBufferId);
+
+   // Render on the whole framebuffer, complete from the lower left corner to the upper right
+  glViewport(0, 0, frameBuffer.width, frameBuffer.height);
+
+  // TODO what?
+  // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
+  glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
+  glClearDepth(clearDepth);
+}
+#endif
+
 void RenderSystem::render(
   FrameBuffer const& frameBuffer,
   sf::Vector3f clearCol,
@@ -611,6 +631,11 @@ void RenderSystem::render(
   Eigen::Matrix4d const& camFromWorld
 )
 {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
+
+  m_label2DBuffer.clear();
+  
   {
     PERFTIMER("Prepare3D");
 
@@ -622,8 +647,8 @@ void RenderSystem::render(
     glViewport(0, 0, frameBuffer.width, frameBuffer.height);
 
     // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
-    glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
-    glClearDepth(clearDepth);
+    // glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
+    // glClearDepth(clearDepth);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
