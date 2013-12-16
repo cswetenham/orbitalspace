@@ -704,50 +704,6 @@ void orApp::InitState()
   }
   delete[] rnds;
 #endif
-
-  // Update debug text
-  {
-    PERFTIMER("DebugText");
-
-    // Top of screen
-    {
-      std::ostringstream str;
-      str.precision(3);
-      str.flags(std::ios::right | std::ios::fixed);
-
-      str << calendarDateFromSimTime(m_simTime) << "\n";
-
-      str << "Time Scale: " << (int)m_timeScale << "\n";
-
-      // str << "FPS: " << (int)(1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
-      // str << "Cam Dist: " << m_camDist << "\n";
-      // str << "Cam Theta:" << m_camTheta << "\n";
-      // str << "Cam Phi:" << m_camPhi << "\n";
-      // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
-      // str << "Intership Distance:" << shipDist << "\n";
-      // str << "Intership Distance: TODO\n";
-      // str << "Integration Method: " << m_integrationMethod << "\n";
-
-      // TODO: better double value text formatting
-      // TODO: small visualisations for the angle etc values
-
-      RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
-      m_uiTextTopLabel2D.m_text = str.str();
-    }
-
-    // Bottom of screen
-    {
-      std::ostringstream str;
-      str.precision(3);
-      str.flags(std::ios::right | std::ios::fixed);
-
-      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
-      str << "Cam Target: " << camTarget.m_name << "\n";
-
-      RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
-      m_uiTextBottomLabel2D.m_text = str.str();
-    }
-  }
 }
 
 
@@ -1088,6 +1044,51 @@ void orApp::UpdateState()
     camera.m_pos[0] = camPosData[0];
     camera.m_pos[1] = camPosData[1];
     camera.m_pos[2] = camPosData[2];
+  }
+
+
+  // Update debug text
+  {
+    PERFTIMER("DebugText");
+
+    // Top of screen
+    {
+      std::ostringstream str;
+      str.precision(3);
+      str.flags(std::ios::right | std::ios::fixed);
+
+      str << calendarDateFromSimTime(m_simTime) << "\n";
+
+      str << "Time Scale: " << (int)m_timeScale << "\n";
+
+      // str << "FPS: " << (int)(1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
+      // str << "Cam Dist: " << m_camDist << "\n";
+      // str << "Cam Theta:" << m_camTheta << "\n";
+      // str << "Cam Phi:" << m_camPhi << "\n";
+      // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
+      // str << "Intership Distance:" << shipDist << "\n";
+      // str << "Intership Distance: TODO\n";
+      // str << "Integration Method: " << m_integrationMethod << "\n";
+
+      // TODO: better double value text formatting
+      // TODO: small visualisations for the angle etc values
+
+      RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
+      m_uiTextTopLabel2D.m_text = str.str();
+    }
+
+    // Bottom of screen
+    {
+      std::ostringstream str;
+      str.precision(3);
+      str.flags(std::ios::right | std::ios::fixed);
+
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
+      str << "Cam Target: " << camTarget.m_name << "\n";
+
+      RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
+      m_uiTextBottomLabel2D.m_text = str.str();
+    }
   }
 }
 
