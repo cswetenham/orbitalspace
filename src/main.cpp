@@ -100,8 +100,8 @@ int CDECL main()
 {
   orApp::Config appConfig;
 
-  appConfig.windowWidth = 2*640;
-  appConfig.windowHeight = 2*400;
+  appConfig.windowWidth = 1*640;
+  appConfig.windowHeight = 1*400;
 
   appConfig.renderWidth = 640;
   appConfig.renderHeight = 200;
