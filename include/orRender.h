@@ -4,6 +4,8 @@
 #include "orMath.h"
 #include "orGfx.h"
 
+#include <SFML/Graphics.hpp>
+
 #include <vector>
 
 namespace sf { class RenderWindow; class Font; class Image; }
@@ -16,6 +18,18 @@ public:
   void initRender();
   void shutdownRender();
 
+  struct FrameBuffer {
+    FrameBuffer() : frameBufferId(0), renderedTextureId(0), depthRenderBufferId(0) {}
+    int width;
+    int height;
+    uint32_t frameBufferId;
+    uint32_t renderedTextureId;
+    uint32_t depthRenderBufferId;
+  };
+
+  FrameBuffer makeFrameBuffer(int width, int height);
+  void freeFrameBuffer(FrameBuffer&) { /* TODO */ }
+
   struct Point {
     double m_pos[3];
 
@@ -26,7 +40,6 @@ public:
   int makePoint() { m_points.push_back(Point()); return numPoints() - 1; }
   Point&       getPoint(int i)       { return m_points[i]; }
   Point const& getPoint(int i) const { return m_points[i]; }
-
 
   struct Label2D {
     std::string m_text;
@@ -113,6 +126,10 @@ public:
 
   void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
   void render3D();
+
+  void render(FrameBuffer const& frameBuffer, sf::Vector3f clearCol, float clearDepth, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
+
+  void checkGLErrors();
 
 private:
   void drawCircle(double const radius, int const steps) const;

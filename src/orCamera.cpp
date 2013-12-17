@@ -10,7 +10,7 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
   // Screen: 0 to +width or 0 to +height
   double const halfWidth = width / 2.0;
   double const halfHeight = height / 2.0;
-  
+
   screenMatrix.setZero(4, 4);
   screenMatrix.coeffRef(0, 0) = halfWidth;
   screenMatrix.coeffRef(0, 3) = halfWidth;
@@ -24,9 +24,12 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
 // Camera Space Coordinates -> Normalised Device Coordinates
 Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, double minZ, double maxZ, double aspect)
 {
+  // Projection matrix (GL_PROJECTION)
+  // Simplified for symmetric case
+
   Camera& camera = getCamera( cameraId );
   double const fov_y = camera.m_fov;
-  
+
   double const heightZ = tan(0.5 * M_TAU * fov_y / 360.0);
   double const widthZ = heightZ * aspect;
 
@@ -42,8 +45,10 @@ Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height
 }
 
 // World Space Coordinates -> Camera Space Coordinates
-Eigen::Affine3d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vector3d up )
+Eigen::Matrix4d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vector3d up )
 {
+  // Camera matrix (GL_MODELVIEW)
+
   Camera& camera = getCamera( cameraId );
   Target& target = getTarget( targetId );
 
@@ -63,5 +68,5 @@ Eigen::Affine3d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vect
   camT.linear() = camRot;
   camT.translation() = cameraPos;
 
-  return camT.inverse();
+  return camT.inverse().matrix();
 }

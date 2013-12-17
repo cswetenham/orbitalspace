@@ -101,6 +101,8 @@ private:
 
   double m_simTime;
 
+  static std::string calendarDateFromSimTime(float simTime);
+
   Config m_config;
 
   // Simulation options
@@ -147,16 +149,8 @@ private:
 
   double m_lightDir[3];
 
-  struct FrameBuffer {
-    FrameBuffer() : frameBufferId(0), renderedTextureId(0), depthRenderBufferId(0) {}
-    uint32_t frameBufferId;
-    uint32_t renderedTextureId;
-    uint32_t depthRenderBufferId;
-  };
-  FrameBuffer m_frameBuffer;
-
-  FrameBuffer makeFrameBuffer(int width, int height);
-  void freeFrameBuffer(FrameBuffer&) { /* TODO */ }
+  // TODO make into an id-handle thing
+  RenderSystem::FrameBuffer m_frameBuffer;
 
   // Rendering options
   bool m_wireframe;

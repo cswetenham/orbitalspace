@@ -49,6 +49,68 @@ void RenderSystem::shutdownRender()
   // TODO free opengl resources
 }
 
+
+RenderSystem::FrameBuffer RenderSystem::makeFrameBuffer(int width, int height)
+{
+  FrameBuffer result;
+
+  result.width = width;
+  result.height = height;
+
+  {
+    checkGLErrors();
+
+    // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    glGenFramebuffers(1, &result.frameBufferId);
+    checkGLErrors();
+    glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId);
+    checkGLErrors();
+
+    // The texture we're going to render to
+    glGenTextures(1, &result.renderedTextureId);
+    checkGLErrors();
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, result.renderedTextureId);
+    checkGLErrors();
+    // Give an empty image to OpenGL ( the last "0" )
+    // TODO change this resolution independently
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    checkGLErrors();
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    checkGLErrors();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    checkGLErrors();
+
+    // The depth buffer
+    glGenRenderbuffers(1, &result.depthRenderBufferId);
+    checkGLErrors();
+    glBindRenderbuffer(GL_RENDERBUFFER, result.depthRenderBufferId);
+    checkGLErrors();
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    checkGLErrors();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthRenderBufferId);
+    checkGLErrors();
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.renderedTextureId, 0);
+    checkGLErrors();
+
+    // Set the list of draw buffers.
+    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
+    checkGLErrors();
+
+    // Always check that our framebuffer is ok
+    ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  }
+
+  return result;
+}
+
 void RenderSystem::drawCircle(double const radius, int const steps) const
 {
     /* Adjust z and radius as stacks and slices are drawn. */
@@ -530,6 +592,102 @@ void RenderSystem::render3D()
   renderSpheres();
   renderOrbits();
   renderTrails();
+}
+
+void RenderSystem::checkGLErrors()
+{
+  int gl_err = glGetError();
+  if(gl_err != GL_NO_ERROR) {
+    fprintf(stderr, "Error: %d %s", gl_err, (char const*)gluErrorString(gl_err));
+  }
+}
+
+void RenderSystem::render(
+  FrameBuffer const& frameBuffer,
+  sf::Vector3f clearCol,
+  float clearDepth,
+  Eigen::Matrix4d const& screenFromProj,
+  Eigen::Matrix4d const& projFromCam,
+  Eigen::Matrix4d const& camFromWorld
+)
+{
+  {
+    PERFTIMER("Prepare3D");
+
+    // Render to our framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId);
+    glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthRenderBufferId);
+
+    // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glViewport(0, 0, frameBuffer.width, frameBuffer.height);
+
+    // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
+    glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
+    glClearDepth(clearDepth);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMultMatrix( projFromCam );
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glMultMatrix( camFromWorld );
+
+    glEnable(GL_TEXTURE_2D);
+
+    GLfloat ambient[] = { 0.0, 0.2, 0.0, 1.0 };
+    GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+    // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
+
+    // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
+    // lights the sphere when the w is 1.0, but not the other way around.
+    // Even when the sphere is lit, the light position doesn't seem to matter
+    // but the sphere is lit from behind from certain camera positions
+    // and not lit at all otherwise.
+    // Possibly something to do with normals? gluSphere code is setting normals
+    // of some kind, and my orbit-drawing code too.
+    // The polygon-based sphere I copy-pasted from the internet gives the same
+    // results!
+
+    // Seems to be related to normals and lighting, made some fixes...
+
+    // TODO clean up mode changes, move more into the Render system
+
+    GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 1.0 };
+
+    glShadeModel( GL_SMOOTH );
+    glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
+    glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
+    glEnable( GL_LIGHT0 );
+    glEnable( GL_LIGHTING );
+
+    glNormal3f(0,0,1);
+
+    glLineWidth(1.0);
+#if 0
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
+#endif
+    glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+    glDisable(GL_TEXTURE_2D);
+  }
+
+  {
+    PERFTIMER("Render3D");
+    render3D();
+  }
+
+  {
+    PERFTIMER("Render2D");
+    render2D(frameBuffer.width, frameBuffer.height, screenFromProj, projFromCam, camFromWorld);
+  }
 }
 
 RenderSystem::Trail::Trail(double const _duration, const double _initPos[3], const double _initOrigin[3]) :

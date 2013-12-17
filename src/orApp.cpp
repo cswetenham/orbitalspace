@@ -208,72 +208,6 @@ void orApp::HandleInput()
   }
 }
 
-void checkGLErrors()
-{
-  int gl_err = glGetError();
-  if(gl_err != GL_NO_ERROR) {
-    fprintf(stderr, "Error: %d %s", gl_err, (char const*)gluErrorString(gl_err));
-  }
-}
-
-orApp::FrameBuffer orApp::makeFrameBuffer(int width, int height)
-{
-  FrameBuffer result;
-
-  {
-    checkGLErrors();
-
-    // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-    glGenFramebuffers(1, &result.frameBufferId);
-    checkGLErrors();
-    glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId);
-    checkGLErrors();
-
-    // The texture we're going to render to
-    glGenTextures(1, &result.renderedTextureId);
-    checkGLErrors();
-
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, result.renderedTextureId);
-    checkGLErrors();
-    // Give an empty image to OpenGL ( the last "0" )
-    // TODO change this resolution independently
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-    checkGLErrors();
-
-    // Poor filtering. Needed !
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    checkGLErrors();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    checkGLErrors();
-
-    // The depth buffer
-    glGenRenderbuffers(1, &result.depthRenderBufferId);
-    checkGLErrors();
-    glBindRenderbuffer(GL_RENDERBUFFER, result.depthRenderBufferId);
-    checkGLErrors();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-    checkGLErrors();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthRenderBufferId);
-    checkGLErrors();
-
-    // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.renderedTextureId, 0);
-    checkGLErrors();
-
-    // Set the list of draw buffers.
-    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
-    checkGLErrors();
-
-    // Always check that our framebuffer is ok
-    ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-  }
-
-  return result;
-}
-
 // TODO cleanup
 char* file_contents(const char* filename, GLint* length)
 {
@@ -379,7 +313,7 @@ void orApp::InitRender()
     fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
   }
 
-  m_frameBuffer = makeFrameBuffer(m_config.renderWidth, m_config.renderHeight);
+  m_frameBuffer = m_renderSystem.makeFrameBuffer(m_config.renderWidth, m_config.renderHeight);
 
   m_renderSystem.initRender();
 
@@ -795,6 +729,50 @@ void orApp::InitState()
   }
   delete[] rnds;
 #endif
+
+  // Update debug text
+  {
+    PERFTIMER("DebugText");
+
+    // Top of screen
+    {
+      std::ostringstream str;
+      str.precision(3);
+      str.flags(std::ios::right | std::ios::fixed);
+
+      str << calendarDateFromSimTime(m_simTime) << "\n";
+
+      str << "Time Scale: " << (int)m_timeScale << "\n";
+
+      // str << "FPS: " << (int)(1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
+      // str << "Cam Dist: " << m_camDist << "\n";
+      // str << "Cam Theta:" << m_camTheta << "\n";
+      // str << "Cam Phi:" << m_camPhi << "\n";
+      // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
+      // str << "Intership Distance:" << shipDist << "\n";
+      // str << "Intership Distance: TODO\n";
+      // str << "Integration Method: " << m_integrationMethod << "\n";
+
+      // TODO: better double value text formatting
+      // TODO: small visualisations for the angle etc values
+
+      RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
+      m_uiTextTopLabel2D.m_text = str.str();
+    }
+
+    // Bottom of screen
+    {
+      std::ostringstream str;
+      str.precision(3);
+      str.flags(std::ios::right | std::ios::fixed);
+
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
+      str << "Cam Target: " << camTarget.m_name << "\n";
+
+      RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
+      m_uiTextBottomLabel2D.m_text = str.str();
+    }
+  }
 }
 
 
@@ -1142,162 +1120,47 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
 
+std::string orApp::calendarDateFromSimTime(float simTime) {
+  using namespace boost::posix_time;
+  using namespace boost::gregorian;
+
+  // Astronomical Epoch: 1200 hours, 1 January 2000
+  ptime epoch(date(2000, Jan, 1), hours(12));
+  // Game start date: 1753 hours, Mar 15 2025 (Did I pick this for any reason?)
+  ptime gameStart(date(2025, Mar, 15), hours(1753));
+  // Note: the (long) here limits us to ~68 years game time.
+  // Should be enough, otherwise just need to keep adding seconds to the
+  // dateTime to match the simTime.
+  ptime curDateTime = gameStart + seconds((long)simTime);
+
+  return to_simple_string(curDateTime);
+}
+
 void orApp::RenderState()
 {
-  // TODO no timer here
+  PERFTIMER("RenderState");
 
   // Projection matrix (GL_PROJECTION)
-  // Simplified for symmetric case
   double const minZ = 1e6; // meters
   double const maxZ = 1e11; // meters
 
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
-  Eigen::Matrix4d projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
+  Eigen::Matrix4d const projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up(0.0, 1.0, 0.0);
-  Eigen::Affine3d camMatrix = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+  Eigen::Matrix4d const camMatrix = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+
+  // Used to translate a 3d position into a 2d framebuffer position
+  Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
+
+  sf::Vector3f clearCol = m_colG[0];
+
+  m_renderSystem.render(m_frameBuffer, clearCol, minZ, screenMatrix, projMatrix, camMatrix);
 
   {
-    PERFTIMER("Prepare3D");
+    PERFTIMER("PostEffect");
 
-    // Render to our framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer.frameBufferId);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_frameBuffer.depthRenderBufferId);
-
-    // Render on the whole framebuffer, complete from the lower left corner to the upper right
-    glViewport(0, 0, m_config.renderWidth, m_config.renderHeight);
-
-    sf::Vector3f clearCol = m_colG[0];
-    // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
-    glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
-    glClearDepth(minZ);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMultMatrix( projMatrix );
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glMultMatrix( camMatrix );
-
-    glEnable(GL_TEXTURE_2D);
-
-    GLfloat ambient[] = { 0.0, 0.2, 0.0, 1.0 };
-    GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
-    // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
-
-    // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
-    // lights the sphere when the w is 1.0, but not the other way around.
-    // Even when the sphere is lit, the light position doesn't seem to matter
-    // but the sphere is lit from behind from certain camera positions
-    // and not lit at all otherwise.
-    // Possibly something to do with normals? gluSphere code is setting normals
-    // of some kind, and my orbit-drawing code too.
-    // The polygon-based sphere I copy-pasted from the internet gives the same
-    // results!
-
-    // Seems to be related to normals and lighting, made some fixes...
-
-    // TODO clean up mode changes, move more into the Render system
-
-    GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 1.0 };
-
-    glShadeModel( GL_SMOOTH );
-    glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
-    glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
-    glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
-    glEnable( GL_LIGHT0 );
-    glEnable( GL_LIGHTING );
-
-    glNormal3f(0,0,1);
-
-    glLineWidth(1.0);
-#if 0
-    glEnable(GL_POINT_SMOOTH);
-    glEnable(GL_LINE_SMOOTH);
-#endif
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // TODO clean up
-    if (m_wireframe && 0) {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    } else {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    }
-  }
-
-  {
-    PERFTIMER("Render3D");
-    glDisable(GL_TEXTURE_2D);
-    m_renderSystem.render3D();
-  }
-
-  // Render debug text
-  {
-    PERFTIMER("Prepare2D");
-
-    // TODO this should go in state not render
-    {
-      std::ostringstream str;
-      str.precision(3);
-      str.flags(std::ios::right | std::ios::fixed);
-
-      {
-        using namespace boost::posix_time;
-        using namespace boost::gregorian;
-
-        // Astronomical Epoch: 1200 hours, 1 January 2000
-        // Game start date:
-        ptime epoch(date(2000, Jan, 1), hours(12));
-        ptime gameStart(date(2025, Mar, 15), hours(1753));
-        // Note: the (long) here limits us to ~68 years game time. Should be enough, otherwise just need to keep adding seconds to the dateTime to match the simTime
-        ptime curDateTime = gameStart + seconds((long)m_simTime);
-        str << to_simple_string(curDateTime) << "\n";
-      }
-
-      str << "Time Scale: " << (int)m_timeScale << "\n";
-
-      // str << "FPS: " << (int)(1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
-      // str << "Cam Dist: " << m_camDist << "\n";
-      // str << "Cam Theta:" << m_camTheta << "\n";
-      // str << "Cam Phi:" << m_camPhi << "\n";
-      // double const shipDist = (m_ships[0].m_physics.m_pos - m_ships[1].m_physics.m_pos).norm();
-      // str << "Intership Distance:" << shipDist << "\n";
-      // str << "Intership Distance: TODO\n";
-      // str << "Integration Method: " << m_integrationMethod << "\n";
-
-      // TODO: better double value text formatting
-      // TODO: small visualisations for the angle etc values
-
-      RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
-      m_uiTextTopLabel2D.m_text = str.str();
-    }
-    {
-      std::ostringstream str;
-      str.precision(3);
-      str.flags(std::ios::right | std::ios::fixed);
-
-      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(m_cameraTargetId);
-      str << "Cam Target: " << camTarget.m_name << "\n";
-
-      RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
-      m_uiTextBottomLabel2D.m_text = str.str();
-    }
-  }
-
-  {
-    PERFTIMER("Render2D");
-
-    // Used to translate a 3d position into a 2d screen position
-    Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix( m_config.renderWidth, m_config.renderHeight );
-    m_renderSystem.render2D(m_config.renderWidth, m_config.renderHeight, screenMatrix, projMatrix, camMatrix.matrix());
-  }
-
-  {
     // Render from 2D framebuffer to screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
