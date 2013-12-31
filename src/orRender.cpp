@@ -58,53 +58,35 @@ RenderSystem::FrameBuffer RenderSystem::makeFrameBuffer(int width, int height)
   result.height = height;
 
   {
+    // Based on OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
     checkGLErrors();
 
-    // From OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-    glGenFramebuffers(1, &result.frameBufferId);
-    checkGLErrors();
-    glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId);
-    checkGLErrors();
-
-    // The texture we're going to render to
-    glGenTextures(1, &result.renderedTextureId);
-    checkGLErrors();
-
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, result.renderedTextureId);
-    checkGLErrors();
-    // Give an empty image to OpenGL ( the last "0" )
-    // TODO change this resolution independently
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-    checkGLErrors();
-
-    // Poor filtering. Needed !
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    checkGLErrors();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    checkGLErrors();
+    // Allocate a texture ID for the texture we're going to render to
+    glGenTextures(1, &result.colorTextureId); checkGLErrors();
+    // Bind the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, result.colorTextureId); checkGLErrors();
+    // Create an empty texture (last '0' is a null image data pointer)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0); checkGLErrors();
+    // Make sure to use nearest-neighbour filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); checkGLErrors();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); checkGLErrors();
 
     // The depth buffer
-    glGenRenderbuffers(1, &result.depthRenderBufferId);
-    checkGLErrors();
-    glBindRenderbuffer(GL_RENDERBUFFER, result.depthRenderBufferId);
-    checkGLErrors();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-    checkGLErrors();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthRenderBufferId);
-    checkGLErrors();
+    glGenRenderbuffers(1, &result.depthBufferId); checkGLErrors();
+    glBindRenderbuffer(GL_RENDERBUFFER, result.depthBufferId); checkGLErrors();
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height); checkGLErrors();
 
-    // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.renderedTextureId, 0);
-    checkGLErrors();
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    glGenFramebuffers(1, &result.frameBufferId); checkGLErrors();
+    glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId); checkGLErrors();
+    // Attach our texture and depth buffers to the frame buffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.colorTextureId, 0); checkGLErrors();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthBufferId); checkGLErrors();
+    // Enable the buffers
+    GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT};
+    glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers); checkGLErrors();
 
-    // Set the list of draw buffers.
-    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers);
-    checkGLErrors();
-
-    // Always check that our framebuffer is ok
+    // Check that our framebuffer is set up correctly
     ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
   }
 
@@ -635,13 +617,13 @@ void RenderSystem::render(
   glLoadIdentity();
 
   m_label2DBuffer.clear();
-  
+
   {
     PERFTIMER("Prepare3D");
 
     // Render to our framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId);
-    glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthRenderBufferId);
+    glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthBufferId);
 
     // Render on the whole framebuffer, complete from the lower left corner to the upper right
     glViewport(0, 0, frameBuffer.width, frameBuffer.height);

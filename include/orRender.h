@@ -19,12 +19,12 @@ public:
   void shutdownRender();
 
   struct FrameBuffer {
-    FrameBuffer() : frameBufferId(0), renderedTextureId(0), depthRenderBufferId(0) {}
+    FrameBuffer() : frameBufferId(0), colorTextureId(0), depthBufferId(0) {}
     int width;
     int height;
     uint32_t frameBufferId;
-    uint32_t renderedTextureId;
-    uint32_t depthRenderBufferId;
+    uint32_t colorTextureId;
+    uint32_t depthBufferId;
   };
 
   FrameBuffer makeFrameBuffer(int width, int height);

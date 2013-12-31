@@ -1153,7 +1153,7 @@ void orApp::RenderState()
     float const scale = 1.0;
     float const uv_scale = 1.0;
 
-    glBindTexture(GL_TEXTURE_2D, m_frameBuffer.renderedTextureId);
+    glBindTexture(GL_TEXTURE_2D, m_frameBuffer.colorTextureId);
     glBegin(GL_QUADS);
     glTexCoord2f(0.0, 0.0);
     glVertex3f(-scale, -scale, 0.0);
