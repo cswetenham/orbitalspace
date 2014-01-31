@@ -12,13 +12,13 @@
 # include <sys/time.h>
 #endif
 
-// store time at start of program run
-static Timer::PerfTime x_baseTime;
+Timer::PerfTime Timer::x_baseTime = 0;
 
-static struct MagicInit
+// store time at start of program run
+void Timer::StaticInit()
 {
-  MagicInit() { x_baseTime = Timer::GetPerfTime(); }
-} x_magicInit;
+  x_baseTime = Timer::GetPerfTime();
+}
 
 Timer::PerfTime Timer::UptimePerfTime()
 {
@@ -50,7 +50,7 @@ Timer::PerfTime Timer::GetPerfTime()
 
   uint64_t const ds = curTime.tv_sec;
   uint64_t const dus = curTime.tv_usec;
-  
+
   return dus + (ds * 1000000);
 }
 
