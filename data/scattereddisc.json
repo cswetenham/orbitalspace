@@ -1,0 +1,68 @@
+{
+    "version": "1.0",
+    "name": "Scattered Disc Objects",
+
+    "items" :
+    [
+      {
+         "name" : "Eris",
+         "class" : "dwarf planet",
+         "label" : { "color" : "#6a7f99" },
+         "trajectoryPlot": { "fade": 0.3 },
+
+         "mass": "1.67e22 kg",
+
+         "center": "Sun",
+         "trajectoryFrame": "EclipticJ2000",
+         "trajectory": {
+           "type": "Keplerian",
+           "period": "561.335507843y",
+           "semiMajorAxis": "68.0479443au",
+           "eccentricity": 0.43365042,
+           "inclination": 43.86701,
+           "ascendingNode": 36.039327,
+           "argumentOfPeriapsis": 151.212095,
+           "meanAnomaly": 200.3785
+         },
+         "bodyFrame": "EclipticJ2000",
+         "rotationModel" :
+         {
+            "type" : "Uniform",
+            "period" : "25.9h"
+         },
+         "geometry": {
+           "type": "Globe",
+           "radius": 1163
+         }
+      },
+
+      {
+         "name" : "Dysnomia",
+         "class" : "satellite",
+         "label" : { "color" : "#6a7f99" },
+         "trajectoryPlot": { "fade": 0.3 },
+
+         "center": "Eris",
+         "trajectoryFrame": "EclipticJ2000",
+         "trajectory": {
+           "type": "Keplerian",
+           "period": "15.774d",
+           "semiMajorAxis": 37350,
+           "eccentricity": 0.013
+         },
+         "bodyFrame": "EclipticJ2000",
+         "rotationModel" :
+         {
+            "type" : "Uniform",
+            "period" : "15.774d"
+         },
+         "geometry" :
+         {
+             "type" : "Mesh",
+             "source" : "models/10hygiea.cmod",
+             "size" : 100.0
+         }
+      }
+    ]
+}
+

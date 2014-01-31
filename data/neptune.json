@@ -1,0 +1,154 @@
+{
+    "version": "1.0",
+    "name": "Neptune",
+
+    "items" :
+    [
+        {
+          "name" : "Neptune",
+          "label" : { "color" : [ 0.5, 0.5, 1.0 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "1.0243e26 kg",
+
+          "center" : "Sun",
+          "trajectory" :
+          {
+              "type" : "Builtin",
+              "name" : "Neptune"
+          },
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period" : "16.109999998858875h",
+              "inclination" : 46.54,
+              "ascendingNode" : 29.36,
+              "meridianAngle" : 253.18
+          },
+
+          "geometry" :
+          {
+              "type" : "Globe",
+              "radii" : [ 24764, 24764, 24341 ],
+              "baseMap" : "textures/neptune.jpg"
+          }
+        },
+
+        {
+          "name" : "Triton",
+          "label" : { "color" : [ 0.4, 0.4, 0.7 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "2.14e22 kg",
+
+          "center" : "Neptune",
+
+          "trajectoryFrame" : "EclipticJ2000",
+          "trajectory" :
+          {
+              "type" : "Keplerian",
+              "semiMajorAxis" : 354765.286,
+              "eccentricity" : 0.0000110534857,
+              "period" : "5.876854078286229d",
+              "inclination" : 130.9092040930803,
+              "ascendingNode" :  213.1742023027628,
+              "argumentOfPeriapsis" : 279.1380491242861,
+              "meanAnomaly" : 348.9715288637743,
+              "epoch" : "1989-08-25 00:00:00"
+          },
+
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period" : "5.876854078286229d",
+              "inclination" : 131.17,
+              "ascendingNode" : 209.36,
+              "meridianAngle" : 243.47
+          },
+
+          "geometry" :
+          {
+              "type" : "Globe",
+              "radius" : 1352.6,
+              "baseMap" : "textures/triton.dds"
+          }
+        },
+
+        {
+          "name" : "Proteus",
+          "label" : { "color" : [ 0.4, 0.6, 0.5 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "4.4e19 kg",
+
+          "center" : "Neptune",
+
+          "trajectoryFrame" : "EclipticJ2000",
+          "trajectory": {
+              "type": "Keplerian", 
+              "argumentOfPeriapsis": 298.14200271586873, 
+              "semiMajorAxis": 117673.0508736895, 
+              "eccentricity": 0.00053279631278782243,
+              "meanAnomaly": 286.52455774346652, 
+              "ascendingNode": 48.49707473757536, 
+              "period": 1.122315481692249,
+              "inclination": 29.097746844067299
+          },
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period": 1.122315481692249,
+              "inclination" : 47.09,
+              "ascendingNode" : 29.27,
+              "meridianAngle" : 93.38
+          },
+
+          "geometry" :
+          {
+              "type" : "Mesh",
+              "source" : "models/proteus.cmod"
+          }
+        },
+
+        {
+          "name" : "Nereid",
+          "label" : { "color" : [ 0.2, 0.2, 0.4 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "3.1e19 kg",
+
+          "center" : "Neptune",
+
+          "trajectoryFrame" : "EclipticJ2000",
+          "trajectory": {
+              "type": "Keplerian", 
+              "period": 360.1362,
+              "semiMajorAxis": 5510011.0252191667, 
+              "eccentricity": 0.74606196284150827, 
+              "inclination": 5.0665402443461254,
+              "ascendingNode": 318.89987636897621, 
+              "argumentOfPeriapsis": 297.48805022729402, 
+              "meanAnomaly": 93.176303478351883
+          },
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period": "11.52h",
+              "inclination" : 47.09,
+              "ascendingNode" : 29.27,
+              "meridianAngle" : 93.38
+          },
+
+          "geometry" :
+          {
+              "type" : "Mesh",
+              "source" : "models/hyperion.cmod",
+              "size" : 170
+          }
+        }
+    ]
+}

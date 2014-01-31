@@ -1,0 +1,217 @@
+{
+    "version": "1.0",
+    "name": "Pluto",
+
+    "items" :
+    [
+        {
+          "name" : "Pluto System Barycenter",
+          "label" : { "color" : [ 0.5, 0.5, 0.5 ], "fadeSize": 10000.0 },
+          "trajectoryPlot" : { "fade" : 0.3 },
+          "class" : "reference point",
+
+          "center" : "Sun",
+          "trajectory" :
+          {
+              "type" : "Builtin",
+              "name" : "Pluto"
+          }
+        },
+
+        {
+          "name" : "Pluto",
+          "class" : "dwarf planet",
+          "label" : { "color" : [ 0.5, 0.5, 0.5 ], "fadeSize" : 6.0e9 },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "0.00218 Mearth",
+
+          "center" : "Pluto System Barycenter",
+          "trajectory" :
+          {
+              "type" : "Keplerian",
+              "semiMajorAxis" : 2043.1,
+              "eccentricity" : 0.003484,
+              "period" : "6.387206d",
+              "inclination" : 96.6175728,
+              "ascendingNode" : 223.0475691,
+              "argumentOfPeriapsis" : 168.6991957716475,
+              "meanAnomaly" : 358.9026939892705,
+              "epoch" : "2002-11-02 00:00:00"
+          },
+
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period" : "6.387206d",
+              "inclination" : 96.163,
+              "ascendingNode" : 222.993,
+              "meridianAngle" : 302.695
+          },
+
+          "geometry" :
+          {
+              "type" : "Globe",
+              "radius" : 1195,
+              "baseMap" : "textures/pluto.png"
+          }
+        },
+
+        {
+          "name" : "Charon",
+          "description" : "Largest moon of Pluto",
+          "label" : { "color" : [ 0.5, 0.5, 0.5 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "1.52e21 kg",
+
+          "center" : "Pluto System Barycenter",
+          "trajectory" :
+          {
+              "type" : "Keplerian",
+              "semiMajorAxis" : 17527.4,
+              "eccentricity" : 0.003484,
+              "period" : "6.387206d",
+              "inclination" : 96.6175728,
+              "ascendingNode" : 223.0475691,
+              "argumentOfPeriapsis" : 348.6991957716475,
+              "meanAnomaly" : 358.9026939892705,
+              "epoch" : "2002-11-02 00:00:00"
+          },
+
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period" : "6.387206d",
+              "inclination" : 96.163,
+              "ascendingNode" : 222.993,
+              "meridianAngle" : 122.695
+          },
+
+          "geometry" :
+          {
+              "type" : "Globe",
+              "radius" : 593,
+              "baseMap" : "textures/charon.png"
+          }
+        },
+
+        {
+          "name" : "Nix",
+          "label" : { "color" : [ 0.5, 0.5, 0.5 ] },
+          "description" : "Moon of Pluto",
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "1e18 kg",
+
+          "center" : "Pluto System Barycenter",
+          "trajectory" :
+          {
+              "type" : "Keplerian",
+              "semiMajorAxis" : 49242,
+              "eccentricity" : 0.01504,
+              "period" : "24.8562d",
+              "inclination" : 95.94310557126632,
+              "ascendingNode" : 222.9400806306264,
+              "argumentOfPeriapsis" : 151.7946942496736,
+              "meanAnomaly" : 21.54069985284917,
+              "epoch" : "2015-07-14 00:00:00"
+          },
+
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period" : "24.8562d",
+              "inclination" : 96.163,
+              "ascendingNode" : 222.993
+          },
+
+          "geometry" :
+          {
+              "type" : "Mesh",
+              "source" : "models/5astraea.cmod",
+              "size" : 44.0
+          }
+        },
+
+        {
+          "name" : "Hydra",
+          "description" : "Moon of Pluto",
+          "label" : { "color" : [ 0.5, 0.5, 0.5 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "mass" : "5e17 kg",
+
+          "center" : "Pluto System Barycenter",
+          "trajectory" :
+          {
+              "type" : "Keplerian",
+              "semiMajorAxis" : 65082,
+              "eccentricity" : 0.00870,
+              "period" : "38.2065d",
+              "inclination" : 96.22593148686714,
+              "ascendingNode" : 223.2733125218676,
+              "argumentOfPeriapsis" : 339.1320742956359,
+              "meanAnomaly" : 66.99859957412578,
+              "epoch" : "2015-07-14 00:00:00"
+          },
+
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              "type" : "Uniform",
+              "period" : "38.2065d",
+              "inclination" : 96.163,
+              "ascendingNode" : 222.993
+          },
+
+          "geometry" :
+          {
+              "type" : "Mesh",
+              "source" : "models/8flora.cmod",
+              "size" : 36.0
+          }
+        },
+
+        {
+          "name" : "P4",
+          "description" : "Moon of Pluto",
+          "label" : { "color" : [ 0.5, 0.5, 0.5 ] },
+          "trajectoryPlot" : { "fade" : 0.3 },
+
+          "center" : "Pluto System Barycenter",
+          "trajectory" :
+          {
+              "type" : "Keplerian",
+              "semiMajorAxis" : 56247,
+              "eccentricity" : 0.00870,
+              "period" : "32.1d",
+              "inclination" : 95.89199810839185,
+              "ascendingNode" : 221.4868753973167,
+              "argumentOfPeriapsis" : 307.0009849867880,
+              "meanAnomaly" : 81.74274153078392,
+              "epoch" : "2015-07-14 00:00:00"
+          },
+
+          "bodyFrame" : "EquatorJ2000",
+          "rotationModel" :
+          {
+              // Assuming synchronous
+              "type" : "Uniform",
+              "period" : "32.1d",
+              "inclination" : 115.60,
+              "ascendingNode" : 228.34
+          },
+
+          "geometry" :
+          {
+              "type" : "Mesh",
+              "source" : "models/8flora.cmod",
+              "size" : 12.0
+          }
+        }
+    ]
+}

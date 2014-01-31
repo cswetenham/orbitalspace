@@ -1,0 +1,36 @@
+{
+    "version": "1.0",
+    "name": "Solar System",
+    "require" :
+    [
+        "sun.json",
+        "mercury.json",
+        "venus.json",
+        "earth.json",
+        "mars.json",
+        "jupiter.json",
+        "saturn.json",
+        "uranus.json",
+        "neptune.json",
+        "pluto.json",
+        "mainbelt.json",
+        "nearearth.json",
+        "kuiperbelt.json",
+        "scattereddisc.json",
+        "cassini.json",
+        "galileo.json",
+        "voyager.json",
+        "dawn.json",
+        "near.json",
+        "msl.json",
+        "earthorbiting.json",
+        "pioneer.json",
+        "mercury-features.json",
+        "venus-features.json",
+        "mars-features.json",
+        "jupiter-features.json",
+        "saturn-features.json",
+        "uranus-features.json",
+        "neptune-features.json"
+    ]
+}
