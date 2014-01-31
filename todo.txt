@@ -1,3 +1,10 @@
+TODO:
+- Move all gl* calls out of orApp.cpp
+- Want to present a similar System-style interface for graphics in orRender,
+wrapping the GL calls
+- Any lower-level wrapping/utility stuff could go in orGfx
+- Want to fix up ID allocation system to allow deallocation
+
 DONE - Kepler orbits
 DONE - Real units/constants
 
