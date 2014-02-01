@@ -1120,20 +1120,108 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
 boost::posix_time::ptime orApp::posixTimeFromSimTime(float simTime) {
   using namespace boost::posix_time;
   using namespace boost::gregorian;
-
+  typedef boost::posix_time::ptime posix_time;
+  
   // Astronomical Epoch: 1200 hours, 1 January 2000
-  ptime epoch(date(2000, Jan, 1), hours(12));
+  posix_time epoch(date(2000, Jan, 1), hours(12));
   // Game start date: 1753 hours, Mar 15 2025 (Did I pick this for any reason?)
-  ptime gameStart(date(2025, Mar, 15), hours(1753));
+  posix_time gameStart(date(2025, Mar, 15), hours(1753));
   // Note: the (long) here limits us to ~68 years game time.
   // Should be enough, otherwise just need to keep adding seconds to the
   // dateTime to match the simTime.
-  ptime curDateTime = gameStart + seconds((long)simTime);
+  posix_time curDateTime = gameStart + seconds((long)simTime);
+  return curDateTime;
 }
 
 std::string orApp::calendarDateFromSimTime(float simTime) {
   using namespace boost::posix_time;
   return to_simple_string(posixTimeFromSimTime(simTime));
+}
+
+double orApp::julianDateFromPosixTime(
+  boost::posix_time::ptime const& ptime
+) {
+  using namespace boost::posix_time;
+  using namespace boost::gregorian;
+  typedef boost::posix_time::ptime posix_time;
+  // wikipedia: posix_time = (julian_date - 2440587.5) * 86400
+  // => (posix_time / 86400.0) + 2440587.5 = julian_date
+  posix_time posix_epoch(date(1970, Jan, 1), hours(0));
+  boost::posix_time::time_duration d = (ptime - posix_epoch);
+  double posix_time_s = (double)d.ticks() / (double)d.ticks_per_second();
+  return (posix_time_s / 86400.0) + 2440587.5;
+}
+
+// returns eccentric anomaly
+// from http://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
+
+// "If this iteration formula won't converge, the eccentricity is probably too close to one. Then you should instead use the formulae for near-parabolic or parabolic orbits."
+// http://astro.if.ufrgs.br/trigesf/position.html
+double orApp::computeEccentricAnomaly(
+  double mean_anomaly_deg,
+  double eccentricity_rad
+) {
+  double tolerance_deg = 10e-6;
+  double eccentricity_deg = eccentricity_rad * (360.0 / M_TAU);
+  double eccentric_anomaly_deg = mean_anomaly_deg + eccentricity_deg * sin(mean_anomaly_deg);
+  double delta_mean_anomaly_deg = 0;
+  double delta_eccentric_anomaly_deg = 0;
+  do
+  {
+    double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
+    delta_mean_anomaly_deg = mean_anomaly_deg - (eccentric_anomaly_deg - eccentricity_deg * sin(eccentric_anomaly_rad));
+    delta_eccentric_anomaly_deg = delta_mean_anomaly_deg / (1 - eccentricity_rad * cos(eccentric_anomaly_rad));
+    eccentric_anomaly_deg += delta_eccentric_anomaly_deg;
+  } while (delta_eccentric_anomaly_deg > tolerance_deg);
+  
+  return eccentric_anomaly_deg;
+}
+
+Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
+  KeplerianElements const& elements_t0,
+  boost::posix_time::ptime const& ptime
+) {
+  // Compute time in centuries since J2000
+  double julian_date = julianDateFromPosixTime(ptime);
+  double t_C = (julian_date - 2451545.0) / 36525;
+  
+  // Update elements for ephemerides
+  KeplerianElements e(elements_t0);
+  e.semi_major_axis_AU += e.semi_major_axis_AU_per_C * t_C;
+  e.eccentricity_rad += e.eccentricity_rad_per_C * t_C;
+  e.inclination_deg += e.inclination_deg_per_C * t_C;
+  e.mean_longitude_deg += e.mean_longitude_deg_per_C * t_C;
+  e.longitude_of_perihelion_deg += e.longitude_of_perihelion_deg_per_C * t_C;
+  e.longitude_of_ascending_node_deg += e.longitude_of_ascending_node_deg_per_C * t_C;
+  
+  // arg: argument
+  double arg_of_perihelion_deg = e.longitude_of_perihelion_deg - e.longitude_of_ascending_node_deg;
+  
+  // NOTE assuming error_f needs deg->rad conversion, since all other angles in the paper needed it
+  double error_f = e.error_f * t_C * (M_TAU / 360.0);
+  
+  double mean_anomaly_deg = e.mean_longitude_deg - e.longitude_of_perihelion_deg
+    + e.error_b * t_C * t_C
+    + e.error_c * cos(error_f)
+    + e.error_s * sin(error_f); 
+  
+  mean_anomaly_deg = Util::Wrap(mean_anomaly_deg, -180.0, +180.0);
+  
+  double eccentric_anomaly_deg = computeEccentricAnomaly(mean_anomaly_deg, e.eccentricity_rad);
+  double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
+  
+  double x_orbital = e.semi_major_axis_AU * (cos(eccentric_anomaly_rad) - e.eccentricity_rad);
+  double y_orbital = e.semi_major_axis_AU * sqrt(1 - e.eccentricity_rad * e.eccentricity_rad) * sin(eccentric_anomaly_rad);
+  double z_orbital = 0;
+  
+  Eigen::Vector3d r_orbital(x_orbital, y_orbital, z_orbital);
+  
+  Eigen::Matrix3d m;
+  m = Eigen::AngleAxisd(-e.longitude_of_ascending_node_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitX())
+    * Eigen::AngleAxisd(-e.inclination_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitY())
+    * Eigen::AngleAxisd(-arg_of_perihelion_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitZ());
+ 
+  return m * r_orbital;
 }
 
 void orApp::RenderState()

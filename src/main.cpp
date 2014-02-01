@@ -102,6 +102,8 @@ int CDECL main()
   
   orApp::Config appConfig;
 
+  // 2:1 pixel aspect ratio
+  
   appConfig.windowWidth = 2*640;
   appConfig.windowHeight = 2*400;
 

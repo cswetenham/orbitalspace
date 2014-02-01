@@ -11,12 +11,22 @@
 // STL
 #include <vector>
 
+// Boost
+
+#include "boost_begin.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include "boost_end.h"
+
 // SFML
 
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio/Music.hpp>
+
+// Eigen
+
+#include <Eigen/Geometry>
 
 // Old style libs
 
@@ -98,8 +108,42 @@ private:
   Rnd64 m_rnd;
 
   double m_simTime;
+  
+  // TODO compute coordinates according to JPL formulas
+  // TODO convert to SI units
+  struct KeplerianElements {
+    // AU: astrononmical unit
+    // C: century
+    // deg: degree
+    double semi_major_axis_AU;
+    double semi_major_axis_AU_per_C;
+    double eccentricity_rad;
+    double eccentricity_rad_per_C;
+    double inclination_deg;
+    double inclination_deg_per_C;
+    double mean_longitude_deg;
+    double mean_longitude_deg_per_C;
+    double longitude_of_perihelion_deg;
+    double longitude_of_perihelion_deg_per_C;
+    double longitude_of_ascending_node_deg;
+    double longitude_of_ascending_node_deg_per_C;
+    
+    double error_b;
+    double error_c;
+    double error_s;
+    double error_f;
+  };
+  
+  struct Ephemeris {
+    // TODO
+  };
+  
+  static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity_rad );
+  
+  static Eigen::Vector3d ephemerisFromKeplerianElements(KeplerianElements const& elements, boost::posix_time::ptime const& time);
 
-  static boost::posix_time::ptime orApp::posixTimeFromSimTime(float simTime);
+  static double julianDateFromPosixTime(boost::posix_time::ptime const& ptime);
+  static boost::posix_time::ptime posixTimeFromSimTime(float simTime);
   static std::string calendarDateFromSimTime(float simTime);
 
   Config m_config;
