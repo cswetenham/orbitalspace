@@ -19,6 +19,9 @@
 
 #include "boost_begin.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 #include "boost_end.h"
 
 #include "constants.h"
@@ -365,6 +368,24 @@ void orApp::InitState()
   m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x;
   m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y;
   m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z;
+
+  // Load in the json data for the solar system
+  // TODO noticed that the data I'm using only has partial information and
+  // not very well explained units/reference frames
+  // In particular, the orbits aren't drawn from the json but parsed from a
+  // binary JPL database of polynomial fits
+#if 0
+  namespace ptree = boost::property_tree;
+  ptree::ptree data_root;
+  ptree::json_parser::read_json("data/solarsys.json", data_root);
+  printf("%s\n", data_root.get<std::string>("name").c_str());
+  BOOST_FOREACH(ptree::ptree::value_type &v,
+            data_root.get_child("require"))
+  {
+    std::string file_name = v.second.get_value<std::string>();
+    printf("%s\n", file_name.c_str());
+  }
+#endif
 
   // For now, give the moon a circular orbit
 
@@ -1096,7 +1117,7 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
 
-std::string orApp::calendarDateFromSimTime(float simTime) {
+boost::posix_time::ptime orApp::posixTimeFromSimTime(float simTime) {
   using namespace boost::posix_time;
   using namespace boost::gregorian;
 
@@ -1108,8 +1129,11 @@ std::string orApp::calendarDateFromSimTime(float simTime) {
   // Should be enough, otherwise just need to keep adding seconds to the
   // dateTime to match the simTime.
   ptime curDateTime = gameStart + seconds((long)simTime);
+}
 
-  return to_simple_string(curDateTime);
+std::string orApp::calendarDateFromSimTime(float simTime) {
+  using namespace boost::posix_time;
+  return to_simple_string(posixTimeFromSimTime(simTime));
 }
 
 void orApp::RenderState()

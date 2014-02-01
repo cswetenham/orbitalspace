@@ -99,6 +99,7 @@ private:
 
   double m_simTime;
 
+  static boost::posix_time::ptime orApp::posixTimeFromSimTime(float simTime);
   static std::string calendarDateFromSimTime(float simTime);
 
   Config m_config;
