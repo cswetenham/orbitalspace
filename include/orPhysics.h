@@ -3,6 +3,8 @@
 #include "orStd.h"
 #include "orMath.h"
 
+#include "orCore/orSystem.h"
+
 #include <vector>
 
 class PhysicsSystem {
@@ -17,11 +19,8 @@ public:
   {
     double m_userAcc[3];
   };
-
-  int numParticleBodies() const { return (int)m_particleBodies.size(); }
-  int makeParticleBody() { m_particleBodies.push_back(ParticleBody()); return numParticleBodies() - 1; }
-  ParticleBody&       getParticleBody(int i)       { return m_particleBodies[i]; }
-  ParticleBody const& getParticleBody(int i) const { return m_particleBodies[i]; }
+  
+  DECLARE_SYSTEM_TYPE(ParticleBody, ParticleBodies);
 
   struct GravBody : public Body
   {
@@ -29,11 +28,15 @@ public:
     double m_mass;
     int m_soiParentBody; // TODO want to avoid this later.
   };
+  
+  DECLARE_SYSTEM_TYPE(GravBody, GravBodies);
 
-  int numGravBodies() const { return (int)m_gravBodies.size(); }
-  int makeGravBody() { m_gravBodies.push_back(GravBody()); return numGravBodies() - 1; }
-  GravBody&       getGravBody(int i)       { return m_gravBodies[i]; }
-  GravBody const& getGravBody(int i) const { return m_gravBodies[i]; }
+  struct KeplerBody : public Body
+  {
+    
+  };
+  
+  DECLARE_SYSTEM_TYPE(KeplerBody, KeplerBodies);
 
   enum IntegrationMethod {
     IntegrationMethod_ExplicitEuler = 0,
@@ -41,7 +44,7 @@ public:
     IntegrationMethod_RK4,
     IntegrationMethod_Count
   };
-
+  
   void update(IntegrationMethod const integrationMethod, double const dt);
   GravBody const& findSOIGravBody(ParticleBody const& body) const;
 
@@ -57,7 +60,4 @@ private:
   void CalcParticleUserAcc(int numParticles, PP const& pp, VP const& vp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
   template< class PG, class VG, class OA >
   void CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
-
-  std::vector<ParticleBody> m_particleBodies;
-  std::vector<GravBody> m_gravBodies;
 }; // class PhysicsSystem

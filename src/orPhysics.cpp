@@ -7,8 +7,8 @@
 
 void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const dt) {
 
-  int numParticles = (int)m_particleBodies.size();
-  int numGravs = (int)m_gravBodies.size();
+  int numParticles = (int)numParticleBodies();
+  int numGravs = (int)numGravBodies();
   int stateSize = numParticles + numGravs;
 
   // State:
@@ -23,29 +23,29 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   int curId = 0;
   for (int i = 0; i < numParticles; ++i, ++curId) {
-    Body& body = m_particleBodies[i];
+    Body& body = m_instancedParticleBodies[i];
     x_0.col(curId) = Vector3d(body.m_pos);
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_gravBodies[i];
+    Body& body = m_instancedGravBodies[i];
     x_0.col(curId) = Vector3d(body.m_pos);
   }
 
   for (int i = 0; i < numParticles; ++i, ++curId) {
-    Body& body = m_particleBodies[i];
+    Body& body = m_instancedParticleBodies[i];
     x_0.col(curId) = Vector3d(body.m_vel);
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_gravBodies[i];
+    Body& body = m_instancedGravBodies[i];
     x_0.col(curId) = Vector3d(body.m_vel);
   }
 
   Eigen::VectorXd mgravs(numGravs);
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
-    GravBody& body = m_gravBodies[i];
+    GravBody& body = m_instancedGravBodies[i];
     mgravs[i] = body.m_mass;
   }
 
@@ -115,7 +115,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   curId = 0;
   for (int i = 0; i < numParticles; ++i, ++curId) {
-    Body& body = m_particleBodies[i];
+    Body& body = m_instancedParticleBodies[i];
 
     const double* const bodyPos = x_1.col(curId).data();
     
@@ -125,7 +125,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_gravBodies[i];
+    Body& body = m_instancedGravBodies[i];
     
     const double* const bodyPos = x_1.col(curId).data();
     
@@ -135,7 +135,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   }
 
   for (int i = 0; i < numParticles; ++i, ++curId) {
-    Body& body = m_particleBodies[i];
+    Body& body = m_instancedParticleBodies[i];
     
     const double* const bodyVel = x_1.col(curId).data();
     
@@ -145,7 +145,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   }
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_gravBodies[i];
+    Body& body = m_instancedGravBodies[i];
     
     const double* const bodyVel = x_1.col(curId).data();
     
