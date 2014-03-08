@@ -10,44 +10,6 @@
           <in>CMakeCXXCompilerId.cpp</in>
         </df>
       </df>
-      <df name="include">
-        <df name="orPlatform">
-          <df name="linux">
-            <in>atomic_linux.h</in>
-          </df>
-          <df name="win32">
-            <in>window_win32.h</in>
-          </df>
-          <in>atomic.h</in>
-          <in>window.h</in>
-        </df>
-        <df name="orProfile">
-          <in>perftimer.h</in>
-        </df>
-        <df name="orTask">
-          <in>task.h</in>
-          <in>taskScheduler.h</in>
-          <in>taskSchedulerWorkStealing.h</in>
-          <in>terminationBarrier.h</in>
-          <in>victimPicker.h</in>
-          <in>workStealingQueue.h</in>
-        </df>
-        <in>boost_begin.h</in>
-        <in>boost_end.h</in>
-        <in>constants.h</in>
-        <in>orApp.h</in>
-        <in>orCamera.h</in>
-        <in>orEntity.h</in>
-        <in>orGfx.h</in>
-        <in>orMath.h</in>
-        <in>orPhysics.h</in>
-        <in>orRender.h</in>
-        <in>orStd.h</in>
-        <in>refCount.h</in>
-        <in>rnd.h</in>
-        <in>timer.h</in>
-        <in>util.h</in>
-      </df>
       <df name="Matlab">
         <df name="lambert">
           <in>lambert-test.m</in>
@@ -77,8 +39,6 @@
         <in>timer.cpp</in>
         <in>util.cpp</in>
       </df>
-      <in>flat.f.glsl</in>
-      <in>flat.v.glsl</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -104,7 +64,7 @@
       </codeAssistance>
       <makefileType>
         <makeTool>
-          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommandWorkingDir>./build</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>OrbitalSpace</executablePath>
@@ -146,7 +106,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -155,81 +116,14 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <item path="flat.f.glsl" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="flat.v.glsl" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/boost_begin.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/boost_end.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/constants.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orApp.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orCamera.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orEntity.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orGfx.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orMath.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orPhysics.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orPlatform/atomic.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orPlatform/linux/atomic_linux.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="include/orPlatform/win32/window_win32.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="include/orPlatform/window.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orProfile/perftimer.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orRender.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orStd.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orTask/task.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orTask/taskScheduler.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orTask/taskSchedulerWorkStealing.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="include/orTask/terminationBarrier.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="include/orTask/victimPicker.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/orTask/workStealingQueue.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/refCount.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/rnd.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/timer.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/util.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
         <ccTool>
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -244,7 +138,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -259,7 +154,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -274,7 +170,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -289,7 +186,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -315,7 +213,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -337,7 +236,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>
@@ -352,7 +252,8 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>.</pElem>
+            <pElem>SDL/include</pElem>
+            <pElem>build</pElem>
           </incDir>
           <preprocessorList>
             <Elem>GL_GLEXT_PROTOTYPES</Elem>

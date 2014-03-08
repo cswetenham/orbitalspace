@@ -4,11 +4,7 @@
 #include "orMath.h"
 #include "orGfx.h"
 
-#include <SFML/Graphics.hpp>
-
 #include <vector>
-
-namespace sf { class RenderWindow; class Font; class Image; }
 
 class RenderSystem {
 public:
@@ -17,6 +13,8 @@ public:
 
   void initRender();
   void shutdownRender();
+
+  typedef Vector3d Colour; // TODO maybe use different type?
 
   struct FrameBuffer {
     FrameBuffer() : frameBufferId(0), colorTextureId(0), depthBufferId(0) {}
@@ -124,7 +122,7 @@ public:
   void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
   void render3D();
 
-  void render(FrameBuffer const& frameBuffer, sf::Vector3f clearCol, float clearDepth, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
+  void render(FrameBuffer const& frameBuffer, Colour clearCol, float clearDepth, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
 
   void checkGLErrors();
 
@@ -156,5 +154,6 @@ private:
   std::vector<Trail> m_trails;
 
   uint32_t m_fontTextureId;
-  sf::Image* m_fontImage;
+  struct Image {}; // TODO replace with appropriate type
+  Image* m_fontImage;
 }; // class RenderSystem

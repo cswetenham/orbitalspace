@@ -22,22 +22,19 @@ find_package(GLUT REQUIRED)
 
 # TODO? find_package(GLEW REQUIRED)
 
-# set(SFML_STATIC_LIBRARIES TRUE)
-find_package(SFML 2 COMPONENTS audio graphics network system window REQUIRED)
-
 # TODO? find_package(Eigen3 REQUIRED)
 
 # No include for Threads
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OpenGL_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_DIRS})
-include_directories(${SFML_INCLUDE_DIRS})
 # TODO what?? Fix plz
 include_directories("/usr/include/eigen3")
 include_directories("/usr/include/eigen3/unsupported")
 include_directories("./include")
 
 add_subdirectory("./SDL")
+include_directories("./SDL/include")
 
 add_definitions(-DGL_GLEXT_PROTOTYPES)
 add_definitions(-D__STDC_LIMIT_MACROS)
@@ -59,5 +56,4 @@ target_link_libraries(OrbitalSpace ${OpenGL_LIBRARIES})
 target_link_libraries(OrbitalSpace GLU)
 target_link_libraries(OrbitalSpace ${GLUT_LIBRARIES})
 target_link_libraries(OrbitalSpace GLEW) # TODO # TODO...what?
-target_link_libraries(OrbitalSpace ${SFML_LIBRARIES})
 target_link_libraries(OrbitalSpace SDL2)

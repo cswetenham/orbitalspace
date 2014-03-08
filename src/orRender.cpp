@@ -3,14 +3,12 @@
 
 #include "orRender.h"
 
-// For Text rendering
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-
 #include "orProfile/perftimer.h"
 
+#include "SDL_log.h"
+
 RenderSystem::RenderSystem() :
-  m_fontImage(new sf::Image)
+  m_fontImage(new Image)
 {
 }
 
@@ -21,6 +19,8 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::initRender()
 {
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Loading font bitmap");
+#if 0
   if (!m_fontImage->loadFromFile("fonts/dos-ascii-8x8.png")) {
     orErr("Could not load '%s'.", "fonts/dos-ascii-8x8.png");
   }
@@ -28,7 +28,7 @@ void RenderSystem::initRender()
   sf::Vector2u const size = m_fontImage->getSize();
 
   uint32_t width = size.x;
-  uint32_t height = size.x;
+  uint32_t height = size.y;
 
   glGenTextures(1, &m_fontTextureId);
   glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
@@ -42,6 +42,7 @@ void RenderSystem::initRender()
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+#endif
 }
 
 void RenderSystem::shutdownRender()
@@ -606,7 +607,7 @@ void RenderSystem::clearBuffer(
 
 void RenderSystem::render(
   FrameBuffer const& frameBuffer,
-  sf::Vector3f clearCol,
+  Colour clearCol,
   float clearDepth,
   Eigen::Matrix4d const& screenFromProj,
   Eigen::Matrix4d const& projFromCam,

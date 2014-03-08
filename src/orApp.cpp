@@ -15,6 +15,10 @@
 #include <iostream>
 #include <fstream>
 
+// SDL
+#include <SDL.h>
+#include <SDL_log.h>
+
 #include <Eigen/Geometry>
 
 #include "boost_begin.h"
@@ -41,7 +45,6 @@ orApp::orApp(Config const& config):
   m_config(config),
   m_paused(false),
   m_singleStep(false),
-  m_wireframe(false),
 
   m_cameraSystem(),
   m_camMode(CameraMode_ThirdPerson),
@@ -50,6 +53,8 @@ orApp::orApp(Config const& config):
   m_camParams(-3.1855e7),
 
   m_renderSystem(),
+  m_frameBuffer(),
+  m_wireframe(false),
 
   m_physicsSystem(),
   m_timeScale(1.0),
@@ -61,7 +66,6 @@ orApp::orApp(Config const& config):
   m_inputMode(InputMode_Default),
   m_thrusters(0),
   m_hasFocus(false),
-  m_frameBuffer(),
   m_window(NULL),
   m_music(NULL)
 {
@@ -72,11 +76,12 @@ orApp::orApp(Config const& config):
   Init();
 
 #if 0
-  m_music = new sf::Music();
+  m_music = new Music();
   m_music->openFromFile("music/spacething3_mastered_fullq.ogg");
   m_music->setLoop(true);
   m_music->play();
 #endif
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Music");
   orLog("Init complete\n");
 }
 
@@ -94,6 +99,7 @@ orApp::~orApp()
 
 void orApp::Init()
 {
+  SDL_Init(SDL_INIT_VIDEO);
   InitState();
   InitRender();
 }
@@ -102,6 +108,7 @@ void orApp::Shutdown()
 {
   ShutdownRender();
   ShutdownState();
+  SDL_Quit();
 }
 
 // TODO put elsewhere
@@ -121,11 +128,14 @@ void runTests() {
 
 void orApp::PollEvents()
 {
+#if 0
   sf::Event event;
   while (m_window->pollEvent(event))
   {
     HandleEvent(event);
   }
+#endif
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI PollEvents()");
 }
 
 void orApp::Run()
@@ -138,7 +148,7 @@ void orApp::Run()
 
     RunOneStep();
 
-    sf::sleep(sf::milliseconds(1)); // TODO sleep according to frame duration
+    SDL_Delay(1); // milliseconds
 
     m_lastFrameDuration = Timer::GetPerfTime() - frameStart;
   }
@@ -175,6 +185,8 @@ void orApp::HandleInput()
 
   // Input handling
   if (m_inputMode == InputMode_RotateCamera) {
+    SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Camera Rotation");
+#if 0
     sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
     sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
     sf::Mouse::setPosition(centerPos, *m_window);
@@ -183,6 +195,7 @@ void orApp::HandleInput()
     m_camParams.theta = Util::Wrap(m_camParams.theta + dx, 0.0, M_TAU);
     double const dy = mouseDelta.y * M_TAU / 300.0;
     m_camParams.phi = Util::Clamp(m_camParams.phi + dy, -.249 * M_TAU, .249 * M_TAU);
+#endif
   }
 }
 
@@ -279,11 +292,14 @@ void orApp::InitRender()
   // TODO 3d labels show when behind the camera as well as when they are in front.
   // TODO trails are bugged when switching camera targets.
 
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Window/Surface Buffer Init");
+#if 0
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
   settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
-  m_window = new sf::RenderWindow(sf::VideoMode(m_config.windowWidth, m_config.windowHeight, 32), "SFML OpenGL", sf::Style::Close, settings);
+  m_window = new sf::RenderWindow(sf::VideoMode(m_config.windowWidth, m_config.windowHeight, 32), "Orbital Space", sf::Style::Close, settings);
+#endif
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -308,30 +324,33 @@ void orApp::ShutdownRender()
 
   // TODO free opengl resources
 
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Window cleanup");
+#if 0
   m_window->close();
   delete m_window; m_window = NULL;
+#endif
 }
 
 void orApp::InitState()
 {
   // Create NES-ish palette (selected colour sets from the NES palettes, taken from Wikipedia)
-  m_colR[0] = sf::Vector3f(0,0,0)/255.f;
-  m_colR[1] = sf::Vector3f(136,20,0)/255.f;
-  m_colR[2] = sf::Vector3f(228,92,16)/255.f;
-  m_colR[3] = sf::Vector3f(252,160,68)/255.f;
-  m_colR[4] = sf::Vector3f(252,224,168)/255.f;
+  m_colR[0] = RenderSystem::Colour(0,0,0)/255.f;
+  m_colR[1] = RenderSystem::Colour(136,20,0)/255.f;
+  m_colR[2] = RenderSystem::Colour(228,92,16)/255.f;
+  m_colR[3] = RenderSystem::Colour(252,160,68)/255.f;
+  m_colR[4] = RenderSystem::Colour(252,224,168)/255.f;
 
-  m_colG[0] = sf::Vector3f(0,0,0)/255.f;
-  m_colG[1] = sf::Vector3f(0,120,0)/255.f;
-  m_colG[2] = sf::Vector3f(0,184,0)/255.f;
-  m_colG[3] = sf::Vector3f(184,248,24)/255.f;
-  m_colG[4] = sf::Vector3f(216,248,120)/255.f;
+  m_colG[0] = RenderSystem::Colour(0,0,0)/255.f;
+  m_colG[1] = RenderSystem::Colour(0,120,0)/255.f;
+  m_colG[2] = RenderSystem::Colour(0,184,0)/255.f;
+  m_colG[3] = RenderSystem::Colour(184,248,24)/255.f;
+  m_colG[4] = RenderSystem::Colour(216,248,120)/255.f;
 
-  m_colB[0] = sf::Vector3f(0,0,0)/255.f;
-  m_colB[1] = sf::Vector3f(0,0,252)/255.f;
-  m_colB[2] = sf::Vector3f(0,120,248)/255.f;
-  m_colB[3] = sf::Vector3f(60,188,252)/255.f;
-  m_colB[4] = sf::Vector3f(164,228,252)/255.f;
+  m_colB[0] = RenderSystem::Colour(0,0,0)/255.f;
+  m_colB[1] = RenderSystem::Colour(0,0,252)/255.f;
+  m_colB[2] = RenderSystem::Colour(0,120,248)/255.f;
+  m_colB[3] = RenderSystem::Colour(60,188,252)/255.f;
+  m_colB[4] = RenderSystem::Colour(164,228,252)/255.f;
 
   Vector3d const lightDir = Vector3d(1.0, 1.0, 0.0).normalized();
 
@@ -355,9 +374,9 @@ void orApp::InitState()
   m_uiTextTopLabel2D.m_pos[0] = 0;
   m_uiTextTopLabel2D.m_pos[1] = 0;
 
-  m_uiTextTopLabel2D.m_col[0] =  m_colG[4].x;
-  m_uiTextTopLabel2D.m_col[1] =  m_colG[4].y;
-  m_uiTextTopLabel2D.m_col[2] =  m_colG[4].z;
+  m_uiTextTopLabel2D.m_col[0] =  m_colG[4].x();
+  m_uiTextTopLabel2D.m_col[1] =  m_colG[4].y();
+  m_uiTextTopLabel2D.m_col[2] =  m_colG[4].z();
 
   m_uiTextBottomLabel2DId = m_renderSystem.makeLabel2D();
   RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
@@ -365,9 +384,9 @@ void orApp::InitState()
   m_uiTextBottomLabel2D.m_pos[0] = 0;
   m_uiTextBottomLabel2D.m_pos[1] = m_config.renderHeight - 8; // TODO HAX - 8 is the bitmap font height, shouldn't be hardcoded
 
-  m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x;
-  m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y;
-  m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z;
+  m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x();
+  m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y();
+  m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z();
 
   // Load in the json data for the solar system
   // TODO noticed that the data I'm using only has partial information and
@@ -441,9 +460,9 @@ void orApp::InitState()
     earthSphere.m_pos[1] = earthPosData[1];
     earthSphere.m_pos[2] = earthPosData[2];
 
-    earthSphere.m_col[0] = m_colG[1].x;
-    earthSphere.m_col[1] = m_colG[1].y;
-    earthSphere.m_col[2] = m_colG[1].z;
+    earthSphere.m_col[0] = m_colG[1].x();
+    earthSphere.m_col[1] = m_colG[1].y();
+    earthSphere.m_col[2] = m_colG[1].z();
   }
 
   CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthPlanet.m_cameraTargetId = m_cameraSystem.makeTarget());
@@ -485,9 +504,9 @@ void orApp::InitState()
     moonSphere.m_pos[1] = moonPosData[1];
     moonSphere.m_pos[2] = moonPosData[2];
 
-    moonSphere.m_col[0] = m_colG[1].x;
-    moonSphere.m_col[1] = m_colG[1].y;
-    moonSphere.m_col[2] = m_colG[1].z;
+    moonSphere.m_col[0] = m_colG[1].x();
+    moonSphere.m_col[1] = m_colG[1].y();
+    moonSphere.m_col[2] = m_colG[1].z();
   }
 
   RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonMoon.m_orbitId = m_renderSystem.makeOrbit());
@@ -498,20 +517,20 @@ void orApp::InitState()
     moonOrbit.m_pos[1] = earthPosData[1];
     moonOrbit.m_pos[2] = earthPosData[2];
 
-    moonOrbit.m_col[0] = m_colG[1].x;
-    moonOrbit.m_col[1] = m_colG[1].y;
-    moonOrbit.m_col[2] = m_colG[1].z;
+    moonOrbit.m_col[0] = m_colG[1].x();
+    moonOrbit.m_col[1] = m_colG[1].y();
+    moonOrbit.m_col[2] = m_colG[1].z();
   }
 
   RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   {
-    moonTrail.m_colOld[0] = m_colG[0].x;
-    moonTrail.m_colOld[1] = m_colG[0].y;
-    moonTrail.m_colOld[2] = m_colG[0].z;
+    moonTrail.m_colOld[0] = m_colG[0].x();
+    moonTrail.m_colOld[1] = m_colG[0].y();
+    moonTrail.m_colOld[2] = m_colG[0].z();
 
-    moonTrail.m_colNew[0] = m_colG[4].x;
-    moonTrail.m_colNew[1] = m_colG[4].y;
-    moonTrail.m_colNew[2] = m_colG[4].z;
+    moonTrail.m_colNew[0] = m_colG[4].x();
+    moonTrail.m_colNew[1] = m_colG[4].y();
+    moonTrail.m_colNew[2] = m_colG[4].z();
   }
 
   CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonMoon.m_cameraTargetId = m_cameraSystem.makeTarget());
@@ -529,9 +548,9 @@ void orApp::InitState()
     moonLabel3D.m_pos[1] = moonPosData[1];
     moonLabel3D.m_pos[2] = moonPosData[2];
 
-    moonLabel3D.m_col[0] = m_colG[4].x;
-    moonLabel3D.m_col[1] = m_colG[4].y;
-    moonLabel3D.m_col[2] = m_colG[4].z;
+    moonLabel3D.m_col[0] = m_colG[4].x();
+    moonLabel3D.m_col[1] = m_colG[4].y();
+    moonLabel3D.m_col[2] = m_colG[4].z();
 
     moonLabel3D.m_text = std::string("Moon");
   }
@@ -609,20 +628,20 @@ void orApp::InitState()
     playerOrbit.m_pos[1] = earthPosData[1];
     playerOrbit.m_pos[2] = earthPosData[2];
 
-    playerOrbit.m_col[0] = m_colB[2].x;
-    playerOrbit.m_col[1] = m_colB[2].y;
-    playerOrbit.m_col[2] = m_colB[2].z;
+    playerOrbit.m_col[0] = m_colB[2].x();
+    playerOrbit.m_col[1] = m_colB[2].y();
+    playerOrbit.m_col[2] = m_colB[2].z();
   }
 
   RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   {
-    playerTrail.m_colOld[0] = m_colB[0].x;
-    playerTrail.m_colOld[1] = m_colB[0].y;
-    playerTrail.m_colOld[2] = m_colB[0].z;
+    playerTrail.m_colOld[0] = m_colB[0].x();
+    playerTrail.m_colOld[1] = m_colB[0].y();
+    playerTrail.m_colOld[2] = m_colB[0].z();
 
-    playerTrail.m_colNew[0] = m_colB[4].x;
-    playerTrail.m_colNew[1] = m_colB[4].y;
-    playerTrail.m_colNew[2] = m_colB[4].z;
+    playerTrail.m_colNew[0] = m_colB[4].x();
+    playerTrail.m_colNew[1] = m_colB[4].y();
+    playerTrail.m_colNew[2] = m_colB[4].z();
   }
 
   RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
@@ -631,9 +650,9 @@ void orApp::InitState()
     playerPoint.m_pos[1] = playerBody.m_pos[1];
     playerPoint.m_pos[2] = playerBody.m_pos[2];
 
-    playerPoint.m_col[0] = m_colB[4].x;
-    playerPoint.m_col[1] = m_colB[4].y;
-    playerPoint.m_col[2] = m_colB[4].z;
+    playerPoint.m_col[0] = m_colB[4].x();
+    playerPoint.m_col[1] = m_colB[4].y();
+    playerPoint.m_col[2] = m_colB[4].z();
   }
 
   CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
@@ -668,20 +687,20 @@ void orApp::InitState()
     suspectOrbit.m_pos[1] = earthPosData[1];
     suspectOrbit.m_pos[2] = earthPosData[2];
 
-    suspectOrbit.m_col[0] = m_colR[2].x;
-    suspectOrbit.m_col[1] = m_colR[2].y;
-    suspectOrbit.m_col[2] = m_colR[2].z;
+    suspectOrbit.m_col[0] = m_colR[2].x();
+    suspectOrbit.m_col[1] = m_colR[2].y();
+    suspectOrbit.m_col[2] = m_colR[2].z();
   }
 
   RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
   {
-    suspectTrail.m_colOld[0] = m_colR[0].x;
-    suspectTrail.m_colOld[1] = m_colR[0].y;
-    suspectTrail.m_colOld[2] = m_colR[0].z;
+    suspectTrail.m_colOld[0] = m_colR[0].x();
+    suspectTrail.m_colOld[1] = m_colR[0].y();
+    suspectTrail.m_colOld[2] = m_colR[0].z();
 
-    suspectTrail.m_colNew[0] = m_colR[4].x;
-    suspectTrail.m_colNew[1] = m_colR[4].y;
-    suspectTrail.m_colNew[2] = m_colR[4].z;
+    suspectTrail.m_colNew[0] = m_colR[4].x();
+    suspectTrail.m_colNew[1] = m_colR[4].y();
+    suspectTrail.m_colNew[2] = m_colR[4].z();
   }
 
   RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
@@ -690,9 +709,9 @@ void orApp::InitState()
     suspectPoint.m_pos[1] = suspectBody.m_pos[1];
     suspectPoint.m_pos[2] = suspectBody.m_pos[2];
 
-    suspectPoint.m_col[0] = m_colR[4].x;
-    suspectPoint.m_col[1] = m_colR[4].y;
-    suspectPoint.m_col[2] = m_colR[4].z;
+    suspectPoint.m_col[0] = m_colR[4].x();
+    suspectPoint.m_col[1] = m_colR[4].y();
+    suspectPoint.m_col[2] = m_colR[4].z();
   }
 
   CameraSystem::Target& suspectCamTarget = m_cameraSystem.getTarget(suspectShip.m_cameraTargetId = m_cameraSystem.makeTarget());
@@ -732,7 +751,7 @@ void orApp::ShutdownState()
 {
 }
 
-void orApp::HandleEvent(sf::Event const& _event)
+void orApp::HandleEvent(Event const& _event)
 {
   /* TODO allow?
   if (_event.type == sf::Event::Resized)
@@ -741,6 +760,9 @@ void orApp::HandleEvent(sf::Event const& _event)
   }
   */
 
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Event handling");
+
+#if 0
   if (_event.type == sf::Event::MouseButtonPressed) {
     if (_event.mouseButton.button == sf::Mouse::Right) {
       m_inputMode = InputMode_RotateCamera;
@@ -881,6 +903,7 @@ void orApp::HandleEvent(sf::Event const& _event)
   {
     m_hasFocus = true;
   }
+#endif
 }
 
 Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
@@ -1121,7 +1144,7 @@ boost::posix_time::ptime orApp::posixTimeFromSimTime(float simTime) {
   using namespace boost::posix_time;
   using namespace boost::gregorian;
   typedef boost::posix_time::ptime posix_time;
-  
+
   // Astronomical Epoch: 1200 hours, 1 January 2000
   posix_time epoch(date(2000, Jan, 1), hours(12));
   // Game start date: 1753 hours, Mar 15 2025 (Did I pick this for any reason?)
@@ -1173,7 +1196,7 @@ double orApp::computeEccentricAnomaly(
     delta_eccentric_anomaly_deg = delta_mean_anomaly_deg / (1 - eccentricity_rad * cos(eccentric_anomaly_rad));
     eccentric_anomaly_deg += delta_eccentric_anomaly_deg;
   } while (delta_eccentric_anomaly_deg > tolerance_deg);
-  
+
   return eccentric_anomaly_deg;
 }
 
@@ -1184,7 +1207,7 @@ Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
   // Compute time in centuries since J2000
   double julian_date = julianDateFromPosixTime(ptime);
   double t_C = (julian_date - 2451545.0) / 36525;
-  
+
   // Update elements for ephemerides
   KeplerianElements e(elements_t0);
   e.semi_major_axis_AU += e.semi_major_axis_AU_per_C * t_C;
@@ -1193,34 +1216,34 @@ Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
   e.mean_longitude_deg += e.mean_longitude_deg_per_C * t_C;
   e.longitude_of_perihelion_deg += e.longitude_of_perihelion_deg_per_C * t_C;
   e.longitude_of_ascending_node_deg += e.longitude_of_ascending_node_deg_per_C * t_C;
-  
+
   // arg: argument
   double arg_of_perihelion_deg = e.longitude_of_perihelion_deg - e.longitude_of_ascending_node_deg;
-  
+
   // NOTE assuming error_f needs deg->rad conversion, since all other angles in the paper needed it
   double error_f = e.error_f * t_C * (M_TAU / 360.0);
-  
+
   double mean_anomaly_deg = e.mean_longitude_deg - e.longitude_of_perihelion_deg
     + e.error_b * t_C * t_C
     + e.error_c * cos(error_f)
-    + e.error_s * sin(error_f); 
-  
+    + e.error_s * sin(error_f);
+
   mean_anomaly_deg = Util::Wrap(mean_anomaly_deg, -180.0, +180.0);
-  
+
   double eccentric_anomaly_deg = computeEccentricAnomaly(mean_anomaly_deg, e.eccentricity_rad);
   double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
-  
+
   double x_orbital = e.semi_major_axis_AU * (cos(eccentric_anomaly_rad) - e.eccentricity_rad);
   double y_orbital = e.semi_major_axis_AU * sqrt(1 - e.eccentricity_rad * e.eccentricity_rad) * sin(eccentric_anomaly_rad);
   double z_orbital = 0;
-  
+
   Eigen::Vector3d r_orbital(x_orbital, y_orbital, z_orbital);
-  
+
   Eigen::Matrix3d m;
   m = Eigen::AngleAxisd(-e.longitude_of_ascending_node_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitX())
     * Eigen::AngleAxisd(-e.inclination_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitY())
     * Eigen::AngleAxisd(-arg_of_perihelion_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitZ());
- 
+
   return m * r_orbital;
 }
 
@@ -1242,7 +1265,7 @@ void orApp::RenderState()
   // Used to translate a 3d position into a 2d framebuffer position
   Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
 
-  sf::Vector3f clearCol = m_colG[0];
+  RenderSystem::Colour clearCol = m_colG[0];
 
   m_renderSystem.render(m_frameBuffer, clearCol, minZ, screenMatrix, projMatrix, camMatrix);
 
@@ -1280,7 +1303,10 @@ void orApp::RenderState()
     glDisable(GL_TEXTURE_2D);
   }
 
+  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI End of frame buffer swap/sync");
+#if 0
   m_window->display();
+#endif
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }

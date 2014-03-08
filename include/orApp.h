@@ -17,13 +17,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "boost_end.h"
 
-// SFML
-
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio/Music.hpp>
-
 // Eigen
 
 #include <Eigen/Geometry>
@@ -59,6 +52,13 @@ public:
     int renderHeight;
   };
 
+  // Eigen::Vectors are SSE magic.
+  // Want those and also some plain old data types.
+  struct VectorData2d {
+    double x;
+    double y;
+  }; // TODO replace with appropriate type
+
   orApp(Config const& config);
   ~orApp();
 
@@ -77,7 +77,8 @@ private:
   void RunOneStep();
 
   void PollEvents();
-    void HandleEvent(sf::Event const& _event);
+    struct Event {}; // TODO replace with appropriate type
+    void HandleEvent(Event const& _event);
 
   void HandleInput();
 
@@ -108,7 +109,7 @@ private:
   Rnd64 m_rnd;
 
   double m_simTime;
-  
+
   // TODO compute coordinates according to JPL formulas
   // TODO convert to SI units
   struct KeplerianElements {
@@ -127,19 +128,19 @@ private:
     double longitude_of_perihelion_deg_per_C;
     double longitude_of_ascending_node_deg;
     double longitude_of_ascending_node_deg_per_C;
-    
+
     double error_b;
     double error_c;
     double error_s;
     double error_f;
   };
-  
+
   struct Ephemeris {
     // TODO
   };
-  
+
   static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity_rad );
-  
+
   static Eigen::Vector3d ephemerisFromKeplerianElements(KeplerianElements const& elements, boost::posix_time::ptime const& time);
 
   static double julianDateFromPosixTime(boost::posix_time::ptime const& ptime);
@@ -186,9 +187,9 @@ private:
   enum {PALETTE_SIZE = 5};
 
   // Lazy
-  sf::Vector3f m_colG[PALETTE_SIZE];
-  sf::Vector3f m_colR[PALETTE_SIZE];
-  sf::Vector3f m_colB[PALETTE_SIZE];
+  RenderSystem::Colour m_colG[PALETTE_SIZE];
+  RenderSystem::Colour m_colR[PALETTE_SIZE];
+  RenderSystem::Colour m_colB[PALETTE_SIZE];
 
   double m_lightDir[3];
 
@@ -238,11 +239,13 @@ private:
 
   uint32_t m_thrusters;
 
-  sf::RenderWindow* m_window;
   bool m_hasFocus;
-  // sf::Vectors are just plain old data. Eigen::Vectors are SSE magic.
-  sf::Vector2i m_savedMousePos;
-  sf::Music* m_music;
+  struct Window {}; // TODO replace with appropriate type
+  Window* m_window;
+
+  VectorData2d m_savedMousePos;
+  struct Music {}; // TODO replace with appropriate type
+  Music* m_music;
 };
 
 #endif	/* ORBITALSPACEAPP_H */
