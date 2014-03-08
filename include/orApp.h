@@ -40,7 +40,13 @@
 #include "orCamera.h"
 #include "orEntity.h"
 
+// TODO forward decl for SDL_GLContext?
+
+#include "SDL_video.h"
+
 // Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
+
+struct SDL_Window;
 
 class orApp
 {
@@ -240,8 +246,8 @@ private:
   uint32_t m_thrusters;
 
   bool m_hasFocus;
-  struct Window {}; // TODO replace with appropriate type
-  Window* m_window;
+  SDL_Window* m_window;
+  SDL_GLContext m_gl_context;
 
   VectorData2d m_savedMousePos;
   struct Music {}; // TODO replace with appropriate type

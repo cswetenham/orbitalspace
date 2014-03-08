@@ -99,7 +99,18 @@ orApp::~orApp()
 
 void orApp::Init()
 {
-  SDL_Init(SDL_INIT_VIDEO);
+  // TODO init audio
+  // TODO init...joystick? gamecontroller? need to look up what each of those do
+  if (SDL_Init(SDL_INIT_EVENTS|SDL_INIT_TIMER|SDL_INIT_VIDEO) != 0) {
+    fprintf(stderr,
+      "\nUnable to initialize SDL:  %s\n",
+      SDL_GetError()
+    );
+  }
+
+  // Show anything with priority of Info and above
+  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
+
   InitState();
   InitRender();
 }
@@ -288,18 +299,28 @@ static GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
 
 void orApp::InitRender()
 {
+  // TODO move to render system
+
   // TODO z-ordering seems bad on text labels (Moon label appears in front of everything else - not sure if this is what I want, would be good to have the option)
   // TODO 3d labels show when behind the camera as well as when they are in front.
   // TODO trails are bugged when switching camera targets.
 
-  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Window/Surface Buffer Init");
+  // TODO SDL logging not flushing?
 #if 0
   sf::ContextSettings settings;
   settings.depthBits         = 24; // Request a 24 bits depth buffer
   settings.stencilBits       = 8;  // Request a 8 bits stencil buffer
   settings.antialiasingLevel = 2;  // Request 2 levels of antialiasing
-  m_window = new sf::RenderWindow(sf::VideoMode(m_config.windowWidth, m_config.windowHeight, 32), "Orbital Space", sf::Style::Close, settings);
 #endif
+  // TODO backbuffer settings as above?
+
+  // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
+  m_window = SDL_CreateWindow(
+    "Orbital Space", 0, 0, m_config.windowWidth, m_config.windowHeight,
+    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+  // Create an OpenGL context associated with the window.
+  m_gl_context = SDL_GL_CreateContext(m_window);
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -324,11 +345,11 @@ void orApp::ShutdownRender()
 
   // TODO free opengl resources
 
-  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Window cleanup");
-#if 0
-  m_window->close();
-  delete m_window; m_window = NULL;
-#endif
+  // Once finished with OpenGL functions, the SDL_GLContext can be deleted.
+  SDL_GL_DeleteContext(m_gl_context);
+
+  SDL_DestroyWindow(m_window);
+  m_window = NULL;
 }
 
 void orApp::InitState()
@@ -1303,10 +1324,7 @@ void orApp::RenderState()
     glDisable(GL_TEXTURE_2D);
   }
 
-  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI End of frame buffer swap/sync");
-#if 0
-  m_window->display();
-#endif
+  SDL_GL_SwapWindow(m_window);
 
   // printf("Frame Time: %04.1f ms Total Sim Time: %04.1f s \n", Timer::PerfTimeToMillis(m_lastFrameDuration), m_simTime / 1000);
 }

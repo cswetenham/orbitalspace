@@ -67,7 +67,7 @@
           <buildCommandWorkingDir>./build</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>OrbitalSpace</executablePath>
+          <executablePath>build/OrbitalSpace</executablePath>
         </makeTool>
       </makefileType>
       <item path="CMakeFiles/CompilerIdC/CMakeCCompilerId.c"

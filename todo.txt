@@ -168,3 +168,7 @@ TODO replace own logging with SDL
 TODO replace own timers with SDL
 TODO replace own atomics with SDL?
 TODO replace own util functions with SDL?
+
+TODO move structs to a forward.h
+
+TODO move TODOs from code into here!
