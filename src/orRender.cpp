@@ -6,43 +6,50 @@
 #include "orProfile/perftimer.h"
 
 #include "SDL_log.h"
+#include "SDL_surface.h"
 
 RenderSystem::RenderSystem() :
-  m_fontImage(new Image)
+  m_fontImage(NULL)
 {
 }
 
 RenderSystem::~RenderSystem()
 {
-  delete m_fontImage; m_fontImage = NULL;
+  SDL_FreeSurface(m_fontImage); m_fontImage = NULL;
 }
 
 void RenderSystem::initRender()
 {
-  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Loading font bitmap");
-#if 0
-  if (!m_fontImage->loadFromFile("fonts/dos-ascii-8x8.png")) {
-    orErr("Could not load '%s'.", "fonts/dos-ascii-8x8.png");
+  m_fontImage = SDL_LoadBMP("fonts/dos-ascii-8x8.bmp");
+
+  if (!m_fontImage) {
+    orErr("Could not load '%s': %s", "fonts/dos-ascii-8x8.bmp", SDL_GetError());
+    SDL_ClearError();
+    return;
   }
 
-  sf::Vector2u const size = m_fontImage->getSize();
+  SDL_LogInfo(SDL_LOG_CATEGORY_RENDER, "Image format: %s", SDL_GetPixelFormatName(m_fontImage->format->format));
 
-  uint32_t width = size.x;
-  uint32_t height = size.y;
+  uint32_t width = m_fontImage->w;
+  uint32_t height = m_fontImage->h;
 
   glGenTextures(1, &m_fontTextureId);
   glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
 
   glTexImage2D(
-    GL_TEXTURE_2D, 0, GL_INTENSITY,
-    width, height,
+    GL_TEXTURE_2D,
     0,
-    GL_RGBA, GL_UNSIGNED_BYTE, m_fontImage->getPixelsPtr()
+    GL_INTENSITY,
+    width,
+    height,
+    0,
+    GL_BGR,
+    GL_UNSIGNED_BYTE,
+    m_fontImage->pixels
   );
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-#endif
 }
 
 void RenderSystem::shutdownRender()

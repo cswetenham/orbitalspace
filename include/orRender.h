@@ -6,6 +6,8 @@
 
 #include <vector>
 
+struct SDL_Surface;
+
 class RenderSystem {
 public:
   RenderSystem();
@@ -154,6 +156,6 @@ private:
   std::vector<Trail> m_trails;
 
   uint32_t m_fontTextureId;
-  struct Image {}; // TODO replace with appropriate type
-  Image* m_fontImage;
+
+  SDL_Surface* m_fontImage;
 }; // class RenderSystem
