@@ -47,6 +47,7 @@
 // Code outside the system should refer to the instances only by opaque Id - not iterate over the collection (when needed this should happen internally in the system)
 
 struct SDL_Window;
+union SDL_Event;
 
 class orApp
 {
@@ -58,12 +59,7 @@ public:
     int renderHeight;
   };
 
-  // Eigen::Vectors are SSE magic.
-  // Want those and also some plain old data types.
-  struct VectorData2d {
-    double x;
-    double y;
-  }; // TODO replace with appropriate type
+  // TODO Eigen::Vectors are SSE magic. Want those and also some plain old data types.
 
   orApp(Config const& config);
   ~orApp();
@@ -83,8 +79,7 @@ private:
   void RunOneStep();
 
   void PollEvents();
-    struct Event {}; // TODO replace with appropriate type
-    void HandleEvent(Event const& _event);
+    void HandleEvent(SDL_Event const& _event);
 
   void HandleInput();
 
@@ -249,7 +244,8 @@ private:
   SDL_Window* m_window;
   SDL_GLContext m_gl_context;
 
-  VectorData2d m_savedMousePos;
+  int m_savedMouseX;
+  int m_savedMouseY;
   struct Music {}; // TODO replace with appropriate type
   Music* m_music;
 };

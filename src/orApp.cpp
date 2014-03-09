@@ -139,14 +139,11 @@ void runTests() {
 
 void orApp::PollEvents()
 {
-#if 0
-  sf::Event event;
-  while (m_window->pollEvent(event))
+  SDL_Event event;
+  while (SDL_PollEvent(&event))
   {
     HandleEvent(event);
   }
-#endif
-  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI PollEvents()");
 }
 
 void orApp::Run()
@@ -195,18 +192,19 @@ void orApp::HandleInput()
   }
 
   // Input handling
-  if (m_inputMode == InputMode_RotateCamera) {
-    SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Camera Rotation");
-#if 0
-    sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
-    sf::Vector2i const mouseDelta = sf::Mouse::getPosition(*m_window) - centerPos;
-    sf::Mouse::setPosition(centerPos, *m_window);
 
-    double const dx = mouseDelta.x * M_TAU / 300.0;
+  // TODO Relative mouse mode doesn't work right on linux;
+  // implement manually with Grab and GetState
+  if (m_hasFocus && m_inputMode == InputMode_RotateCamera) {
+    int x;
+    int y;
+    SDL_GetMouseState(&x, &y);
+    SDL_WarpMouseInWindow(m_window, m_config.windowWidth / 2, m_config.windowHeight / 2);
+    SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO TWEAK mouse move multiplier");
+    double const dx = (x - m_config.windowWidth / 2) * M_TAU / 300.0;
     m_camParams.theta = Util::Wrap(m_camParams.theta + dx, 0.0, M_TAU);
-    double const dy = mouseDelta.y * M_TAU / 300.0;
+    double const dy = (y - m_config.windowHeight / 2) * M_TAU / 300.0;
     m_camParams.phi = Util::Clamp(m_camParams.phi + dy, -.249 * M_TAU, .249 * M_TAU);
-#endif
   }
 }
 
@@ -317,10 +315,13 @@ void orApp::InitRender()
   // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
   m_window = SDL_CreateWindow(
     "Orbital Space", 0, 0, m_config.windowWidth, m_config.windowHeight,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    SDL_WINDOW_OPENGL);
 
   // Create an OpenGL context associated with the window.
   m_gl_context = SDL_GL_CreateContext(m_window);
+
+  // TODO some part of the SDL init causes a spurious error.
+  // Find it, and add a loop calling glGetError() until it returns 0...
 
   GLenum err = glewInit();
   if (GLEW_OK != err) {
@@ -772,159 +773,159 @@ void orApp::ShutdownState()
 {
 }
 
-void orApp::HandleEvent(Event const& _event)
+void orApp::HandleEvent(SDL_Event const& _event)
 {
-  /* TODO allow?
-  if (_event.type == sf::Event::Resized)
-  {
-    glViewport(0, 0, _event.size.width, _event.size.height);
-  }
-  */
+  // TODO allow resize?
 
-  SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO NYI Event handling");
-
-#if 0
-  if (_event.type == sf::Event::MouseButtonPressed) {
-    if (_event.mouseButton.button == sf::Mouse::Right) {
-      m_inputMode = InputMode_RotateCamera;
-
-      // When rotating the camera, hide the mouse cursor and center it. We'll then track how far it's moved off center each frame.
-      sf::Vector2i const centerPos = sf::Vector2i(m_config.windowWidth/2, m_config.windowHeight/2);
-      m_savedMousePos = sf::Mouse::getPosition(*m_window);
-      m_window->setMouseCursorVisible(false);
-      sf::Mouse::setPosition(centerPos, *m_window);
-
+  switch(_event.type) {
+    case SDL_MOUSEBUTTONDOWN: {
+      if (_event.button.button == SDL_BUTTON_RIGHT) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "Mouse down");
+        m_inputMode = InputMode_RotateCamera;
+        SDL_ShowCursor(SDL_DISABLE);
+        SDL_GetMouseState(&m_savedMouseX, &m_savedMouseY);
+        SDL_WarpMouseInWindow(m_window, m_config.windowWidth / 2, m_config.windowHeight / 2);
+      }
+      break;
     }
-  }
 
-  if (_event.type == sf::Event::MouseButtonReleased) {
-    if (_event.mouseButton.button == sf::Mouse::Right) {
-      // Restore the old position of the cursor.
-      m_inputMode = InputMode_Default;
-      sf::Mouse::setPosition(m_savedMousePos, *m_window);
-      m_window->setMouseCursorVisible(true);
+    case SDL_MOUSEBUTTONUP: {
+      if (_event.button.button == SDL_BUTTON_RIGHT) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "Mouse up");
+        m_inputMode = InputMode_Default;
+        SDL_WarpMouseInWindow(m_window, m_savedMouseX, m_savedMouseY);
+        SDL_ShowCursor(SDL_ENABLE);
+      }
+      break;
     }
-  }
 
-  if (_event.type == sf::Event::MouseWheelMoved)
-  {
-    m_camParams.dist *= pow(0.9, _event.mouseWheel.delta);
-  }
+    case SDL_MOUSEWHEEL: {
+      SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO TWEAK mouse wheel multiplier");
+      double const WHEEL_SPEED = 1.0;
+      m_camParams.dist *= pow(0.9, WHEEL_SPEED * _event.wheel.y);
+      break;
+    }
 
-  if (_event.type == sf::Event::KeyPressed)
-  {
-    if (_event.key.code == sf::Keyboard::Escape)
-    {
+    case SDL_KEYDOWN: {
+      if (_event.key.keysym.sym == SDLK_ESCAPE)
+      {
+        m_running = false;
+      }
+
+      if (_event.key.keysym.sym == SDLK_TAB)
+      {
+        m_cameraTargetId = m_cameraSystem.nextTarget(m_cameraTargetId);
+        // TODO clear all trails
+        // TODO make all trails relative to camera target
+        // Maybe make a physics frame object, with position + velocity?
+        // Make Body the frame?
+        // Make frame its own system, have render, physics etc share the frame?
+      }
+
+      if (_event.key.keysym.sym == SDLK_F1) {
+        m_camMode = CameraMode_FirstPerson;
+      }
+
+      if (_event.key.keysym.sym == SDLK_F2) {
+        m_camMode = CameraMode_ThirdPerson;
+      }
+
+      if (_event.key.keysym.sym == SDLK_PAGEDOWN) {
+        m_integrationMethod = PhysicsSystem::IntegrationMethod((m_integrationMethod + 1) % PhysicsSystem::IntegrationMethod_Count);
+      }
+
+      if (_event.key.keysym.sym == SDLK_PLUS || _event.key.keysym.sym == SDLK_EQUALS)
+      {
+        m_timeScale *= 2;
+        if (m_timeScale > 1<<16) {
+          m_timeScale = 1<<16;
+        }
+      }
+
+      if (_event.key.keysym.sym == SDLK_MINUS || _event.key.keysym.sym == SDLK_UNDERSCORE)
+      {
+        m_timeScale /= 2;
+        if (m_timeScale < 1) {
+          m_timeScale = 1;
+        }
+      }
+
+      if (_event.key.keysym.sym == SDLK_a)
+      {
+        m_thrusters |= ThrustLeft;
+      }
+      if (_event.key.keysym.sym == SDLK_d)
+      {
+        m_thrusters |= ThrustRight;
+      }
+      if (_event.key.keysym.sym == SDLK_w)
+      {
+        m_thrusters |= ThrustFwd;
+      }
+      if (_event.key.keysym.sym == SDLK_s)
+      {
+        m_thrusters |= ThrustBack;
+      }
+      if (_event.key.keysym.sym == SDLK_UP)
+      {
+        m_thrusters |= ThrustUp;
+      }
+      if (_event.key.keysym.sym == SDLK_DOWN)
+      {
+        m_thrusters |= ThrustDown;
+      }
+      break;
+    }
+
+    case SDL_KEYUP: {
+      if (_event.key.keysym.sym == SDLK_a)
+      {
+        m_thrusters &= ~ThrustLeft;
+      }
+      if (_event.key.keysym.sym == SDLK_d)
+      {
+        m_thrusters &= ~ThrustRight;
+      }
+      if (_event.key.keysym.sym == SDLK_w)
+      {
+        m_thrusters &= ~ThrustFwd;
+      }
+      if (_event.key.keysym.sym == SDLK_s)
+      {
+        m_thrusters &= ~ThrustBack;
+      }
+      if (_event.key.keysym.sym == SDLK_UP)
+      {
+        m_thrusters &= ~ThrustUp;
+      }
+      if (_event.key.keysym.sym == SDLK_DOWN)
+      {
+        m_thrusters &= ~ThrustDown;
+      }
+      break;
+    }
+
+    case SDL_QUIT: {
       m_running = false;
+      break;
     }
 
-    if (_event.key.code == sf::Keyboard::Tab)
-    {
-      m_cameraTargetId = m_cameraSystem.nextTarget(m_cameraTargetId);
-      // TODO clear all trails
-      // TODO make all trails relative to camera target
-      // Maybe make a physics frame object, with position + velocity?
-      // Make Body the frame?
-      // Make frame its own system, have render, physics etc share the frame?
-    }
-
-    if (_event.key.code == sf::Keyboard::F1) {
-      m_camMode = CameraMode_FirstPerson;
-    }
-
-    if (_event.key.code == sf::Keyboard::F2) {
-      m_camMode = CameraMode_ThirdPerson;
-    }
-
-    if (_event.key.code == sf::Keyboard::PageDown) {
-      m_integrationMethod = PhysicsSystem::IntegrationMethod((m_integrationMethod + 1) % PhysicsSystem::IntegrationMethod_Count);
-    }
-
-    if (_event.key.code == sf::Keyboard::Add || _event.key.code == sf::Keyboard::Equal)
-    {
-      m_timeScale *= 2;
-      if (m_timeScale > 1<<16) {
-        m_timeScale = 1<<16;
+    case SDL_WINDOWEVENT: {
+      if (_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+      {
+        m_hasFocus = false;
       }
-    }
 
-    if (_event.key.code == sf::Keyboard::Subtract || _event.key.code == sf::Keyboard::Dash)
-    {
-      m_timeScale /= 2;
-      if (m_timeScale < 1) {
-        m_timeScale = 1;
+      if (_event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+      {
+        m_hasFocus = true;
       }
+      break;
     }
 
-    if (_event.key.code == sf::Keyboard::A)
-    {
-      m_thrusters |= ThrustLeft;
-    }
-    if (_event.key.code == sf::Keyboard::D)
-    {
-      m_thrusters |= ThrustRight;
-    }
-    if (_event.key.code == sf::Keyboard::W)
-    {
-      m_thrusters |= ThrustFwd;
-    }
-    if (_event.key.code == sf::Keyboard::S)
-    {
-      m_thrusters |= ThrustBack;
-    }
-    if (_event.key.code == sf::Keyboard::Up)
-    {
-      m_thrusters |= ThrustUp;
-    }
-    if (_event.key.code == sf::Keyboard::Down)
-    {
-      m_thrusters |= ThrustDown;
-    }
-  }
-
-  if (_event.type == sf::Event::KeyReleased)
-  {
-    if (_event.key.code == sf::Keyboard::A)
-    {
-      m_thrusters &= ~ThrustLeft;
-    }
-    if (_event.key.code == sf::Keyboard::D)
-    {
-      m_thrusters &= ~ThrustRight;
-    }
-    if (_event.key.code == sf::Keyboard::W)
-    {
-      m_thrusters &= ~ThrustFwd;
-    }
-    if (_event.key.code == sf::Keyboard::S)
-    {
-      m_thrusters &= ~ThrustBack;
-    }
-    if (_event.key.code == sf::Keyboard::Up)
-    {
-      m_thrusters &= ~ThrustUp;
-    }
-    if (_event.key.code == sf::Keyboard::Down)
-    {
-      m_thrusters &= ~ThrustDown;
-    }
-  }
-
-  if (_event.type == sf::Event::Closed)
-  {
-    m_running = false;
-  }
-
-  if (_event.type == sf::Event::LostFocus)
-  {
-    m_hasFocus = false;
-  }
-
-  if (_event.type == sf::Event::GainedFocus)
-  {
-    m_hasFocus = true;
-  }
-#endif
+    default:
+      break;
+  } // switch (_event.type)
 }
 
 Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
