@@ -410,23 +410,23 @@ void orApp::InitState()
   m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y();
   m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z();
 
-  // Load in the json data for the solar system
-  // TODO noticed that the data I'm using only has partial information and
-  // not very well explained units/reference frames
-  // In particular, the orbits aren't drawn from the json but parsed from a
-  // binary JPL database of polynomial fits
-#if 0
-  namespace ptree = boost::property_tree;
-  ptree::ptree data_root;
-  ptree::json_parser::read_json("data/solarsys.json", data_root);
-  printf("%s\n", data_root.get<std::string>("name").c_str());
-  BOOST_FOREACH(ptree::ptree::value_type &v,
-            data_root.get_child("require"))
-  {
-    std::string file_name = v.second.get_value<std::string>();
-    printf("%s\n", file_name.c_str());
+  // For now, just get initial ephemeris from JPL data and sim using RK4 integrator
+  Ephemeris ephemeris[3]; // TODO
+  for (int i = 0; i < 3; ++i) {
+    Eigen::Vector3d pos = orApp::ephemerisFromKeplerianElements(
+      s_jpl_elements_t0[i],
+      posixTimeFromSimTime(m_simTime)
+    );
+    Eigen::Vector3d pos_1 = orApp::ephemerisFromKeplerianElements(
+      s_jpl_elements_t0[i],
+      posixTimeFromSimTime(m_simTime + 1)
+    );
+    Eigen::Vector3d vel = pos_1 - pos;
+    ephemeris[i].pos = pos;
+    ephemeris[i].vel = vel;
   }
-#endif
+
+  // TODO get some data on Earth-Moon orbit
 
   // For now, give the moon a circular orbit
 
@@ -439,20 +439,48 @@ void orApp::InitState()
   double const earthOrbitRadius = earthMoonOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
   double const moonOrbitRadius = earthMoonOrbitRadius - earthOrbitRadius;
 
-  Vector3d const earthPos = Vector3d(0.0, 0.0, -earthOrbitRadius);
-  Vector3d const moonPos = Vector3d(0.0, 0.0, moonOrbitRadius);
+  Vector3d const earthPos = ephemeris[2].pos + Vector3d(0.0, 0.0, -earthOrbitRadius);
+  Vector3d const moonPos = ephemeris[2].pos + Vector3d(0.0, 0.0, moonOrbitRadius);
 
   double const earthSpeed = earthOrbitRadius / angularSpeed;
   double const moonSpeed = moonOrbitRadius / angularSpeed;
 
-  Vector3d const earthVel = Vector3d(-earthSpeed, 0.0, 0.0);
-  Vector3d const moonVel = Vector3d(moonSpeed, 0.0, 0.0);
+  Vector3d const earthVel = ephemeris[2].vel + Vector3d(-earthSpeed, 0.0, 0.0);
+  Vector3d const moonVel = ephemeris[2].vel + Vector3d(moonSpeed, 0.0, 0.0);
 
   double const* const earthPosData = earthPos.data();
   double const* const earthVelData = earthVel.data();
 
   double const* const moonPosData = moonPos.data();
   double const* const moonVelData = moonVel.data();
+
+  // Create Sun
+
+  int sunCamTargetId;
+  CameraSystem::Target& sumCamTarget = m_cameraSystem.getTarget(sunCamTargetId = m_cameraSystem.makeTarget());
+  {
+    sumCamTarget.m_pos[0] = 0;
+    sumCamTarget.m_pos[1] = 0;
+    sumCamTarget.m_pos[2] = 0;
+
+    sumCamTarget.m_name = std::string("Sun");
+  }
+
+  m_cameraTargetId = sunCamTargetId;
+
+  int sunlabel3DId;
+  RenderSystem::Label3D& sunLabel3D = m_renderSystem.getLabel3D(sunlabel3DId = m_renderSystem.makeLabel3D());
+  {
+    sunLabel3D.m_pos[0] = 0;
+    sunLabel3D.m_pos[1] = 0;
+    sunLabel3D.m_pos[2] = 0;
+
+    sunLabel3D.m_col[0] = 1.0;
+    sunLabel3D.m_col[1] = 1.0;
+    sunLabel3D.m_col[2] = 0.0;
+
+    sunLabel3D.m_text = std::string("Sun");
+  }
 
   // Create Earth
 
@@ -495,8 +523,6 @@ void orApp::InitState()
 
     earthCamTarget.m_name = std::string("Earth");
   }
-
-  m_cameraTargetId = earthPlanet.m_cameraTargetId;
 
   // Create Moon
 
@@ -1222,6 +1248,26 @@ double orApp::computeEccentricAnomaly(
   return eccentric_anomaly_deg;
 }
 
+char const* orApp::s_jpl_names[] = {
+  "Mercury",
+  "Venus",
+  "EarthMoon",
+  "Mars",
+  "Jupiter",
+  "Saturn",
+  "Uranus",
+  "Neptune",
+  "Pluto"
+};
+
+
+
+orApp::KeplerianElements orApp::s_jpl_elements_t0[] = {
+  {0.38709843, 0.20563661, 7.00559432, 252.25166724, 77.45771895, 48.33961819, 0.00000000, 0.00002123, -0.00590158, 149472.67486623, 0.15940013, -0.12214182, 0, 0, 0, 0},
+  {0.72332102, 0.00676399, 3.39777545, 181.97970850, 131.76755713, 76.67261496, -0.00000026, -0.00005107, 0.00043494, 58517.81560260, 0.05679648, -0.27274174, 0, 0, 0, 0},
+  {1.00000018, 0.01673163, -0.00054346, 100.46691572, 102.93005885, -5.11260389, -0.00000003, -0.00003661, -0.01337178, 35999.37306329, 0.31795260, -0.24123856, 0, 0, 0, 0}
+};
+
 Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
   KeplerianElements const& elements_t0,
   boost::posix_time::ptime const& ptime
@@ -1255,8 +1301,10 @@ Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
   double eccentric_anomaly_deg = computeEccentricAnomaly(mean_anomaly_deg, e.eccentricity_rad);
   double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
 
-  double x_orbital = e.semi_major_axis_AU * (cos(eccentric_anomaly_rad) - e.eccentricity_rad);
-  double y_orbital = e.semi_major_axis_AU * sqrt(1 - e.eccentricity_rad * e.eccentricity_rad) * sin(eccentric_anomaly_rad);
+  double const meters_per_AU = 149597870700.0;
+
+  double x_orbital = meters_per_AU * e.semi_major_axis_AU * (cos(eccentric_anomaly_rad) - e.eccentricity_rad);
+  double y_orbital = meters_per_AU * e.semi_major_axis_AU * sqrt(1 - e.eccentricity_rad * e.eccentricity_rad) * sin(eccentric_anomaly_rad);
   double z_orbital = 0;
 
   Eigen::Vector3d r_orbital(x_orbital, y_orbital, z_orbital);

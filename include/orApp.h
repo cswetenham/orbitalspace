@@ -118,16 +118,16 @@ private:
     // C: century
     // deg: degree
     double semi_major_axis_AU;
-    double semi_major_axis_AU_per_C;
     double eccentricity_rad;
-    double eccentricity_rad_per_C;
     double inclination_deg;
-    double inclination_deg_per_C;
     double mean_longitude_deg;
-    double mean_longitude_deg_per_C;
     double longitude_of_perihelion_deg;
-    double longitude_of_perihelion_deg_per_C;
     double longitude_of_ascending_node_deg;
+    double semi_major_axis_AU_per_C;
+    double eccentricity_rad_per_C;
+    double inclination_deg_per_C;
+    double mean_longitude_deg_per_C;
+    double longitude_of_perihelion_deg_per_C;
     double longitude_of_ascending_node_deg_per_C;
 
     double error_b;
@@ -137,7 +137,8 @@ private:
   };
 
   struct Ephemeris {
-    // TODO
+    Eigen::Vector3d pos;
+    Eigen::Vector3d vel;
   };
 
   static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity_rad );
@@ -248,6 +249,9 @@ private:
   int m_savedMouseY;
   struct Music {}; // TODO replace with appropriate type
   Music* m_music;
+
+  static char const* s_jpl_names[];
+  static KeplerianElements s_jpl_elements_t0[];
 };
 
 #endif	/* ORBITALSPACEAPP_H */
