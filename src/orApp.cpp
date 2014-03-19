@@ -1192,8 +1192,8 @@ Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
   Eigen::Vector3d r_orbital(x_orbital, y_orbital, z_orbital);
 
   Eigen::Matrix3d m;
-  m = Eigen::AngleAxisd(-e.longitude_of_ascending_node_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitX())
-    * Eigen::AngleAxisd(-e.inclination_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitY())
+  m = Eigen::AngleAxisd(-e.longitude_of_ascending_node_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitZ())
+    * Eigen::AngleAxisd(-e.inclination_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitX())
     * Eigen::AngleAxisd(-arg_of_perihelion_deg * (M_TAU / 360.0), Eigen::Vector3d::UnitZ());
 
   return m * r_orbital;
