@@ -646,8 +646,8 @@ void RenderSystem::render(
 
     glEnable(GL_TEXTURE_2D);
 
-    GLfloat ambient[] = { 0.0, 0.2, 0.0, 1.0 };
-    GLfloat diffuse[] = { 1.0, 0.0, 0.0, 1.0 };
+    GLfloat ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+    GLfloat diffuse[] = { 1.0, 1.0, 0.0, 1.0 };
     // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
 
     // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
@@ -664,7 +664,7 @@ void RenderSystem::render(
 
     // TODO clean up mode changes, move more into the Render system
 
-    GLfloat light_pos[] = { 0.0, 0.0, 25000000.0, 1.0 };
+    GLfloat light_pos[] = { 0.0, 0.0, 0.0, 1.0 };
 
     glShadeModel( GL_SMOOTH );
     glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );

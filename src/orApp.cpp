@@ -374,8 +374,6 @@ void orApp::InitState()
   m_colB[3] = Colour(60,188,252)/255.f;
   m_colB[4] = Colour(164,228,252)/255.f;
 
-  m_lightDir = orVec3(Vector3d(1.0, 1.0, 0.0).normalized());
-
   // Make camera
 
   CameraSystem::Camera& camera = m_cameraSystem.getCamera(m_cameraId = m_cameraSystem.makeCamera());
@@ -437,6 +435,8 @@ void orApp::InitState()
   Vector3d const earthVel = ephemeris[2].vel + Vector3d(-earthSpeed, 0.0, 0.0);
   Vector3d const moonVel = ephemeris[2].vel + Vector3d(moonSpeed, 0.0, 0.0);
 
+  m_lightDir = orVec3(earthPos.normalized());
+
   // Create Sun
 
   {
@@ -466,7 +466,7 @@ void orApp::InitState()
       RenderSystem::Sphere& sunSphere = m_renderSystem.getSphere(sunBody.m_sphereId = m_renderSystem.makeSphere());
       sunSphere.m_radius = radius;
       sunSphere.m_pos = sunPos;
-      sunSphere.m_col = m_colG[1];
+      sunSphere.m_col = RenderSystem::Colour(1.0, 1.0, 0);
     }
 
     int sunlabel3DId;
@@ -505,7 +505,7 @@ void orApp::InitState()
       RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthBody.m_sphereId = m_renderSystem.makeSphere());
       earthSphere.m_radius = radius;
       earthSphere.m_pos = earthPos;
-      earthSphere.m_col = m_colG[1];
+      earthSphere.m_col = RenderSystem::Colour(0.2, 0.5, 1.0);
     }
 
     {
@@ -534,7 +534,7 @@ void orApp::InitState()
     RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonBody.m_sphereId = m_renderSystem.makeSphere());
     moonSphere.m_radius = radius;
     moonSphere.m_pos = moonPos;
-    moonSphere.m_col = m_colG[1];
+    moonSphere.m_col = RenderSystem::Colour(0.4, 0.4, 0.4);
   }
 
   {
@@ -605,11 +605,12 @@ void orApp::InitState()
   {
     EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
 
-    orVec3 playerPos(0.0, 0.0, 1.3e7);
+    orVec3 playerPos(earthPos + Vector3d(0.0, 0.0, 1.3e7));
+    orVec3 playerVel(earthVel + Vector3d(5e3, 0.0, 0.0));
     {
       PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
       playerBody.m_pos = playerPos;
-      playerBody.m_vel = orVec3(5e3, 0.0, 0.0);
+      playerBody.m_vel = playerVel;
       playerBody.m_userAcc = orVec3(0, 0, 0);
     }
 
@@ -642,11 +643,12 @@ void orApp::InitState()
   {
     EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_suspectShipId = m_entitySystem.makeShip());
 
-    orVec3 suspectPos(0.0, 0.0, 1.3e7);
+    orVec3 suspectPos(earthPos + Vector3d(0.0, 0.0, 1.3e7));
+    orVec3 suspectVel(earthVel + Vector3d(5e3, 0.0, 0.0));
     {
       PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
       suspectBody.m_pos = suspectPos;
-      suspectBody.m_vel = orVec3(5e3, 0.0, 0.0);
+      suspectBody.m_vel = suspectVel;
       suspectBody.m_userAcc = orVec3(0.0, 0.0, 0.0);
     }
 
