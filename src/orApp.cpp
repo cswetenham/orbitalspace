@@ -355,32 +355,27 @@ void orApp::ShutdownRender()
 
 void orApp::InitState()
 {
+  typedef RenderSystem::Colour Colour;
   // Create NES-ish palette (selected colour sets from the NES palettes, taken from Wikipedia)
-  m_colR[0] = RenderSystem::Colour(0,0,0)/255.f;
-  m_colR[1] = RenderSystem::Colour(136,20,0)/255.f;
-  m_colR[2] = RenderSystem::Colour(228,92,16)/255.f;
-  m_colR[3] = RenderSystem::Colour(252,160,68)/255.f;
-  m_colR[4] = RenderSystem::Colour(252,224,168)/255.f;
+  m_colR[0] = Colour(0,0,0)/255.f;
+  m_colR[1] = Colour(136,20,0)/255.f;
+  m_colR[2] = Colour(228,92,16)/255.f;
+  m_colR[3] = Colour(252,160,68)/255.f;
+  m_colR[4] = Colour(252,224,168)/255.f;
 
-  m_colG[0] = RenderSystem::Colour(0,0,0)/255.f;
-  m_colG[1] = RenderSystem::Colour(0,120,0)/255.f;
-  m_colG[2] = RenderSystem::Colour(0,184,0)/255.f;
-  m_colG[3] = RenderSystem::Colour(184,248,24)/255.f;
-  m_colG[4] = RenderSystem::Colour(216,248,120)/255.f;
+  m_colG[0] = Colour(0,0,0)/255.f;
+  m_colG[1] = Colour(0,120,0)/255.f;
+  m_colG[2] = Colour(0,184,0)/255.f;
+  m_colG[3] = Colour(184,248,24)/255.f;
+  m_colG[4] = Colour(216,248,120)/255.f;
 
-  m_colB[0] = RenderSystem::Colour(0,0,0)/255.f;
-  m_colB[1] = RenderSystem::Colour(0,0,252)/255.f;
-  m_colB[2] = RenderSystem::Colour(0,120,248)/255.f;
-  m_colB[3] = RenderSystem::Colour(60,188,252)/255.f;
-  m_colB[4] = RenderSystem::Colour(164,228,252)/255.f;
+  m_colB[0] = Colour(0,0,0)/255.f;
+  m_colB[1] = Colour(0,0,252)/255.f;
+  m_colB[2] = Colour(0,120,248)/255.f;
+  m_colB[3] = Colour(60,188,252)/255.f;
+  m_colB[4] = Colour(164,228,252)/255.f;
 
-  Vector3d const lightDir = Vector3d(1.0, 1.0, 0.0).normalized();
-
-  const double* const lightDirData = lightDir.data();
-
-  m_lightDir[0] = lightDirData[0];
-  m_lightDir[1] = lightDirData[1];
-  m_lightDir[2] = lightDirData[2];
+  m_lightDir = orVec3(Vector3d(1.0, 1.0, 0.0).normalized());
 
   // Make camera
 
@@ -393,22 +388,17 @@ void orApp::InitState()
   m_uiTextTopLabel2DId = m_renderSystem.makeLabel2D();
   RenderSystem::Label2D& m_uiTextTopLabel2D = m_renderSystem.getLabel2D(m_uiTextTopLabel2DId);
 
-  m_uiTextTopLabel2D.m_pos[0] = 0;
-  m_uiTextTopLabel2D.m_pos[1] = 0;
+  m_uiTextTopLabel2D.m_pos = orVec2(0, 0);
 
-  m_uiTextTopLabel2D.m_col[0] =  m_colG[4].x();
-  m_uiTextTopLabel2D.m_col[1] =  m_colG[4].y();
-  m_uiTextTopLabel2D.m_col[2] =  m_colG[4].z();
+  m_uiTextTopLabel2D.m_col = m_colG[4];
 
   m_uiTextBottomLabel2DId = m_renderSystem.makeLabel2D();
   RenderSystem::Label2D& m_uiTextBottomLabel2D = m_renderSystem.getLabel2D(m_uiTextBottomLabel2DId);
 
-  m_uiTextBottomLabel2D.m_pos[0] = 0;
-  m_uiTextBottomLabel2D.m_pos[1] = m_config.renderHeight - 8; // TODO HAX - 8 is the bitmap font height, shouldn't be hardcoded
+  // TODO HAX - 8 is the bitmap font height, shouldn't be hardcoded
+  m_uiTextBottomLabel2D.m_pos = orVec2(0, m_config.renderHeight - 8);
 
-  m_uiTextBottomLabel2D.m_col[0] =  m_colG[4].x();
-  m_uiTextBottomLabel2D.m_col[1] =  m_colG[4].y();
-  m_uiTextBottomLabel2D.m_col[2] =  m_colG[4].z();
+  m_uiTextBottomLabel2D.m_col = m_colG[4];
 
   // For now, just get initial ephemeris from JPL data and sim using RK4 integrator
   Ephemeris ephemeris[3]; // TODO
@@ -448,157 +438,102 @@ void orApp::InitState()
   Vector3d const earthVel = ephemeris[2].vel + Vector3d(-earthSpeed, 0.0, 0.0);
   Vector3d const moonVel = ephemeris[2].vel + Vector3d(moonSpeed, 0.0, 0.0);
 
-  double const* const earthPosData = earthPos.data();
-  double const* const earthVelData = earthVel.data();
-
-  double const* const moonPosData = moonPos.data();
-  double const* const moonVelData = moonVel.data();
-
   // Create Sun
 
   int sunCamTargetId;
-  CameraSystem::Target& sumCamTarget = m_cameraSystem.getTarget(sunCamTargetId = m_cameraSystem.makeTarget());
   {
-    sumCamTarget.m_pos[0] = 0;
-    sumCamTarget.m_pos[1] = 0;
-    sumCamTarget.m_pos[2] = 0;
-
+    CameraSystem::Target& sumCamTarget = m_cameraSystem.getTarget(sunCamTargetId = m_cameraSystem.makeTarget());
+    sumCamTarget.m_pos = orVec3(0, 0, 0);
     sumCamTarget.m_name = std::string("Sun");
   }
 
   m_cameraTargetId = sunCamTargetId;
 
   int sunlabel3DId;
-  RenderSystem::Label3D& sunLabel3D = m_renderSystem.getLabel3D(sunlabel3DId = m_renderSystem.makeLabel3D());
   {
-    sunLabel3D.m_pos[0] = 0;
-    sunLabel3D.m_pos[1] = 0;
-    sunLabel3D.m_pos[2] = 0;
-
-    sunLabel3D.m_col[0] = 1.0;
-    sunLabel3D.m_col[1] = 1.0;
-    sunLabel3D.m_col[2] = 0.0;
-
+    RenderSystem::Label3D& sunLabel3D = m_renderSystem.getLabel3D(sunlabel3DId = m_renderSystem.makeLabel3D());
+    sunLabel3D.m_pos = orVec3(0, 0, 0);
+    sunLabel3D.m_col = orVec3(1.0, 1.0, 0.0);
     sunLabel3D.m_text = std::string("Sun");
   }
 
   // Create Earth
 
-  EntitySystem::Body& earthBody = m_entitySystem.getBody(m_earthBodyId = m_entitySystem.makeBody());
-
-  PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthBody.m_gravBodyId = m_physicsSystem.makeGravBody());
   {
-    earthGravBody.m_mass = EARTH_MASS;
-    earthGravBody.m_radius = EARTH_RADIUS;
+    EntitySystem::Body& earthBody = m_entitySystem.getBody(m_earthBodyId = m_entitySystem.makeBody());
 
-    earthGravBody.m_pos[0] = earthPosData[0];
-    earthGravBody.m_pos[1] = earthPosData[1];
-    earthGravBody.m_pos[2] = earthPosData[2];
+    double radius = EARTH_RADIUS;
+    {
+      PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthBody.m_gravBodyId = m_physicsSystem.makeGravBody());
+      earthGravBody.m_mass = EARTH_MASS;
+      earthGravBody.m_radius = radius;
+      earthGravBody.m_pos = orVec3(earthPos);
+      earthGravBody.m_vel = orVec3(earthVel);
+    }
 
-    earthGravBody.m_vel[0] = earthVelData[0];
-    earthGravBody.m_vel[1] = earthVelData[1];
-    earthGravBody.m_vel[2] = earthVelData[2];
-  }
+    RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthBody.m_sphereId = m_renderSystem.makeSphere());
+    {
+      earthSphere.m_radius = radius;
 
-  RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthBody.m_sphereId = m_renderSystem.makeSphere());
-  {
-    earthSphere.m_radius = earthGravBody.m_radius;
+      earthSphere.m_pos = earthPos;
 
-    earthSphere.m_pos[0] = earthPosData[0];
-    earthSphere.m_pos[1] = earthPosData[1];
-    earthSphere.m_pos[2] = earthPosData[2];
+      earthSphere.m_col = m_colG[1];
+    }
 
-    earthSphere.m_col[0] = m_colG[1].x();
-    earthSphere.m_col[1] = m_colG[1].y();
-    earthSphere.m_col[2] = m_colG[1].z();
-  }
+    CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthBody.m_cameraTargetId = m_cameraSystem.makeTarget());
+    {
+      earthCamTarget.m_pos = earthPos;
 
-  CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthBody.m_cameraTargetId = m_cameraSystem.makeTarget());
-  {
-    earthCamTarget.m_pos[0] = earthPosData[0];
-    earthCamTarget.m_pos[1] = earthPosData[1];
-    earthCamTarget.m_pos[2] = earthPosData[2];
-
-    earthCamTarget.m_name = std::string("Earth");
+      earthCamTarget.m_name = std::string("Earth");
+    }
   }
 
   // Create Body
 
   EntitySystem::Body& moonBody = m_entitySystem.getBody(m_moonBodyId = m_entitySystem.makeBody());
 
-  PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonBody.m_gravBodyId = m_physicsSystem.makeGravBody());
+  double const radius = MOON_RADIUS;
+
   {
+    PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonBody.m_gravBodyId = m_physicsSystem.makeGravBody());
     moonGravBody.m_mass = MOON_MASS;
-    moonGravBody.m_radius = MOON_RADIUS;
-
-    moonGravBody.m_pos[0] = moonPosData[0];
-    moonGravBody.m_pos[1] = moonPosData[1];
-    moonGravBody.m_pos[2] = moonPosData[2];
-
-    moonGravBody.m_vel[0] = moonVelData[0];
-    moonGravBody.m_vel[1] = moonVelData[1];
-    moonGravBody.m_vel[2] = moonVelData[2];
-
-    moonGravBody.m_soiParentBody = earthBody.m_gravBodyId;
+    moonGravBody.m_radius = radius;
+    moonGravBody.m_pos = moonPos;
+    moonGravBody.m_vel = moonVel;
+    moonGravBody.m_soiParentBody = m_entitySystem.getBody(m_earthBodyId).m_gravBodyId;
   }
 
-  RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonBody.m_sphereId = m_renderSystem.makeSphere());
   {
-    moonSphere.m_radius = moonGravBody.m_radius;
-
-    moonSphere.m_pos[0] = moonPosData[0];
-    moonSphere.m_pos[1] = moonPosData[1];
-    moonSphere.m_pos[2] = moonPosData[2];
-
-    moonSphere.m_col[0] = m_colG[1].x();
-    moonSphere.m_col[1] = m_colG[1].y();
-    moonSphere.m_col[2] = m_colG[1].z();
+    RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonBody.m_sphereId = m_renderSystem.makeSphere());
+    moonSphere.m_radius = radius;
+    moonSphere.m_pos = moonPos;
+    moonSphere.m_col = m_colG[1];
   }
 
-  RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonBody.m_orbitId = m_renderSystem.makeOrbit());
   {
+    RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonBody.m_orbitId = m_renderSystem.makeOrbit());
     // Orbit pos is pos of parent body
-
-    moonOrbit.m_pos[0] = earthPosData[0];
-    moonOrbit.m_pos[1] = earthPosData[1];
-    moonOrbit.m_pos[2] = earthPosData[2];
-
-    moonOrbit.m_col[0] = m_colG[1].x();
-    moonOrbit.m_col[1] = m_colG[1].y();
-    moonOrbit.m_col[2] = m_colG[1].z();
+    moonOrbit.m_pos = earthPos;
+    moonOrbit.m_col = m_colG[1];
   }
 
-  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonBody.m_trailId = m_renderSystem.makeTrail());
   {
-    moonTrail.Init(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
-    moonTrail.m_colOld[0] = m_colG[0].x();
-    moonTrail.m_colOld[1] = m_colG[0].y();
-    moonTrail.m_colOld[2] = m_colG[0].z();
-
-    moonTrail.m_colNew[0] = m_colG[4].x();
-    moonTrail.m_colNew[1] = m_colG[4].y();
-    moonTrail.m_colNew[2] = m_colG[4].z();
+    RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonBody.m_trailId = m_renderSystem.makeTrail());
+    moonTrail.Init(5000.0, moonPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
+    moonTrail.m_colOld = m_colG[0];
+    moonTrail.m_colNew = m_colG[4];
   }
 
-  CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonBody.m_cameraTargetId = m_cameraSystem.makeTarget());
   {
-    moonCamTarget.m_pos[0] = moonPosData[0];
-    moonCamTarget.m_pos[1] = moonPosData[1];
-    moonCamTarget.m_pos[2] = moonPosData[2];
-
+    CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonBody.m_cameraTargetId = m_cameraSystem.makeTarget());
+    moonCamTarget.m_pos = moonPos;
     moonCamTarget.m_name = std::string("Body");
   }
 
-  RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonBody.m_label3DId = m_renderSystem.makeLabel3D());
   {
-    moonLabel3D.m_pos[0] = moonPosData[0];
-    moonLabel3D.m_pos[1] = moonPosData[1];
-    moonLabel3D.m_pos[2] = moonPosData[2];
-
-    moonLabel3D.m_col[0] = m_colG[4].x();
-    moonLabel3D.m_col[1] = m_colG[4].y();
-    moonLabel3D.m_col[2] = m_colG[4].z();
-
+    RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonBody.m_label3DId = m_renderSystem.makeLabel3D());
+    moonLabel3D.m_pos = moonPos;
+    moonLabel3D.m_col = m_colG[4];
     moonLabel3D.m_text = std::string("Body");
   }
 
@@ -606,172 +541,113 @@ void orApp::InitState()
 
   EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
 
-  RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId = m_renderSystem.makePoint());
-  {
-    comPoint.m_pos[0] = 0.0;
-    comPoint.m_pos[1] = 0.0;
-    comPoint.m_pos[2] = 0.0;
+  orVec3 comPos = ephemeris[2].pos;
 
-    comPoint.m_col[0] = 1.0f;
-    comPoint.m_col[1] = 0.0f;
-    comPoint.m_col[2] = 0.0f;
+  {
+    RenderSystem::Point& comPoint = m_renderSystem.getPoint(comPoi.m_pointId = m_renderSystem.makePoint());
+    comPoint.m_pos = comPos;
+    comPoint.m_col = RenderSystem::Colour(1.0, 0.0, 0.0);
   }
 
-  CameraSystem::Target& comCamTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId = m_cameraSystem.makeTarget());
   {
-    comCamTarget.m_pos[0] = comPoint.m_pos[0];
-    comCamTarget.m_pos[1] = comPoint.m_pos[1];
-    comCamTarget.m_pos[2] = comPoint.m_pos[2];
-
+    CameraSystem::Target& comCamTarget = m_cameraSystem.getTarget(comPoi.m_cameraTargetId = m_cameraSystem.makeTarget());
+    comCamTarget.m_pos = comPos;
     comCamTarget.m_name = std::string("Earth-Body COM");
   }
 
   for (int i = 0; i < 5; ++i) {
     EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i] = m_entitySystem.makePoi());
 
-    RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId = m_renderSystem.makePoint());
+    // Correct positions will get computed in update step
     {
-      lagrangePoint.m_pos[0] = 0.0;
-      lagrangePoint.m_pos[1] = 0.0;
-      lagrangePoint.m_pos[2] = 0.0;
-
-      lagrangePoint.m_col[0] = 1.0f;
-      lagrangePoint.m_col[1] = 0.0f;
-      lagrangePoint.m_col[2] = 0.0f;
+      RenderSystem::Point& lagrangePoint = m_renderSystem.getPoint(lagrangePoi.m_pointId = m_renderSystem.makePoint());
+      lagrangePoint.m_pos = orVec3(0, 0, 0);
+      lagrangePoint.m_col = RenderSystem::Colour(1.0, 0.0, 0.0);
     }
 
-    CameraSystem::Target& lagrangeCamTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId = m_cameraSystem.makeTarget());
-
-    lagrangeCamTarget.m_pos[0] = lagrangePoint.m_pos[0];
-    lagrangeCamTarget.m_pos[1] = lagrangePoint.m_pos[1];
-    lagrangeCamTarget.m_pos[2] = lagrangePoint.m_pos[2];
-
-    std::stringstream builder;
-    builder << "Earth-Body L" << (i + 1);
-    lagrangeCamTarget.m_name = builder.str();
+    {
+      CameraSystem::Target& lagrangeCamTarget = m_cameraSystem.getTarget(lagrangePoi.m_cameraTargetId = m_cameraSystem.makeTarget());
+      lagrangeCamTarget.m_pos = orVec3(0, 0, 0);
+      std::stringstream builder;
+      builder << "Earth-Body L" << (i + 1);
+      lagrangeCamTarget.m_name = builder.str();
+    }
   }
 
   // Create ships
-  EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
-
-  PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
   {
-    playerBody.m_pos[0] = 0.0;
-    playerBody.m_pos[1] = 0.0;
-    playerBody.m_pos[2] = 1.3e7;
+    EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
 
-    playerBody.m_vel[0] = 5e3;
-    playerBody.m_vel[1] = 0.0;
-    playerBody.m_vel[2] = 0.0;
+    orVec3 playerPos(0.0, 0.0, 1.3e7);
+    {
+      PhysicsSystem::ParticleBody& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
+      playerBody.m_pos = playerPos;
+      playerBody.m_vel = orVec3(5e3, 0.0, 0.0);
+      playerBody.m_userAcc = orVec3(0, 0, 0);
+    }
 
-    playerBody.m_userAcc[0] = 0.0;
-    playerBody.m_userAcc[1] = 0.0;
-    playerBody.m_userAcc[2] = 0.0;
+    {
+      RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
+      playerOrbit.m_pos = earthPos;
+      playerOrbit.m_col = m_colB[2];
+    }
+
+    {
+      RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail());
+      playerTrail.Init(5000.0, playerPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
+      playerTrail.m_colOld = m_colB[0];
+      playerTrail.m_colNew = m_colB[4];
+    }
+
+    {
+      RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
+      playerPoint.m_pos = playerPos;
+      playerPoint.m_col = m_colB[4];
+    }
+
+    {
+      CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
+      playerCamTarget.m_pos = playerPos;
+      playerCamTarget.m_name = std::string("Player");
+    }
   }
 
-  RenderSystem::Orbit& playerOrbit = m_renderSystem.getOrbit(playerShip.m_orbitId = m_renderSystem.makeOrbit());
   {
-    playerOrbit.m_pos[0] = earthPosData[0];
-    playerOrbit.m_pos[1] = earthPosData[1];
-    playerOrbit.m_pos[2] = earthPosData[2];
+    EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_suspectShipId = m_entitySystem.makeShip());
 
-    playerOrbit.m_col[0] = m_colB[2].x();
-    playerOrbit.m_col[1] = m_colB[2].y();
-    playerOrbit.m_col[2] = m_colB[2].z();
+    orVec3 suspectPos(0.0, 0.0, 1.3e7);
+    {
+      PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
+      suspectBody.m_pos = suspectPos;
+      suspectBody.m_vel = orVec3(5e3, 0.0, 0.0);
+      suspectBody.m_userAcc = orVec3(0.0, 0.0, 0.0);
+    }
+
+    {
+      RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
+      suspectOrbit.m_pos = earthPos;
+      suspectOrbit.m_col = m_colR[2];
+    }
+
+    {
+      RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail());
+      suspectTrail.Init(5000.0, suspectPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
+      suspectTrail.m_colOld = m_colR[0];
+      suspectTrail.m_colNew = m_colR[4];
+    }
+
+    {
+      RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
+      suspectPoint.m_pos = suspectPos;
+      suspectPoint.m_col = m_colR[4];
+    }
+
+    {
+      CameraSystem::Target& suspectCamTarget = m_cameraSystem.getTarget(suspectShip.m_cameraTargetId = m_cameraSystem.makeTarget());
+      suspectCamTarget.m_pos = suspectPos;
+      suspectCamTarget.m_name = std::string("Suspect");
+    }
   }
-
-  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail());
-  {
-    playerTrail.Init(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
-    playerTrail.m_colOld[0] = m_colB[0].x();
-    playerTrail.m_colOld[1] = m_colB[0].y();
-    playerTrail.m_colOld[2] = m_colB[0].z();
-
-    playerTrail.m_colNew[0] = m_colB[4].x();
-    playerTrail.m_colNew[1] = m_colB[4].y();
-    playerTrail.m_colNew[2] = m_colB[4].z();
-  }
-
-  RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
-  {
-    playerPoint.m_pos[0] = playerBody.m_pos[0];
-    playerPoint.m_pos[1] = playerBody.m_pos[1];
-    playerPoint.m_pos[2] = playerBody.m_pos[2];
-
-    playerPoint.m_col[0] = m_colB[4].x();
-    playerPoint.m_col[1] = m_colB[4].y();
-    playerPoint.m_col[2] = m_colB[4].z();
-  }
-
-  CameraSystem::Target& playerCamTarget = m_cameraSystem.getTarget(playerShip.m_cameraTargetId = m_cameraSystem.makeTarget());
-  {
-    playerCamTarget.m_pos[0] = playerBody.m_pos[0];
-    playerCamTarget.m_pos[1] = playerBody.m_pos[1];
-    playerCamTarget.m_pos[2] = playerBody.m_pos[2];
-
-    playerCamTarget.m_name = std::string("Player");
-  }
-
-  EntitySystem::Ship& suspectShip = m_entitySystem.getShip(m_suspectShipId = m_entitySystem.makeShip());
-
-  PhysicsSystem::ParticleBody& suspectBody = m_physicsSystem.getParticleBody(suspectShip.m_particleBodyId = m_physicsSystem.makeParticleBody());
-  {
-    suspectBody.m_pos[0] = 0.0;
-    suspectBody.m_pos[1] = 0.0;
-    suspectBody.m_pos[2] = 1.3e7;
-
-    suspectBody.m_vel[0] = 5e3;
-    suspectBody.m_vel[1] = 0.0;
-    suspectBody.m_vel[2] = 0.0;
-
-    suspectBody.m_userAcc[0] = 0.0;
-    suspectBody.m_userAcc[1] = 0.0;
-    suspectBody.m_userAcc[2] = 0.0;
-  }
-
-  RenderSystem::Orbit& suspectOrbit = m_renderSystem.getOrbit(suspectShip.m_orbitId = m_renderSystem.makeOrbit());
-  {
-    suspectOrbit.m_pos[0] = earthPosData[0];
-    suspectOrbit.m_pos[1] = earthPosData[1];
-    suspectOrbit.m_pos[2] = earthPosData[2];
-
-    suspectOrbit.m_col[0] = m_colR[2].x();
-    suspectOrbit.m_col[1] = m_colR[2].y();
-    suspectOrbit.m_col[2] = m_colR[2].z();
-  }
-
-  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail());
-  {
-    suspectTrail.Init(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
-    suspectTrail.m_colOld[0] = m_colR[0].x();
-    suspectTrail.m_colOld[1] = m_colR[0].y();
-    suspectTrail.m_colOld[2] = m_colR[0].z();
-
-    suspectTrail.m_colNew[0] = m_colR[4].x();
-    suspectTrail.m_colNew[1] = m_colR[4].y();
-    suspectTrail.m_colNew[2] = m_colR[4].z();
-  }
-
-  RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());
-  {
-    suspectPoint.m_pos[0] = suspectBody.m_pos[0];
-    suspectPoint.m_pos[1] = suspectBody.m_pos[1];
-    suspectPoint.m_pos[2] = suspectBody.m_pos[2];
-
-    suspectPoint.m_col[0] = m_colR[4].x();
-    suspectPoint.m_col[1] = m_colR[4].y();
-    suspectPoint.m_col[2] = m_colR[4].z();
-  }
-
-  CameraSystem::Target& suspectCamTarget = m_cameraSystem.getTarget(suspectShip.m_cameraTargetId = m_cameraSystem.makeTarget());
-  {
-    suspectCamTarget.m_pos[0] = suspectBody.m_pos[0];
-    suspectCamTarget.m_pos[1] = suspectBody.m_pos[1];
-    suspectCamTarget.m_pos[2] = suspectBody.m_pos[2];
-
-    suspectCamTarget.m_name = std::string("Suspect");
-  }
-
   // Perturb all the ship orbits
   // TODO this should update all the other positions too, or happen earlier!
   // TODO shouldn't iterate through IDs outside a system.

@@ -164,11 +164,12 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
   Vector3d const bodyPos(_body.m_pos);
 
   double minDist = DBL_MAX;
-  int minDistId = -1;
+  int minDistId = 0;
 
   for (int i = 0; i < numGravBodies(); ++i)
   {
-    GravBody const& soiBody = getGravBody(i + 1);
+    int curId = i + 1;
+    GravBody const& soiBody = getGravBody(curId);
     Vector3d const soiPos(soiBody.m_pos);
 
     double soi;
@@ -192,10 +193,10 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
 
     if (soiDistance < soi && soiDistance < minDist) {
       minDist = soiDistance;
-      minDistId = i;
+      minDistId = curId;
     }
   }
-  ensure(minDistId >= 0); // TODO return Id instead, -1 for none?
+  ensure(minDistId > 0); // TODO return Id instead, -1 for none?
   return getGravBody(minDistId);
 }
 
@@ -251,8 +252,10 @@ void PhysicsSystem::CalcParticleGrav(int numParticles, PP const& pp, VP const& v
 template< class PP, class VP, class OA >
 void PhysicsSystem::CalcParticleUserAcc(int numParticles, PP const& pp, VP const& vp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
+  // TODO need a better way of iterating over instances
   for (int pi = 0; pi < numParticles; ++pi) {
-    o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pi).m_userAcc.data);
+    int pid = pi + 1;
+    o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pid).m_userAcc.data);
   }
 }
 

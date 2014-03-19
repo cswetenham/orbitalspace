@@ -193,7 +193,7 @@ private:
   RenderSystem::Colour m_colR[PALETTE_SIZE];
   RenderSystem::Colour m_colB[PALETTE_SIZE];
 
-  double m_lightDir[3];
+  orVec3 m_lightDir;
 
   // TODO make into an id-handle thing
   RenderSystem::FrameBuffer m_frameBuffer;

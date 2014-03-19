@@ -21,10 +21,19 @@ struct orVec2 {
       data[i] = 0;
     }
   }
+
   orVec2(double x, double y) {
     data[0] = x;
     data[1] = y;
   }
+
+  orVec2(Eigen::Vector2d v) {
+    double const* vdata = v.data();
+    for (int i = 0; i < 2; ++i) {
+      data[i] = vdata[i];
+    }
+  }
+
   double&       operator[] (int i)       { return data[i]; }
   double const& operator[] (int i) const { return data[i]; }
   double data[2];
@@ -36,11 +45,20 @@ struct orVec3 {
       data[i] = 0;
     }
   }
+
   orVec3(double x, double y, double z) {
     data[0] = x;
     data[1] = y;
     data[2] = z;
   }
+
+  orVec3(Eigen::Vector3d v) {
+    double const* vdata = v.data();
+    for (int i = 0; i < 3; ++i) {
+      data[i] = vdata[i];
+    }
+  }
+
   double&       operator[] (int i)       { return data[i]; }
   double const& operator[] (int i) const { return data[i]; }
 

@@ -28,7 +28,7 @@ public:
 
   DECLARE_SYSTEM_TYPE(Target, Targets);
 
-  int nextTarget(int targetId) { return (targetId + 1) % numTargets(); }
+  int nextTarget(int targetId) { return (targetId % numTargets()) + 1; }
 
   Eigen::Matrix4d calcScreenMatrix( int width, int height );
   Eigen::Matrix4d calcProjMatrix( int cameraId, int width, int height, double minZ, double maxZ, double aspect );

@@ -291,7 +291,8 @@ void RenderSystem::renderPoints() const
   PERFTIMER("RenderPoints");
   glDisable(GL_LIGHTING);
   for (int pi = 0; pi < (int)m_instancedPoints.size(); ++pi) {
-    RenderSystem::Point const& point = getPoint(pi);
+    int pid = pi + 1;
+    RenderSystem::Point const& point = getPoint(pid);
 
     glColor3d(point.m_col[0], point.m_col[1], point.m_col[2]);
 
@@ -308,7 +309,8 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
 {
   PERFTIMER("ProjectLabel3Ds");
   for (int li = 0; li < (int)m_instancedLabel3Ds.size(); ++li) {
-    RenderSystem::Label3D const& label3D = getLabel3D(li);
+    int lid = li + 1;
+    RenderSystem::Label3D const& label3D = getLabel3D(lid);
 
     Vector4d pos3d;
     pos3d.x() = label3D.m_pos[0]; // is this really the best way?
@@ -320,20 +322,12 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
 
     pos2d /= pos2d.w();
 
-    float x = (float)pos2d.x();
-    float y = (float)pos2d.y();
-
     m_label2DBuffer.push_back(Label2D());
     Label2D& label2D = m_label2DBuffer.back();
 
     label2D.m_text = label3D.m_text;
-
-    label2D.m_col[0] = label3D.m_col[0];
-    label2D.m_col[1] = label3D.m_col[1];
-    label2D.m_col[2] = label3D.m_col[2];
-
-    label2D.m_pos[0] = (int)x;
-    label2D.m_pos[1] = (int)y;
+    label2D.m_col = label3D.m_col;
+    label2D.m_pos = orVec2((int)pos2d.x(), (int)pos2d.y());
   }
 }
 
@@ -368,18 +362,15 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   // thing_measure[_space]_unit?
 
   for (int li = 0; li < (int)m_instancedLabel2Ds.size(); ++li) {
-    RenderSystem::Label2D const& label2D = getLabel2D(li);
-
+    int lid = li + 1;
+    RenderSystem::Label2D const& label2D = getLabel2D(lid);
     glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
-
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
 
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
-
     glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
-
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
 
@@ -454,7 +445,8 @@ void RenderSystem::renderSpheres() const
 
   PERFTIMER("RenderSpheres");
   for (int si = 0; si < (int)m_instancedSpheres.size(); ++si) {
-    RenderSystem::Sphere const& sphere = getSphere(si);
+    int sid = si + 1;
+    RenderSystem::Sphere const& sphere = getSphere(sid);
 
     glColor3d(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
 
@@ -467,7 +459,8 @@ void RenderSystem::renderOrbits() const
   PERFTIMER("RenderOrbits");
   glDisable(GL_LIGHTING);
   for (int oi = 0; oi < (int)m_instancedOrbits.size(); ++oi) {
-    RenderSystem::Orbit const& orbit = getOrbit(oi);
+    int oid = oi + 1;
+    RenderSystem::Orbit const& orbit = getOrbit(oid);
 
     glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
@@ -528,7 +521,8 @@ void RenderSystem::renderTrails() const
 {
   PERFTIMER("RenderTrails");
   for (int ti = 0; ti < (int)m_instancedTrails.size(); ++ti) {
-    Trail const& trail = getTrail(ti);
+    int tid = ti + 1;
+    Trail const& trail = getTrail(tid);
     glBegin(GL_LINE_STRIP);
 
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)

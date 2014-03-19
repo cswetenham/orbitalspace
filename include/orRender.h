@@ -17,7 +17,7 @@ public:
   void initRender();
   void shutdownRender();
 
-  typedef Vector3d Colour; // TODO maybe use different type?
+  typedef Eigen::Vector3d Colour; // TODO maybe use different type?
 
   struct FrameBuffer {
     FrameBuffer() : width(0), height(0), frameBufferId(0), colorTextureId(0), depthBufferId(0) {}
