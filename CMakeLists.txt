@@ -33,8 +33,8 @@ include_directories("/usr/include/eigen3")
 include_directories("/usr/include/eigen3/unsupported")
 include_directories("./include")
 
-add_subdirectory("./SDL")
-include_directories("./SDL/include")
+add_subdirectory("./3rdparty/SDL")
+include_directories("./3rdparty/SDL/include")
 
 add_definitions(-DGL_GLEXT_PROTOTYPES)
 add_definitions(-D__STDC_LIMIT_MACROS)
