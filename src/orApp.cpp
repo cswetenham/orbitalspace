@@ -200,7 +200,6 @@ void orApp::HandleInput()
     int y;
     SDL_GetMouseState(&x, &y);
     SDL_WarpMouseInWindow(m_window, m_config.windowWidth / 2, m_config.windowHeight / 2);
-    SDL_LogWarn(SDL_LOG_CATEGORY_ERROR, "TODO TWEAK mouse move multiplier");
     double const dx = (x - m_config.windowWidth / 2) * M_TAU / 300.0;
     m_camParams.theta = Util::Wrap(m_camParams.theta + dx, 0.0, M_TAU);
     double const dy = (y - m_config.windowHeight / 2) * M_TAU / 300.0;
