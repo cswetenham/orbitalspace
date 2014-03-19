@@ -138,59 +138,59 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
   gluDeleteQuadric(quad);
   glPopMatrix();
 #else
-  Vector3f const center(pos.x(), pos.y(), pos.z());
+  Vector3d const center(pos.x(), pos.y(), pos.z());
   float const off_H = ( M_PI ) / float(stacks);
   float const off_R = ( M_PI * 2.0 ) / float(slices);
 
   // draw the tips as tri_fans
   {
     glBegin( GL_TRIANGLE_FAN );
-    Vector3f n(
+    Vector3d n(
       sin( 0.0 ) * sin( 0.0 ),
       cos( 0.0 ) * sin( 0.0 ),
       cos( 0.0 )
     );
-    Vector3f p = center + n * radius;
-    glNormal3fv( n.data() );
-    glVertex3fv( p.data() );
+    Vector3d p = center + n * radius;
+    glNormal3dv( n.data() );
+    glVertex3dv( p.data() );
 
     for ( int sl=0; sl<slices+1; sl++ )
     {
       float a = float(sl)*off_R;
-      Vector3f n(
+      Vector3d n(
         sin( a ) * sin( off_H ),
         cos( a ) * sin( off_H ),
         cos( off_H )
       );
-      Vector3f p = center + n * radius;
-      glNormal3fv( n.data() );
-      glVertex3fv( p.data() );
+      Vector3d p = center + n * radius;
+      glNormal3dv( n.data() );
+      glVertex3dv( p.data() );
     }
     glEnd();
   }
 
   {
     glBegin( GL_TRIANGLE_FAN );
-    Vector3f n(
+    Vector3d n(
       sin( 0.0 ) * sin( M_PI ),
       cos( 0.0 ) * sin( M_PI ),
       cos( M_PI )
     );
-    Vector3f p = center + n * radius;
-    glNormal3fv( n.data() );
-    glVertex3fv( p.data() );
+    Vector3d p = center + n * radius;
+    glNormal3dv( n.data() );
+    glVertex3dv( p.data() );
 
     for ( int sl=slices; sl>=0; sl-- )
     {
       float a = float(sl)*off_R;
-      Vector3f n(
+      Vector3d n(
         sin( a ) * sin( M_PI-off_H ),
         cos( a ) * sin( M_PI-off_H ),
         cos( M_PI-off_H )
       );
-      Vector3f p = center + n * radius;
-      glNormal3fv( n.data() );
-      glVertex3fv( p.data() );
+      Vector3d p = center + n * radius;
+      glNormal3dv( n.data() );
+      glVertex3dv( p.data() );
     }
     glEnd();
   }
@@ -203,31 +203,31 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
     {
       float a = float(sl)*off_R;
       {
-        Vector3f n(
+        Vector3d n(
           sin( a ) * sin( b ),
           cos( a ) * sin( b ),
           cos( b )
         );
-        Vector3f p = center + n * radius;
-        glNormal3fv( n.data() );
-        glVertex3fv( p.data() );
+        Vector3d p = center + n * radius;
+        glNormal3dv( n.data() );
+        glVertex3dv( p.data() );
       }
 
       {
-        Vector3f n(
+        Vector3d n(
           sin( a ) * sin( b+off_H ),
           cos( a ) * sin( b+off_H ),
           cos( b+off_H )
         );
-        Vector3f p = center + n * radius;
-        glNormal3fv( n.data() );
-        glVertex3fv( p.data() );
+        Vector3d p = center + n * radius;
+        glNormal3dv( n.data() );
+        glVertex3dv( p.data() );
       }
     }
     glEnd();
   }
 #endif
-  glNormal3f( 0.0, 0.0, 1.0 );
+  glNormal3d( 0.0, 0.0, 1.0 );
 }
 
 void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
@@ -290,10 +290,10 @@ void RenderSystem::renderPoints() const
 {
   PERFTIMER("RenderPoints");
   glDisable(GL_LIGHTING);
-  for (int pi = 0; pi < (int)m_points.size(); ++pi) {
+  for (int pi = 0; pi < (int)m_instancedPoints.size(); ++pi) {
     RenderSystem::Point const& point = getPoint(pi);
 
-    glColor3f(point.m_col[0], point.m_col[1], point.m_col[2]);
+    glColor3d(point.m_col[0], point.m_col[1], point.m_col[2]);
 
     glPointSize(3.0);
     glBegin(GL_POINTS);
@@ -307,7 +307,7 @@ void RenderSystem::renderPoints() const
 void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
 {
   PERFTIMER("ProjectLabel3Ds");
-  for (int li = 0; li < (int)m_label3Ds.size(); ++li) {
+  for (int li = 0; li < (int)m_instancedLabel3Ds.size(); ++li) {
     RenderSystem::Label3D const& label3D = getLabel3D(li);
 
     Vector4d pos3d;
@@ -367,10 +367,10 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   // thing_measure[_space]_unit?
 
-  for (int li = 0; li < (int)m_label2Ds.size(); ++li) {
+  for (int li = 0; li < (int)m_instancedLabel2Ds.size(); ++li) {
     RenderSystem::Label2D const& label2D = getLabel2D(li);
 
-    glColor3f(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
+    glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
 
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
@@ -378,7 +378,7 @@ void RenderSystem::renderLabels( int w_px, int h_px )
   for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
     RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
 
-    glColor3f(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
+    glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
 
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
@@ -433,16 +433,16 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
     float const char_t_tx = char_y_tex_px * v_scale;
 
     glTexCoord2f( char_l_tx,             char_t_tx               );
-    glVertex3f(   char_x_px,             char_y_px,             0);
+    glVertex3d(   char_x_px,             char_y_px,             0);
 
     glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
-    glVertex3f(   char_x_px + char_w_px, char_y_px,             0);
+    glVertex3d(   char_x_px + char_w_px, char_y_px,             0);
 
     glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
-    glVertex3f(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
+    glVertex3d(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
 
     glTexCoord2f( char_l_tx,             char_t_tx + char_h_tx   );
-    glVertex3f(   char_x_px,             char_y_px + char_h_px, 0);
+    glVertex3d(   char_x_px,             char_y_px + char_h_px, 0);
 
     char_x_px += char_w_px;
   }
@@ -453,10 +453,10 @@ void RenderSystem::renderSpheres() const
   glEnable(GL_LIGHTING);
 
   PERFTIMER("RenderSpheres");
-  for (int si = 0; si < (int)m_spheres.size(); ++si) {
+  for (int si = 0; si < (int)m_instancedSpheres.size(); ++si) {
     RenderSystem::Sphere const& sphere = getSphere(si);
 
-    glColor3f(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
+    glColor3d(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
 
     drawSolidSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
@@ -466,10 +466,10 @@ void RenderSystem::renderOrbits() const
 {
   PERFTIMER("RenderOrbits");
   glDisable(GL_LIGHTING);
-  for (int oi = 0; oi < (int)m_orbits.size(); ++oi) {
+  for (int oi = 0; oi < (int)m_instancedOrbits.size(); ++oi) {
     RenderSystem::Orbit const& orbit = getOrbit(oi);
 
-    glColor3f(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
+    glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
     int const steps = 1000;
     // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
@@ -527,7 +527,7 @@ void RenderSystem::renderOrbits() const
 void RenderSystem::renderTrails() const
 {
   PERFTIMER("RenderTrails");
-  for (int ti = 0; ti < (int)m_trails.size(); ++ti) {
+  for (int ti = 0; ti < (int)m_instancedTrails.size(); ++ti) {
     Trail const& trail = getTrail(ti);
     glBegin(GL_LINE_STRIP);
 
@@ -539,9 +539,9 @@ void RenderSystem::renderTrails() const
       Vector3d v = Vector3d(&trail.m_trailPts[3*idx]) + Vector3d(trail.m_HACKorigin);
 
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
-      Vector3f c = Util::Lerp(Vector3f(trail.m_colNew), Vector3f(trail.m_colOld), l);
+      Vector3d c = Util::Lerp(Vector3d(trail.m_colNew), Vector3d(trail.m_colOld), l);
 
-      glColor3f(c.x(), c.y(), c.z());
+      glColor3d(c.x(), c.y(), c.z());
 
       glVertex3d(v.x(),v.y(),v.z());
     }
@@ -551,7 +551,7 @@ void RenderSystem::renderTrails() const
 
     // Debugging trail: show the trail points
 #if 0
-    glColor3f(0.0, 0.0, 1.0);
+    glColor3d(0.0, 0.0, 1.0);
 
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
     {
@@ -595,7 +595,7 @@ void RenderSystem::checkGLErrors()
 #if 0
 void RenderSystem::clearBuffer(
   FrameBuffer const& frameBuffer,
-  sf::Vector3f clearCol,
+  sf::Vector3d clearCol,
   float clearDepth
 ) {
   // Render to our framebuffer
@@ -679,7 +679,7 @@ void RenderSystem::render(
     glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHTING );
 
-    glNormal3f(0,0,1);
+    glNormal3d(0,0,1);
 
     glLineWidth(1.0);
 #if 0
@@ -705,10 +705,10 @@ void RenderSystem::render(
   }
 }
 
-RenderSystem::Trail::Trail(double const _duration, const double _initPos[3], const double _initOrigin[3]) :
-  m_duration(_duration),
-  m_headIdx(0)
+void RenderSystem::Trail::Init(double const _duration, const orVec3 _initPos, const orVec3 _initOrigin)
 {
+  m_duration = _duration;
+  m_headIdx = 0;
   // TODO need to set m_HACKorigin from _initOrigin? _initOrigin never read right now, m_HACKorigin never set...
   Vector3d initPos(_initPos);
   Vector3d initOrigin(_initOrigin);

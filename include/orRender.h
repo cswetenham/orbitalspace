@@ -3,6 +3,7 @@
 #include "orStd.h"
 #include "orMath.h"
 #include "orGfx.h"
+#include "orCore/orSystem.h"
 
 #include <vector>
 
@@ -19,7 +20,7 @@ public:
   typedef Vector3d Colour; // TODO maybe use different type?
 
   struct FrameBuffer {
-    FrameBuffer() : frameBufferId(0), colorTextureId(0), depthBufferId(0) {}
+    FrameBuffer() : width(0), height(0), frameBufferId(0), colorTextureId(0), depthBufferId(0) {}
     int width;
     int height;
     uint32_t frameBufferId;
@@ -31,75 +32,70 @@ public:
   void freeFrameBuffer(FrameBuffer&) { /* TODO */ }
 
   struct Point {
-    double m_pos[3];
+    Point(): m_pos(), m_col() {}
+    orVec3 m_pos;
 
-    float m_col[3];
+    orVec3 m_col;
   };
 
-  int numPoints() const { return m_points.size(); }
-  int makePoint() { m_points.push_back(Point()); return numPoints() - 1; }
-  Point&       getPoint(int i)       { return m_points[i]; }
-  Point const& getPoint(int i) const { return m_points[i]; }
+  DECLARE_SYSTEM_TYPE(Point, Points);
 
   struct Label2D {
+    Label2D() : m_text(), m_pos(), m_col() {}
+
     std::string m_text;
 
-    int m_pos[2];
+    orVec2 m_pos;
 
-    float m_col[3];
+    orVec3 m_col;
   };
 
-  int numLabel2Ds() const { return m_label2Ds.size(); }
-  int makeLabel2D() { m_label2Ds.push_back(Label2D()); return numLabel2Ds() - 1; }
-  Label2D&       getLabel2D(int i)       { ensure(0 <= i && i < numLabel2Ds()); return m_label2Ds[i]; }
-  Label2D const& getLabel2D(int i) const { ensure(0 <= i && i < numLabel2Ds()); return m_label2Ds[i]; }
+  DECLARE_SYSTEM_TYPE(Label2D, Label2Ds);
 
   struct Label3D {
+    Label3D() : m_text(), m_pos(), m_col() {}
+
     std::string m_text;
 
-    double m_pos[3];
+    orVec3 m_pos;
 
-    float m_col[3];
+    orVec3 m_col;
   };
 
-  int numLabel3Ds() const { return m_label3Ds.size(); }
-  int makeLabel3D() { m_label3Ds.push_back(Label3D()); return numLabel3Ds() - 1; }
-  Label3D&       getLabel3D(int i)       { ensure(0 <= i && i < numLabel3Ds()); return m_label3Ds[i]; }
-  Label3D const& getLabel3D(int i) const { ensure(0 <= i && i < numLabel3Ds()); return m_label3Ds[i]; }
+  DECLARE_SYSTEM_TYPE(Label3D, Label3Ds);
 
   struct Sphere {
-    double m_radius;
-    double m_pos[3];
+    Sphere() : m_radius(0), m_pos(), m_col() {}
 
-    float m_col[3];
+    double m_radius;
+    orVec3 m_pos;
+
+    orVec3 m_col;
   };
 
-  int numSpheres() const { return (int)m_spheres.size(); }
-  int makeSphere() { m_spheres.push_back(Sphere()); return numSpheres() - 1; }
-  Sphere&       getSphere(int i)       { return m_spheres[i]; }
-  Sphere const& getSphere(int i) const { return m_spheres[i]; }
+  DECLARE_SYSTEM_TYPE(Sphere, Spheres);
 
   struct Orbit {
+    Orbit() : p(0), e(0), theta(0), x_dir(), y_dir(), m_pos(), m_col() {}
+
     double p;
     double e;
     double theta;
-    double x_dir[3];
-    double y_dir[3];
+    orVec3 x_dir;
+    orVec3 y_dir;
 
-    double m_pos[3];
+    orVec3 m_pos;
 
-    float m_col[3];
+    orVec3 m_col;
   };
 
-  int numOrbits() const { return (int)m_orbits.size(); }
-  int makeOrbit() { m_orbits.push_back(Orbit()); return numOrbits() - 1; }
-  Orbit&       getOrbit(int i)       { return m_orbits[i]; }
-  Orbit const& getOrbit(int i) const { return m_orbits[i]; }
+  DECLARE_SYSTEM_TYPE(Orbit, Orbits);
 
   struct Trail
   {
-    Trail(double const _duration, const double _initPos[3], const double _initOrigin[3]);
+    Trail() : m_duration(0), m_headIdx(0), m_HACKorigin(), m_colOld(), m_colNew() {}
 
+    void Init(double const _duration, const orVec3 _initPos, const orVec3 _initOrigin);
     void Update(double const _dt, Vector3d const _pos);
 
     // TODO this stores a fixed number of frames, not the best approach
@@ -110,16 +106,13 @@ public:
     double m_trailPts[NUM_TRAIL_PTS*3];
     double m_trailPointAge[NUM_TRAIL_PTS];
 
-    double m_HACKorigin[3];
+    orVec3 m_HACKorigin;
 
-    float m_colOld[3];
-    float m_colNew[3];
+    orVec3 m_colOld;
+    orVec3 m_colNew;
   };
 
-  int numTrails() const { return (int)m_trails.size(); }
-  int makeTrail( double const _duration, const double _initPos[3], const double _origin[3] ) { m_trails.push_back(Trail(_duration, _initPos, _origin)); return numTrails() - 1; }
-  Trail&       getTrail(int i)       { return m_trails[i]; }
-  Trail const& getTrail(int i) const { return m_trails[i]; }
+  DECLARE_SYSTEM_TYPE(Trail, Trails);
 
   void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
   void render3D();
@@ -144,16 +137,8 @@ private:
   void renderTrails() const;
 
 private:
-  std::vector<Point> m_points;
-  std::vector<Label2D> m_label2Ds;
-  std::vector<Label3D> m_label3Ds;
-
   // 2D labels for this frame
   std::vector<Label2D> m_label2DBuffer;
-
-  std::vector<Sphere> m_spheres;
-  std::vector<Orbit> m_orbits;
-  std::vector<Trail> m_trails;
 
   uint32_t m_fontTextureId;
 

@@ -11,31 +11,36 @@ class PhysicsSystem {
 public:
   struct Body
   {
-    double m_pos[3];
-    double m_vel[3];
+    Body() : m_pos(), m_vel() {}
+
+    orVec3 m_pos;
+    orVec3 m_vel;
   };
 
   struct ParticleBody : public Body
   {
-    double m_userAcc[3];
+    ParticleBody() : Body(), m_userAcc() {}
+    orVec3 m_userAcc;
   };
-  
+
   DECLARE_SYSTEM_TYPE(ParticleBody, ParticleBodies);
 
   struct GravBody : public Body
   {
+    GravBody() : Body(), m_radius(0), m_mass(0), m_soiParentBody(0) {}
+
     double m_radius;
     double m_mass;
     int m_soiParentBody; // TODO want to avoid this later.
   };
-  
+
   DECLARE_SYSTEM_TYPE(GravBody, GravBodies);
 
   struct KeplerBody : public Body
   {
-    
+    KeplerBody() : Body() {}
   };
-  
+
   DECLARE_SYSTEM_TYPE(KeplerBody, KeplerBodies);
 
   enum IntegrationMethod {
@@ -44,7 +49,7 @@ public:
     IntegrationMethod_RK4,
     IntegrationMethod_Count
   };
-  
+
   void update(IntegrationMethod const integrationMethod, double const dt);
   GravBody const& findSOIGravBody(ParticleBody const& body) const;
 

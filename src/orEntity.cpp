@@ -6,40 +6,23 @@
 
 #include "constants.h"
 
-void EntitySystem::update(double const _dt, double const _origin[3])
+void EntitySystem::update(double const _dt, const orVec3 _origin)
 {
-  // Update Planets
-  for (int i = 0; i < (int)m_planets.size(); ++i) {
-    Planet& planet = getPlanet(i);
-
-    PhysicsSystem::Body& body = m_physicsSystem.getGravBody(planet.m_gravBodyId);
-
-    RenderSystem::Sphere& sphere = m_renderSystem.getSphere(planet.m_sphereId);
-    {
-      sphere.m_pos[0] = body.m_pos[0];
-      sphere.m_pos[1] = body.m_pos[1];
-      sphere.m_pos[2] = body.m_pos[2];
-    }
-    
-    CameraSystem::Target& camTarget = m_cameraSystem.getTarget(planet.m_cameraTargetId);
-    {
-      camTarget.m_pos[0] = body.m_pos[0];
-      camTarget.m_pos[1] = body.m_pos[1];
-      camTarget.m_pos[2] = body.m_pos[2];
-    }
-  }
-  
-  // Update Moons
-  for (int i = 0; i < (int)m_moons.size(); ++i) {
-    Moon& moon = getMoon(i);
+  // Update Bodies
+  for (int i = 0; i < (int)m_instancedBodies.size(); ++i) {
+    Body& moon = getBody(i);
 
     PhysicsSystem::GravBody& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
 
-    RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
-    UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_soiParentBody), orbit);
+    if (moon.m_orbitId && body.m_soiParentBody) {
+      RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
+      UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_soiParentBody), orbit);
+    }
 
-    RenderSystem::Trail& trail = m_renderSystem.getTrail(moon.m_trailId);
-    trail.Update(_dt, Vector3d(body.m_pos));
+    if (moon.m_trailId) {
+      RenderSystem::Trail& trail = m_renderSystem.getTrail(moon.m_trailId);
+      trail.Update(_dt, Vector3d(body.m_pos));
+    }
 
     RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
     {
@@ -57,11 +40,11 @@ void EntitySystem::update(double const _dt, double const _origin[3])
   }
 
   // Update ships
-  for (int i = 0; i < (int)m_ships.size(); ++i) {
+  for (int i = 0; i < (int)m_instancedShips.size(); ++i) {
     Ship& ship = getShip(i);
 
     PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
-     
+
     RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
     UpdateOrbit(body, m_physicsSystem.findSOIGravBody(body), orbit);
 
@@ -73,7 +56,7 @@ void EntitySystem::update(double const _dt, double const _origin[3])
 
       trail.Update(_dt, Vector3d(body.m_pos));
     }
-    
+
     RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);
     {
       point.m_pos[0] = body.m_pos[0];
@@ -104,7 +87,7 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
 
   double const G = GRAV_CONSTANT;
   double const M = parentBody.m_mass;
-    
+
   double const mu = M * G;
 
   Vector3d const bodyPos(body.m_pos);

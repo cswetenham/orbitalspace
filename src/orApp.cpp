@@ -299,7 +299,7 @@ void orApp::InitRender()
 {
   // TODO move to render system
 
-  // TODO z-ordering seems bad on text labels (Moon label appears in front of everything else - not sure if this is what I want, would be good to have the option)
+  // TODO z-ordering seems bad on text labels (Body label appears in front of everything else - not sure if this is what I want, would be good to have the option)
   // TODO 3d labels show when behind the camera as well as when they are in front.
   // TODO trails are bugged when switching camera targets.
 
@@ -426,18 +426,18 @@ void orApp::InitState()
     ephemeris[i].vel = vel;
   }
 
-  // TODO get some data on Earth-Moon orbit
+  // TODO get some data on Earth-Body orbit
 
   // For now, give the moon a circular orbit
 
-  double const muEarthMoon = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
+  double const muEarthBody = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
   double const angularSpeed = MOON_PERIOD / M_TAU;
 
-  double const earthMoonOrbitRadius = pow(muEarthMoon * angularSpeed * angularSpeed, 1.0/3.0); // meters
+  double const earthBodyOrbitRadius = pow(muEarthBody * angularSpeed * angularSpeed, 1.0/3.0); // meters
 
-  // Distances from COM of Earth-Moon system
-  double const earthOrbitRadius = earthMoonOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
-  double const moonOrbitRadius = earthMoonOrbitRadius - earthOrbitRadius;
+  // Distances from COM of Earth-Body system
+  double const earthOrbitRadius = earthBodyOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
+  double const moonOrbitRadius = earthBodyOrbitRadius - earthOrbitRadius;
 
   Vector3d const earthPos = ephemeris[2].pos + Vector3d(0.0, 0.0, -earthOrbitRadius);
   Vector3d const moonPos = ephemeris[2].pos + Vector3d(0.0, 0.0, moonOrbitRadius);
@@ -484,9 +484,9 @@ void orApp::InitState()
 
   // Create Earth
 
-  EntitySystem::Planet& earthPlanet = m_entitySystem.getPlanet(m_earthPlanetId = m_entitySystem.makePlanet());
+  EntitySystem::Body& earthBody = m_entitySystem.getBody(m_earthBodyId = m_entitySystem.makeBody());
 
-  PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthPlanet.m_gravBodyId = m_physicsSystem.makeGravBody());
+  PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthBody.m_gravBodyId = m_physicsSystem.makeGravBody());
   {
     earthGravBody.m_mass = EARTH_MASS;
     earthGravBody.m_radius = EARTH_RADIUS;
@@ -498,11 +498,9 @@ void orApp::InitState()
     earthGravBody.m_vel[0] = earthVelData[0];
     earthGravBody.m_vel[1] = earthVelData[1];
     earthGravBody.m_vel[2] = earthVelData[2];
-
-    earthGravBody.m_soiParentBody = earthPlanet.m_gravBodyId;
   }
 
-  RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthPlanet.m_sphereId = m_renderSystem.makeSphere());
+  RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthBody.m_sphereId = m_renderSystem.makeSphere());
   {
     earthSphere.m_radius = earthGravBody.m_radius;
 
@@ -515,7 +513,7 @@ void orApp::InitState()
     earthSphere.m_col[2] = m_colG[1].z();
   }
 
-  CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthPlanet.m_cameraTargetId = m_cameraSystem.makeTarget());
+  CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthBody.m_cameraTargetId = m_cameraSystem.makeTarget());
   {
     earthCamTarget.m_pos[0] = earthPosData[0];
     earthCamTarget.m_pos[1] = earthPosData[1];
@@ -524,11 +522,11 @@ void orApp::InitState()
     earthCamTarget.m_name = std::string("Earth");
   }
 
-  // Create Moon
+  // Create Body
 
-  EntitySystem::Moon& moonMoon = m_entitySystem.getMoon(m_moonMoonId = m_entitySystem.makeMoon());
+  EntitySystem::Body& moonBody = m_entitySystem.getBody(m_moonBodyId = m_entitySystem.makeBody());
 
-  PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonMoon.m_gravBodyId = m_physicsSystem.makeGravBody());
+  PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonBody.m_gravBodyId = m_physicsSystem.makeGravBody());
   {
     moonGravBody.m_mass = MOON_MASS;
     moonGravBody.m_radius = MOON_RADIUS;
@@ -541,10 +539,10 @@ void orApp::InitState()
     moonGravBody.m_vel[1] = moonVelData[1];
     moonGravBody.m_vel[2] = moonVelData[2];
 
-    moonGravBody.m_soiParentBody = earthPlanet.m_gravBodyId;
+    moonGravBody.m_soiParentBody = earthBody.m_gravBodyId;
   }
 
-  RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonMoon.m_sphereId = m_renderSystem.makeSphere());
+  RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonBody.m_sphereId = m_renderSystem.makeSphere());
   {
     moonSphere.m_radius = moonGravBody.m_radius;
 
@@ -557,7 +555,7 @@ void orApp::InitState()
     moonSphere.m_col[2] = m_colG[1].z();
   }
 
-  RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonMoon.m_orbitId = m_renderSystem.makeOrbit());
+  RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonBody.m_orbitId = m_renderSystem.makeOrbit());
   {
     // Orbit pos is pos of parent body
 
@@ -570,8 +568,9 @@ void orApp::InitState()
     moonOrbit.m_col[2] = m_colG[1].z();
   }
 
-  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonMoon.m_trailId = m_renderSystem.makeTrail(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
+  RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonBody.m_trailId = m_renderSystem.makeTrail());
   {
+    moonTrail.Init(5000.0, moonGravBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
     moonTrail.m_colOld[0] = m_colG[0].x();
     moonTrail.m_colOld[1] = m_colG[0].y();
     moonTrail.m_colOld[2] = m_colG[0].z();
@@ -581,16 +580,16 @@ void orApp::InitState()
     moonTrail.m_colNew[2] = m_colG[4].z();
   }
 
-  CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonMoon.m_cameraTargetId = m_cameraSystem.makeTarget());
+  CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonBody.m_cameraTargetId = m_cameraSystem.makeTarget());
   {
     moonCamTarget.m_pos[0] = moonPosData[0];
     moonCamTarget.m_pos[1] = moonPosData[1];
     moonCamTarget.m_pos[2] = moonPosData[2];
 
-    moonCamTarget.m_name = std::string("Moon");
+    moonCamTarget.m_name = std::string("Body");
   }
 
-  RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonMoon.m_label3DId = m_renderSystem.makeLabel3D());
+  RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonBody.m_label3DId = m_renderSystem.makeLabel3D());
   {
     moonLabel3D.m_pos[0] = moonPosData[0];
     moonLabel3D.m_pos[1] = moonPosData[1];
@@ -600,10 +599,10 @@ void orApp::InitState()
     moonLabel3D.m_col[1] = m_colG[4].y();
     moonLabel3D.m_col[2] = m_colG[4].z();
 
-    moonLabel3D.m_text = std::string("Moon");
+    moonLabel3D.m_text = std::string("Body");
   }
 
-  // Create Earth-Moon COM
+  // Create Earth-Body COM
 
   EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
 
@@ -624,7 +623,7 @@ void orApp::InitState()
     comCamTarget.m_pos[1] = comPoint.m_pos[1];
     comCamTarget.m_pos[2] = comPoint.m_pos[2];
 
-    comCamTarget.m_name = std::string("Earth-Moon COM");
+    comCamTarget.m_name = std::string("Earth-Body COM");
   }
 
   for (int i = 0; i < 5; ++i) {
@@ -648,7 +647,7 @@ void orApp::InitState()
     lagrangeCamTarget.m_pos[2] = lagrangePoint.m_pos[2];
 
     std::stringstream builder;
-    builder << "Earth-Moon L" << (i + 1);
+    builder << "Earth-Body L" << (i + 1);
     lagrangeCamTarget.m_name = builder.str();
   }
 
@@ -681,8 +680,9 @@ void orApp::InitState()
     playerOrbit.m_col[2] = m_colB[2].z();
   }
 
-  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
+  RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail());
   {
+    playerTrail.Init(5000.0, playerBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
     playerTrail.m_colOld[0] = m_colB[0].x();
     playerTrail.m_colOld[1] = m_colB[0].y();
     playerTrail.m_colOld[2] = m_colB[0].z();
@@ -740,8 +740,9 @@ void orApp::InitState()
     suspectOrbit.m_col[2] = m_colR[2].z();
   }
 
-  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos));
+  RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail());
   {
+    suspectTrail.Init(5000.0, suspectBody.m_pos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
     suspectTrail.m_colOld[0] = m_colR[0].x();
     suspectTrail.m_colOld[1] = m_colR[0].y();
     suspectTrail.m_colOld[2] = m_colR[0].z();
@@ -1005,8 +1006,8 @@ void orApp::UpdateState_Bodies(double const dt)
 
   // TODO eaghghgh not clear where these should live
 
-  PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getPlanet(m_earthPlanetId).m_gravBodyId);
-  EntitySystem::Moon& moon = m_entitySystem.getMoon(m_moonMoonId);
+  PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getBody(m_earthBodyId).m_gravBodyId);
+  EntitySystem::Body& moon = m_entitySystem.getBody(m_moonBodyId);
   PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(moon.m_gravBodyId);
 
   Vector3d const earthPos(earthBody.m_pos);
@@ -1045,28 +1046,28 @@ void orApp::UpdateState_Bodies(double const dt)
   }
 
   // Update the earth-moon Lagrange points
-  Vector3d const earthMoonVector = moonPos - earthPos;
-  double const earthMoonOrbitRadius = earthMoonVector.norm();
-  Vector3d const earthMoonDir = earthMoonVector / earthMoonOrbitRadius;
+  Vector3d const earthBodyVector = moonPos - earthPos;
+  double const earthBodyOrbitRadius = earthBodyVector.norm();
+  Vector3d const earthBodyDir = earthBodyVector / earthBodyOrbitRadius;
   double const massRatio = MOON_MASS / EARTH_MASS;
-  double const r1 = earthMoonOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
-  double const r3 = earthMoonOrbitRadius * (1.0 + (7.0/12.0) * massRatio); // extra 1.0 to make r3 a distand from Earth position rather than an offset from earthMoonOrbitRadius
+  double const r1 = earthBodyOrbitRadius * pow(massRatio / 3.0, 1.0/3.0);
+  double const r3 = earthBodyOrbitRadius * (1.0 + (7.0/12.0) * massRatio); // extra 1.0 to make r3 a distand from Earth position rather than an offset from earthBodyOrbitRadius
 
   Vector3d lagrangePos[5];
   // Lagrange point 1
-  lagrangePos[0] = moonPos - earthMoonDir * r1;
+  lagrangePos[0] = moonPos - earthBodyDir * r1;
   // Lagrange point 2
-  lagrangePos[1] = moonPos + earthMoonDir * r1;
+  lagrangePos[1] = moonPos + earthBodyDir * r1;
   // Lagrange point 3
-  lagrangePos[2] = earthPos - earthMoonDir * r3;
+  lagrangePos[2] = earthPos - earthBodyDir * r3;
 
-  // L4 and L5 are on the Moon's orbit, 60 degrees ahead and 60 degrees behind.
-  Vector3d orbitAxis = moonVel.normalized().cross(earthMoonVector.normalized());
+  // L4 and L5 are on the Body's orbit, 60 degrees ahead and 60 degrees behind.
+  Vector3d orbitAxis = moonVel.normalized().cross(earthBodyVector.normalized());
   Eigen::AngleAxisd rotation(M_TAU / 6.0, orbitAxis);
   // Lagrange point 4
-  lagrangePos[3] = rotation           * earthMoonVector;
+  lagrangePos[3] = rotation           * earthBodyVector;
   // Lagrange point 5
-  lagrangePos[4] = rotation.inverse() * earthMoonVector;
+  lagrangePos[4] = rotation.inverse() * earthBodyVector;
 
   for (int i = 0; i < 5; ++i) {
     EntitySystem::Poi& lagrangePoi = m_entitySystem.getPoi(m_lagrangePoiIds[i]);
@@ -1251,7 +1252,7 @@ double orApp::computeEccentricAnomaly(
 char const* orApp::s_jpl_names[] = {
   "Mercury",
   "Venus",
-  "EarthMoon",
+  "EarthBody",
   "Mars",
   "Jupiter",
   "Saturn",

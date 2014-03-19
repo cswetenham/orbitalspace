@@ -118,7 +118,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
     Body& body = m_instancedParticleBodies[i];
 
     const double* const bodyPos = x_1.col(curId).data();
-    
+
     body.m_pos[0] = bodyPos[0];
     body.m_pos[1] = bodyPos[1];
     body.m_pos[2] = bodyPos[2];
@@ -126,9 +126,9 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
     Body& body = m_instancedGravBodies[i];
-    
+
     const double* const bodyPos = x_1.col(curId).data();
-    
+
     body.m_pos[0] = bodyPos[0];
     body.m_pos[1] = bodyPos[1];
     body.m_pos[2] = bodyPos[2];
@@ -136,9 +136,9 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   for (int i = 0; i < numParticles; ++i, ++curId) {
     Body& body = m_instancedParticleBodies[i];
-    
+
     const double* const bodyVel = x_1.col(curId).data();
-    
+
     body.m_vel[0] = bodyVel[0];
     body.m_vel[1] = bodyVel[1];
     body.m_vel[2] = bodyVel[2];
@@ -146,9 +146,9 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   for (int i = 0; i < numGravs; ++i, ++curId) {
     Body& body = m_instancedGravBodies[i];
-    
+
     const double* const bodyVel = x_1.col(curId).data();
-    
+
     body.m_vel[0] = bodyVel[0];
     body.m_vel[1] = bodyVel[1];
     body.m_vel[2] = bodyVel[2];
@@ -165,20 +165,20 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
 
   double minDist = DBL_MAX;
   int minDistId = -1;
-  
+
   for (int i = 0; i < numGravBodies(); ++i)
   {
-    GravBody const& soiBody = getGravBody(i);
-    GravBody const& parentBody = getGravBody(soiBody.m_soiParentBody);
-
+    GravBody const& soiBody = getGravBody(i + 1);
     Vector3d const soiPos(soiBody.m_pos);
-    Vector3d const parentPos(parentBody.m_pos);
-    
+
     double soi;
-    if (soiBody.m_soiParentBody == i) {
-      // If body is own parent, set infinite SOI
+    if (soiBody.m_soiParentBody == 0) {
+      // If body has no own parent, set infinite SOI
       soi = DBL_MAX;
     } else {
+      GravBody const& parentBody = getGravBody(soiBody.m_soiParentBody);
+      Vector3d const parentPos(parentBody.m_pos);
+
       double const orbitRadius = (parentPos - soiPos).norm();
 
       // Distances from COM of Earth-Moon system
@@ -252,7 +252,7 @@ template< class PP, class VP, class OA >
 void PhysicsSystem::CalcParticleUserAcc(int numParticles, PP const& pp, VP const& vp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   for (int pi = 0; pi < numParticles; ++pi) {
-    o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pi).m_userAcc);
+    o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pi).m_userAcc.data);
   }
 }
 
