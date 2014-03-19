@@ -1205,7 +1205,7 @@ void orApp::RenderState()
 
   // Projection matrix (GL_PROJECTION)
   double const minZ = 1e6; // meters
-  double const maxZ = 1e11; // meters
+  double const maxZ = 1e13; // meters
 
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
   Eigen::Matrix4d const projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
