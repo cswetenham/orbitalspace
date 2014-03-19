@@ -4,10 +4,12 @@
 #define GRAV_CONSTANT 6.6738480e-11
 
 // meters
+#define SUN_RADIUS   1.392e9
 #define EARTH_RADIUS 6.371e6
 #define MOON_RADIUS  1.737e6
 
 // kg
+#define SUN_MASS   1.989e30
 #define EARTH_MASS 5.9742e24
 #define MOON_MASS  7.3477e22
 

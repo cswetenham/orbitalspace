@@ -113,22 +113,13 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
   Vector3d const x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
   Vector3d const y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
 
-  const double* const x_dir_data = x_dir.data();
-  const double* const y_dir_data = y_dir.data();
-
   o_params.e = e;
   o_params.p = p;
   o_params.theta = theta;
 
-  o_params.x_dir[0] = x_dir_data[0];
-  o_params.x_dir[1] = x_dir_data[1];
-  o_params.x_dir[2] = x_dir_data[2];
+  o_params.x_dir = x_dir;
 
-  o_params.y_dir[0] = y_dir_data[0];
-  o_params.y_dir[1] = y_dir_data[1];
-  o_params.y_dir[2] = y_dir_data[2];
+  o_params.y_dir = y_dir;
 
-  o_params.m_pos[0] = parentBody.m_pos[0];
-  o_params.m_pos[1] = parentBody.m_pos[1];
-  o_params.m_pos[2] = parentBody.m_pos[2];
+  o_params.m_pos = parentBody.m_pos;
 }

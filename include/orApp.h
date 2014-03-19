@@ -215,6 +215,7 @@ private:
   int m_playerShipId;
   int m_suspectShipId;
 
+  int m_sunBodyId;
   int m_earthBodyId;
   int m_moonBodyId;
 

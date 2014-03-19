@@ -122,7 +122,7 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>SDL/include</pElem>
+            <pElem>3rdparty/SDL/include</pElem>
             <pElem>build</pElem>
           </incDir>
           <preprocessorList>
@@ -138,7 +138,7 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>SDL/include</pElem>
+            <pElem>3rdparty/SDL/include</pElem>
             <pElem>build</pElem>
           </incDir>
           <preprocessorList>
@@ -170,7 +170,7 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>SDL/include</pElem>
+            <pElem>3rdparty/SDL/include</pElem>
             <pElem>build</pElem>
           </incDir>
           <preprocessorList>
@@ -186,7 +186,7 @@
             <pElem>/usr/include/eigen3</pElem>
             <pElem>/usr/include/eigen3/unsupported</pElem>
             <pElem>include</pElem>
-            <pElem>SDL/include</pElem>
+            <pElem>3rdparty/SDL/include</pElem>
             <pElem>build</pElem>
           </incDir>
           <preprocessorList>
