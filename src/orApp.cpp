@@ -398,8 +398,9 @@ void orApp::InitState()
   m_uiTextBottomLabel2D.m_col = m_colG[4];
 
   // For now, just get initial ephemeris from JPL data and sim using RK4 integrator
-  Ephemeris ephemeris[3]; // TODO
-  for (int i = 0; i < 3; ++i) {
+  enum { NUM_PLANETS = 4 };
+  Ephemeris ephemeris[NUM_PLANETS]; // TODO
+  for (int i = 0; i < NUM_PLANETS; ++i) {
     Eigen::Vector3d pos = orApp::ephemerisFromKeplerianElements(
       s_jpl_elements_t0[i],
       posixTimeFromSimTime(m_simTime)
@@ -429,15 +430,17 @@ void orApp::InitState()
   // Distances from COM of Earth-Body system
   double const earthOrbitRadius = earthBodyOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
   double const moonOrbitRadius = earthBodyOrbitRadius - earthOrbitRadius;
+  
+  int earth_ephemeris_idx = 2;
 
-  Vector3d const earthPos = ephemeris[2].pos + Vector3d(0.0, 0.0, -earthOrbitRadius);
-  Vector3d const moonPos = ephemeris[2].pos + Vector3d(0.0, 0.0, moonOrbitRadius);
+  Vector3d const earthPos = ephemeris[earth_ephemeris_idx].pos + Vector3d(0.0, -earthOrbitRadius, 0.0);
+  Vector3d const moonPos = ephemeris[earth_ephemeris_idx].pos + Vector3d(0.0, moonOrbitRadius, 0.0 );
 
   double const earthSpeed = earthOrbitRadius / angularSpeed;
   double const moonSpeed = moonOrbitRadius / angularSpeed;
 
-  Vector3d const earthVel = ephemeris[2].vel + Vector3d(-earthSpeed, 0.0, 0.0);
-  Vector3d const moonVel = ephemeris[2].vel + Vector3d(moonSpeed, 0.0, 0.0);
+  Vector3d const earthVel = ephemeris[earth_ephemeris_idx].vel + Vector3d(-earthSpeed, 0.0, 0.0);
+  Vector3d const moonVel = ephemeris[earth_ephemeris_idx].vel + Vector3d(moonSpeed, 0.0, 0.0);
 
   m_lightDir = orVec3(earthPos.normalized());
 
@@ -975,14 +978,14 @@ void orApp::UpdateState_Bodies(double const dt)
 
 Vector3d orApp::CamPosFromCamParams(OrbitalCamParams const& params)
 {
-  Eigen::AngleAxisd thetaRot(params.theta, Vector3d(0.0, 1.0, 0.0));
+  Eigen::AngleAxisd thetaRot(params.theta, Vector3d(0.0, 0.0, 1.0));
   Eigen::AngleAxisd phiRot(params.phi, Vector3d(1.0, 0.0, 0.0));
 
   Eigen::Affine3d mat;
   mat.setIdentity();
   mat.rotate(thetaRot).rotate(phiRot);
 
-  return mat * Vector3d(0.0, 0.0, params.dist);
+  return mat * Vector3d(0.0, params.dist, 0.0);
 }
 
 void orApp::UpdateState()
@@ -1221,7 +1224,7 @@ void orApp::RenderState()
   Eigen::Matrix4d const projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
   // Camera matrix (GL_MODELVIEW)
-  Vector3d up(0.0, 1.0, 0.0);
+  Vector3d up = Vector3d::UnitZ();
   Eigen::Matrix4d const camMatrix = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
 
   // Used to translate a 3d position into a 2d framebuffer position
