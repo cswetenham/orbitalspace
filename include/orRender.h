@@ -125,6 +125,7 @@ private:
   void drawCircle(double const radius, int const steps) const;
   void drawSolidSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
   void drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const;
+  void drawAxes(Vector3d const pos, double const size) const;
 
   void drawString(std::string const& str, int pos_x, int pos_y);
 

@@ -286,6 +286,42 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
   glPopMatrix();
 }
 
+void glColor3d(Vector3d const col)
+{
+  glColor3d(col.x(), col.y(), col.z());
+}
+
+void glVertex3d(Vector3d const pos)
+{
+  glVertex3d(pos.x(), pos.y(), pos.z());
+}
+
+void drawLine(Vector3d const start, Vector3d const end, Vector3d const col)
+{
+  glBegin(GL_LINE_STRIP);
+  enum { STEPS = 1 };
+  Vector3d const inc = (end - start) / STEPS;
+  Vector3d cur_pos = start;
+  glColor3d(col);
+  glVertex3d(cur_pos);
+  for (int i = 0; i < STEPS; ++i) {
+    cur_pos += inc;
+    glVertex3d(cur_pos);
+  }
+  glVertex3d(end);
+  glEnd();
+}
+
+void RenderSystem::drawAxes(Vector3d const pos, double const size) const
+{
+  // X
+  drawLine(pos, pos + size * Vector3d::UnitX(), Vector3d(1.0, 0.0, 0.0));
+  // Y
+  drawLine(pos, pos + size * Vector3d::UnitY(), Vector3d(0.0, 1.0, 0.0));
+  // Z
+  drawLine(pos, pos + size * Vector3d::UnitZ(), Vector3d(0.0, 0.0, 1.0));
+}
+
 void RenderSystem::renderPoints() const
 {
   PERFTIMER("RenderPoints");
@@ -451,6 +487,14 @@ void RenderSystem::renderSpheres() const
     glColor3d(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
 
     drawSolidSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
+  }
+  
+  glDisable(GL_LIGHTING);
+  for (int si = 0; si < (int)m_instancedSpheres.size(); ++si) {
+    int sid = si + 1;
+    RenderSystem::Sphere const& sphere = getSphere(sid);
+
+    drawAxes(Vector3d(sphere.m_pos), 3 * sphere.m_radius);
   }
 }
 
