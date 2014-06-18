@@ -90,6 +90,14 @@ private:
 
 private:
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
+  int spawnBody(
+    std::string const& name,
+    double const radius,
+    double const mass,
+    orVec3 const pos,
+    orVec3 const vel,
+    int const parent_grav_body_id
+  );
 
 private:
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
@@ -216,8 +224,13 @@ private:
   int m_suspectShipId;
 
   int m_sunBodyId;
+  
   int m_earthBodyId;
   int m_moonBodyId;
+  
+  int m_mercuryBodyId;
+  int m_venusBodyId;
+  int m_marsBodyId;
 
   int m_comPoiId;
   int m_lagrangePoiIds[5];

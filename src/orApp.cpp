@@ -352,6 +352,59 @@ void orApp::ShutdownRender()
   m_window = NULL;
 }
 
+int orApp::spawnBody(
+  std::string const& name,
+  double const radius,
+  double const mass,
+  orVec3 const pos,
+  orVec3 const vel,
+  int const parent_grav_body_id
+)
+{
+  int body_id;
+  EntitySystem::Body& body = m_entitySystem.getBody(body_id = m_entitySystem.makeBody());
+
+  {
+    PhysicsSystem::GravBody& gravBody = m_physicsSystem.getGravBody(body.m_gravBodyId = m_physicsSystem.makeGravBody());
+    gravBody.m_mass = mass;
+    gravBody.m_radius = radius;
+    gravBody.m_pos = pos;
+    gravBody.m_vel = vel;
+    gravBody.m_soiParentBody = parent_grav_body_id;
+  }
+
+  {
+    RenderSystem::Sphere& sphere = m_renderSystem.getSphere(body.m_sphereId = m_renderSystem.makeSphere());
+    sphere.m_radius = radius;
+    sphere.m_pos = pos;
+    sphere.m_col = RenderSystem::Colour(1.0, 1.0, 0); // TODO use this type throughout
+  }
+  
+  // Best to init parents before children for this to work!
+  if (parent_grav_body_id)
+  {
+    RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(body.m_orbitId = m_renderSystem.makeOrbit());
+    // Orbit pos is pos of parent body
+    orbit.m_pos = m_physicsSystem.getGravBody(parent_grav_body_id).m_pos;
+    orbit.m_col = m_colG[1];
+  }
+
+  {
+    CameraSystem::Target& camTarget = m_cameraSystem.getTarget(body.m_cameraTargetId = m_cameraSystem.makeTarget());
+    camTarget.m_pos = pos;
+    camTarget.m_name = name;
+  }
+
+  {
+    RenderSystem::Label3D& label = m_renderSystem.getLabel3D(body.m_label3DId = m_renderSystem.makeLabel3D());
+    label.m_pos = pos;
+    label.m_col = orVec3(1.0, 1.0, 0.0);
+    label.m_text = name;
+  }
+  
+  return body_id;
+}
+
 void orApp::InitState()
 {
   typedef RenderSystem::Colour Colour;
@@ -419,6 +472,7 @@ void orApp::InitState()
   }
 
   // TODO get some better data on Moon's orbit
+  // TODO have all planets on rails and better handling of earth-moon special case
 
   // For now, give the moon a circular orbit
 
@@ -447,43 +501,17 @@ void orApp::InitState()
   // Create Sun
 
   {
-    EntitySystem::Body& sunBody = m_entitySystem.getBody(m_sunBodyId = m_entitySystem.makeBody());
-
-    double radius = SUN_RADIUS;
-    {
-      PhysicsSystem::GravBody& sunGravBody = m_physicsSystem.getGravBody(sunBody.m_gravBodyId = m_physicsSystem.makeGravBody());
-      sunGravBody.m_mass = SUN_MASS;
-      sunGravBody.m_radius = radius;
-      sunGravBody.m_pos = orVec3(0, 0, 0);
-      sunGravBody.m_vel = orVec3(0, 0, 0);
-      sunGravBody.m_soiParentBody = 0;
-    }
-
-    orVec3 sunPos(0, 0, 0);
-
-    {
-      RenderSystem::Sphere& sunSphere = m_renderSystem.getSphere(sunBody.m_sphereId = m_renderSystem.makeSphere());
-      sunSphere.m_radius = radius;
-      sunSphere.m_pos = sunPos;
-      sunSphere.m_col = RenderSystem::Colour(1.0, 1.0, 0);
-    }
-    
-    {
-      CameraSystem::Target& sumCamTarget = m_cameraSystem.getTarget(sunBody.m_cameraTargetId = m_cameraSystem.makeTarget());
-      sumCamTarget.m_pos = sunPos;
-      sumCamTarget.m_name = std::string("Sun");
-
-      m_cameraTargetId = sunBody.m_cameraTargetId;
-    }
-
-    {
-      RenderSystem::Label3D& sunLabel3D = m_renderSystem.getLabel3D(sunBody.m_label3DId = m_renderSystem.makeLabel3D());
-      sunLabel3D.m_pos = sunPos;
-      sunLabel3D.m_col = orVec3(1.0, 1.0, 0.0);
-      sunLabel3D.m_text = std::string("Sun");
-    }
+    orVec3 const pos(0, 0, 0);
+    orVec3 const vel(0, 0, 0);
+    m_sunBodyId = spawnBody("Sun", SUN_RADIUS, SUN_MASS, pos, vel, 0);
   }
-
+    
+  // Set initial camera target to be the Sun
+  m_cameraTargetId = m_entitySystem.getBody(m_sunBodyId).m_cameraTargetId;
+  
+  // Create Mercury
+  // TODO
+  
   // Create Earth
 
   {
