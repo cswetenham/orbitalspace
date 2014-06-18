@@ -404,11 +404,15 @@ void orApp::InitState()
       s_jpl_elements_t0[i],
       posixTimeFromSimTime(m_simTime)
     );
+    // lol hax :/
+    // This probably isn't giving a very accurate result, since I'm subtracting
+    // two large values close together
+    double const delta_t = 60.0;
     Eigen::Vector3d pos_1 = orApp::ephemerisFromKeplerianElements(
       s_jpl_elements_t0[i],
-      posixTimeFromSimTime(m_simTime + 1)
+      posixTimeFromSimTime(m_simTime + delta_t)
     );
-    Eigen::Vector3d vel = pos_1 - pos;
+    Eigen::Vector3d vel = (pos_1 - pos) / delta_t;
     ephemeris[i].pos = pos;
     ephemeris[i].vel = vel;
   }
