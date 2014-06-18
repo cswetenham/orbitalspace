@@ -34,6 +34,12 @@ void EntitySystem::update(double const _dt, const orVec3 _origin)
       CameraSystem::Target& camTarget = m_cameraSystem.getTarget(moon.m_cameraTargetId);
       camTarget.m_pos = body.m_pos;
     }
+    
+    if (moon.m_label3DId)
+    {
+      RenderSystem::Label3D& label3d = m_renderSystem.getLabel3D(moon.m_label3DId);
+      label3d.m_pos = body.m_pos;
+    }
   }
 
   // Update ships

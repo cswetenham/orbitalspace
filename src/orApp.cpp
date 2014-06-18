@@ -418,7 +418,7 @@ void orApp::InitState()
     ephemeris[i].vel = vel;
   }
 
-  // TODO get some data on Earth-Body orbit
+  // TODO get some better data on Moon's orbit
 
   // For now, give the moon a circular orbit
 
@@ -462,6 +462,13 @@ void orApp::InitState()
     orVec3 sunPos(0, 0, 0);
 
     {
+      RenderSystem::Sphere& sunSphere = m_renderSystem.getSphere(sunBody.m_sphereId = m_renderSystem.makeSphere());
+      sunSphere.m_radius = radius;
+      sunSphere.m_pos = sunPos;
+      sunSphere.m_col = RenderSystem::Colour(1.0, 1.0, 0);
+    }
+    
+    {
       CameraSystem::Target& sumCamTarget = m_cameraSystem.getTarget(sunBody.m_cameraTargetId = m_cameraSystem.makeTarget());
       sumCamTarget.m_pos = sunPos;
       sumCamTarget.m_name = std::string("Sun");
@@ -470,15 +477,7 @@ void orApp::InitState()
     }
 
     {
-      RenderSystem::Sphere& sunSphere = m_renderSystem.getSphere(sunBody.m_sphereId = m_renderSystem.makeSphere());
-      sunSphere.m_radius = radius;
-      sunSphere.m_pos = sunPos;
-      sunSphere.m_col = RenderSystem::Colour(1.0, 1.0, 0);
-    }
-
-    int sunlabel3DId;
-    {
-      RenderSystem::Label3D& sunLabel3D = m_renderSystem.getLabel3D(sunlabel3DId = m_renderSystem.makeLabel3D());
+      RenderSystem::Label3D& sunLabel3D = m_renderSystem.getLabel3D(sunBody.m_label3DId = m_renderSystem.makeLabel3D());
       sunLabel3D.m_pos = sunPos;
       sunLabel3D.m_col = orVec3(1.0, 1.0, 0.0);
       sunLabel3D.m_text = std::string("Sun");
@@ -519,6 +518,13 @@ void orApp::InitState()
       CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthBody.m_cameraTargetId = m_cameraSystem.makeTarget());
       earthCamTarget.m_pos = earthPos;
       earthCamTarget.m_name = std::string("Earth");
+    }
+    
+    {
+      RenderSystem::Label3D& earthLabel3d = m_renderSystem.getLabel3D(earthBody.m_label3DId = m_renderSystem.makeLabel3D());
+      earthLabel3d.m_pos = moonPos;
+      earthLabel3d.m_col = m_colG[4];
+      earthLabel3d.m_text = std::string("Earth");
     }
   }
 
