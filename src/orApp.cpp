@@ -510,7 +510,22 @@ void orApp::InitState()
   m_cameraTargetId = m_entitySystem.getBody(m_sunBodyId).m_cameraTargetId;
   
   // Create Mercury
-  // TODO
+  {
+    int const ephemeris_idx = 0;
+    m_mercuryBodyId = spawnBody("Mercury", MERCURY_RADIUS, MERCURY_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+  
+  // Create Venus
+  {
+    int const ephemeris_idx = 1;
+    m_mercuryBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+  
+  // Create Mars
+  {
+    int const ephemeris_idx = 3;
+    m_mercuryBodyId = spawnBody("Mars", MARS_RADIUS, MARS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
   
   // Create Earth
 
@@ -556,7 +571,7 @@ void orApp::InitState()
     }
   }
 
-  // Create Body
+  // Create Moon
 
   EntitySystem::Body& moonBody = m_entitySystem.getBody(m_moonBodyId = m_entitySystem.makeBody());
 
