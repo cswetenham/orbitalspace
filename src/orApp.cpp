@@ -451,7 +451,7 @@ void orApp::InitState()
   m_uiTextBottomLabel2D.m_col = m_colG[4];
 
   // For now, just get initial ephemeris from JPL data and sim using RK4 integrator
-  enum { NUM_PLANETS = 4 };
+  enum { NUM_PLANETS = 9 };
   Ephemeris ephemeris[NUM_PLANETS]; // TODO
   for (int i = 0; i < NUM_PLANETS; ++i) {
     Eigen::Vector3d pos = orApp::ephemerisFromKeplerianElements(
@@ -518,15 +518,45 @@ void orApp::InitState()
   // Create Venus
   {
     int const ephemeris_idx = 1;
-    m_mercuryBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_venusBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
   
   // Create Mars
   {
     int const ephemeris_idx = 3;
-    m_mercuryBodyId = spawnBody("Mars", MARS_RADIUS, MARS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_marsBodyId = spawnBody("Mars", MARS_RADIUS, MARS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
   
+  // Create Jupiter
+  {
+    int const ephemeris_idx = 4;
+    m_jupiterBodyId = spawnBody("Jupiter", JUPITER_RADIUS, JUPITER_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+  
+  // Create Saturn
+  {
+    int const ephemeris_idx = 5;
+    m_saturnBodyId = spawnBody("Saturn", SATURN_RADIUS, SATURN_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+  
+  // Create Neptune
+  {
+    int const ephemeris_idx = 6;
+    m_neptuneBodyId = spawnBody("Neptune", NEPTUNE_RADIUS, NEPTUNE_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+  
+  // Create Uranus
+  {
+    int const ephemeris_idx = 7;
+    m_uranusBodyId = spawnBody("Uranus", URANUS_RADIUS, URANUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+  
+  // Create Uranus
+  {
+    int const ephemeris_idx = 8;
+    m_plutoBodyId = spawnBody("Pluto", PLUTO_RADIUS, PLUTO_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+    
   // Create Earth
 
   {
@@ -1206,10 +1236,15 @@ char const* orApp::s_jpl_names[] = {
 // TODO render XYZ frame for each planet + sun + moon
 
 orApp::KeplerianElements orApp::s_jpl_elements_t0[] = {
-  { 0.38709843, 0.20563661,  7.00559432, 252.25166724,  77.45771895, 48.33961819,  0.00000000,  0.00002123, -0.00590158, 149472.67486623, 0.15940013, -0.12214182, 0, 0, 0, 0 },
-  { 0.72332102, 0.00676399,  3.39777545, 181.97970850, 131.76755713, 76.67261496, -0.00000026, -0.00005107,  0.00043494,  58517.81560260, 0.05679648, -0.27274174, 0, 0, 0, 0 },
-  { 1.00000018, 0.01673163, -0.00054346, 100.46691572, 102.93005885, -5.11260389, -0.00000003, -0.00003661, -0.01337178,  35999.37306329, 0.31795260, -0.24123856, 0, 0, 0, 0 },
-  { 1.52371243, 0.09336511,  1.85181869,  -4.56813164, -23.91744784, 49.71320984,  0.00000097,  0.00009149, -0.00724757,  19140.29934243, 0.45223625, -0.26852431, 0, 0, 0, 0 }
+  {  0.38709843, 0.20563661,  7.00559432, 252.25166724,  77.45771895,  48.33961819,  0.00000000,  0.00002123, -0.00590158, 149472.67486623,  0.15940013, -0.12214182,           0,           0,           0,           0 },
+  {  0.72332102, 0.00676399,  3.39777545, 181.97970850, 131.76755713,  76.67261496, -0.00000026, -0.00005107,  0.00043494,  58517.81560260,  0.05679648, -0.27274174,           0,           0,           0,           0 },
+  {  1.00000018, 0.01673163, -0.00054346, 100.46691572, 102.93005885,  -5.11260389, -0.00000003, -0.00003661, -0.01337178,  35999.37306329,  0.31795260, -0.24123856,           0,           0,           0,           0 },
+  {  1.52371243, 0.09336511,  1.85181869,  -4.56813164, -23.91744784,  49.71320984,  0.00000097,  0.00009149, -0.00724757,  19140.29934243,  0.45223625, -0.26852431,           0,           0,           0,           0 },
+  {  5.20248019, 0.04853590,  1.29861416,  34.33479152,  14.27495244, 100.29282654, -0.00002864,  0.00018026, -0.00322699,   3034.90371757,  0.18199196,  0.13024619, -0.00012452,  0.06064060, -0.35635438, 38.35125000 },
+  {  9.54149883, 0.05550825,  2.49424102,  50.07571329,  92.86136063, 113.63998702, -0.00003065, -0.00032044,  0.00451969,   1222.11494724,  0.54179478, -0.25015002,  0.00025899, -0.13434469,  0.87320147, 38.35125000 },
+  { 19.18797948, 0.04685740,  0.77298127, 314.20276625, 172.43404441,  73.96250215, -0.00020455, -0.00001550, -0.00180155,    428.49512595,  0.09266985,  0.05739699,  0.00058331, -0.97731848,  0.17689245,  7.67025000 },
+  { 30.06952752, 0.00895439,  1.77005520, 304.22289287,  46.68158724, 131.78635853,  0.00006447,  0.00000818,  0.00022400,    218.46515314,  0.01009938, -0.00606302, -0.00041348,  0.68346318, -0.10162547,  7.67025000 },
+  { 39.48686035, 0.24885238, 17.14104260, 238.96535011, 224.09702598, 110.30167986,  0.00449751,  0.00006016,  0.00000501,    145.18042903, -0.00968827, -0.00809981, -0.01262724,           0,           0,           0 }
 };
 
 Eigen::Vector3d orApp::ephemerisFromKeplerianElements(

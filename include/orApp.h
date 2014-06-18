@@ -231,6 +231,11 @@ private:
   int m_mercuryBodyId;
   int m_venusBodyId;
   int m_marsBodyId;
+  int m_jupiterBodyId;
+  int m_saturnBodyId;
+  int m_neptuneBodyId;
+  int m_uranusBodyId;
+  int m_plutoBodyId;
 
   int m_comPoiId;
   int m_lagrangePoiIds[5];
