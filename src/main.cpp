@@ -2,9 +2,13 @@
 
 #include "orApp.h"
 
+#include "Fixed64.h"
+
 int CDECL main()
 {
   Timer::StaticInit();
+
+  run_tests();
 
   orApp::Config appConfig;
 
@@ -16,8 +20,8 @@ int CDECL main()
   appConfig.renderWidth = 2*640;
   appConfig.renderHeight = 2*200;
 
-  orApp app(appConfig);
-  app.Run();
+  // orApp app(appConfig);
+  // app.Run();
 
   return 0;
 }
