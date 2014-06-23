@@ -43,6 +43,10 @@ public:
     return integral_part_d + fractional_part_d;
   }
 
+  Fixed64 operator+(Fixed64 const& rhs) {
+    int64_t carry = (fractional_part & rhs.fractional_part) >> 63;
+    return Fixed64(integral_part + rhs.integral_part + carry, fractional_part + rhs.fractional_part);
+  }
 private:
    int64_t integral_part;
   uint64_t fractional_part;
@@ -75,6 +79,19 @@ void run_tests() {
   ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(-0.625)), -0.625);
   ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(-2.625)), -2.625);
 
+  // Positive ints
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(1.0) + Fixed64::FromDouble(0.0)), 1.0);
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(1.0) + Fixed64::FromDouble(1.0)), 2.0);
+  // Negative ints
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(-2.0) + Fixed64::FromDouble(-1.0)), -3.0);
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(1.0) + Fixed64::FromDouble(-1.0)), 0.0);
+  // Fractions
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(0.5) + Fixed64::FromDouble(0.5)), 1.0);
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(1.5) + Fixed64::FromDouble(1.5)), 3.0);
+  // Negative fractions
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(-0.5) + Fixed64::FromDouble(-0.5)), -1.0);
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(-0.25) + Fixed64::FromDouble(0.25)), 0.0);
+  ASSERT_EQ(Fixed64::ToDouble(Fixed64::FromDouble(-2.625) + Fixed64::FromDouble(2.625)), 0.0);
 
   printf("All tests passed.\n");
 }
