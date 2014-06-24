@@ -508,7 +508,7 @@ void RenderSystem::renderOrbits() const
 
     glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
-    int const steps = 1000;
+    int const steps = 10000;
     // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
     // restrict the range of theta?
     double const delta = .0001;
