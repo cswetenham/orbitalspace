@@ -54,8 +54,18 @@ public:
     printf("%s\n", ss.str().c_str());
   }
   Fixed64 operator+(Fixed64 const& rhs) {
-    int64_t carry = (fractional_part & rhs.fractional_part) >> 63;
-    return Fixed64(integral_part + rhs.integral_part + carry, fractional_part + rhs.fractional_part);
+     int64_t const int_lhs = integral_part;
+     int64_t const int_rhs = rhs.integral_part;
+     int64_t const int_sum = int_lhs + int_rhs;
+
+    uint64_t const frac_lhs = fractional_part;
+    uint64_t const frac_rhs = rhs.fractional_part;
+    uint64_t const frac_sum = frac_lhs + frac_rhs;
+
+    // This is about as much as it simplifies
+    uint64_t const carry = (frac_lhs & frac_rhs) | ((frac_lhs ^ frac_rhs) & ~frac_sum);
+
+    return Fixed64(int_sum + (carry >> 63), frac_sum);
   }
 private:
    int64_t integral_part;
