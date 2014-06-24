@@ -21,10 +21,12 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
       UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_soiParentBody), _origin, orbit);
     }
 
+#if 0
     if (moon.m_trailId) {
       RenderSystem::Trail& trail = m_renderSystem.getTrail(moon.m_trailId);
       trail.Update(_dt, offset_pos);
     }
+#endif
 
     {
       RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
@@ -49,11 +51,13 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
     RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
     UpdateOrbit(body, m_physicsSystem.findSOIGravBody(body), _origin, orbit);
 
+#if 0
     {
       RenderSystem::Trail& trail = m_renderSystem.getTrail(ship.m_trailId);
       trail.m_HACKorigin = _origin; // TODO hmm
       trail.Update(_dt, offset_pos);
     }
+#endif
 
     {
       RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);

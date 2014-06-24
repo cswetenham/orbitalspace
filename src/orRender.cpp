@@ -561,6 +561,7 @@ void RenderSystem::renderOrbits() const
   }
 }
 
+#if 0
 void RenderSystem::renderTrails() const
 {
   PERFTIMER("RenderTrails");
@@ -607,6 +608,7 @@ void RenderSystem::renderTrails() const
 #endif
   }
 }
+#endif
 
 void RenderSystem::render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
 {
@@ -619,7 +621,9 @@ void RenderSystem::render3D()
   renderPoints();
   renderSpheres();
   renderOrbits();
+#if 0
   renderTrails();
+#endif
 }
 
 void RenderSystem::checkGLErrors()
@@ -743,6 +747,7 @@ void RenderSystem::render(
   }
 }
 
+#if 0
 void RenderSystem::Trail::Init(double const _duration, const orVec3 _initPos, const orVec3 _initOrigin)
 {
   m_duration = _duration;
@@ -803,3 +808,4 @@ void RenderSystem::Trail::Update(double const _dt, Vector3d const _pos)
   }
 #endif
 }
+#endif

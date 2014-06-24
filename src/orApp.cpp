@@ -630,12 +630,14 @@ void orApp::InitState()
     moonOrbit.m_col = m_colG[1];
   }
 
+#if 0
   {
     RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonBody.m_trailId = m_renderSystem.makeTrail());
     moonTrail.Init(5000.0, moonPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
     moonTrail.m_colOld = m_colG[0];
     moonTrail.m_colNew = m_colG[4];
   }
+#endif
 
   {
     CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonBody.m_cameraTargetId = m_cameraSystem.makeTarget());
@@ -707,12 +709,14 @@ void orApp::InitState()
       playerOrbit.m_col = m_colB[2];
     }
 
+#if 0
     {
       RenderSystem::Trail& playerTrail = m_renderSystem.getTrail(playerShip.m_trailId = m_renderSystem.makeTrail());
       playerTrail.Init(5000.0, playerPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
       playerTrail.m_colOld = m_colB[0];
       playerTrail.m_colNew = m_colB[4];
     }
+#endif
 
     {
       RenderSystem::Point& playerPoint = m_renderSystem.getPoint(playerShip.m_pointId = m_renderSystem.makePoint());
@@ -745,12 +749,14 @@ void orApp::InitState()
       suspectOrbit.m_col = m_colR[2];
     }
 
+#if 0
     {
       RenderSystem::Trail& suspectTrail = m_renderSystem.getTrail(suspectShip.m_trailId = m_renderSystem.makeTrail());
       suspectTrail.Init(5000.0, suspectPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
       suspectTrail.m_colOld = m_colR[0];
       suspectTrail.m_colNew = m_colR[4];
     }
+#endif
 
     {
       RenderSystem::Point& suspectPoint = m_renderSystem.getPoint(suspectShip.m_pointId = m_renderSystem.makePoint());

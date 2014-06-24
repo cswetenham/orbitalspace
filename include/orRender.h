@@ -91,6 +91,7 @@ public:
 
   DECLARE_SYSTEM_TYPE(Orbit, Orbits);
 
+#if 0
   struct Trail
   {
     Trail() : m_duration(0), m_headIdx(0), m_HACKorigin(), m_colOld(), m_colNew() {}
@@ -113,6 +114,7 @@ public:
   };
 
   DECLARE_SYSTEM_TYPE(Trail, Trails);
+#endif
 
   void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
   void render3D();
@@ -135,7 +137,9 @@ private:
   void renderLabels( int w_px, int h_px );
   void renderSpheres() const;
   void renderOrbits() const;
+#if 0
   void renderTrails() const;
+#endif
 
 private:
   // 2D labels for this frame
