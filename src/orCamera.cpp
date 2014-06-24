@@ -66,7 +66,8 @@ Eigen::Matrix4d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vect
 
   Eigen::Affine3d camT;
   camT.linear() = camRot;
-  camT.translation() = cameraPos;
+  // NOTE now we subtract the camera position from everything before sending it to the render system, instead
+  // camT.translation() = cameraPos;
 
   return camT.inverse().matrix();
 }

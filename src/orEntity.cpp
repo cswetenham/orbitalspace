@@ -14,31 +14,32 @@ void EntitySystem::update(double const _dt, const orVec3 _origin)
     Body& moon = getBody(id);
 
     PhysicsSystem::GravBody& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
+    orVec3 offset_pos = orVec3(Vector3d(body.m_pos) - Vector3d(_origin));
 
     if (moon.m_orbitId && body.m_soiParentBody) {
       RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
-      UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_soiParentBody), orbit);
+      UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_soiParentBody), _origin, orbit);
     }
 
     if (moon.m_trailId) {
       RenderSystem::Trail& trail = m_renderSystem.getTrail(moon.m_trailId);
-      trail.Update(_dt, Vector3d(body.m_pos));
+      trail.Update(_dt, offset_pos);
     }
 
     {
       RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
-      sphere.m_pos = body.m_pos;
+      sphere.m_pos = offset_pos;
     }
 
     {
       CameraSystem::Target& camTarget = m_cameraSystem.getTarget(moon.m_cameraTargetId);
-      camTarget.m_pos = body.m_pos;
+      camTarget.m_pos = body.m_pos; // Only RenderSystem objects get the origin shift...is that right?
     }
-    
+
     if (moon.m_label3DId)
     {
       RenderSystem::Label3D& label3d = m_renderSystem.getLabel3D(moon.m_label3DId);
-      label3d.m_pos = body.m_pos;
+      label3d.m_pos = offset_pos;
     }
   }
 
@@ -48,24 +49,25 @@ void EntitySystem::update(double const _dt, const orVec3 _origin)
     Ship& ship = getShip(id);
 
     PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
+    orVec3 offset_pos = orVec3(Vector3d(body.m_pos) - Vector3d(_origin));
 
     RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
-    UpdateOrbit(body, m_physicsSystem.findSOIGravBody(body), orbit);
+    UpdateOrbit(body, m_physicsSystem.findSOIGravBody(body), _origin, orbit);
 
     {
       RenderSystem::Trail& trail = m_renderSystem.getTrail(ship.m_trailId);
-      trail.m_HACKorigin = _origin;
-      trail.Update(_dt, Vector3d(body.m_pos));
+      trail.m_HACKorigin = _origin; // TODO hmm
+      trail.Update(_dt, offset_pos);
     }
 
     {
       RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);
-      point.m_pos = body.m_pos;
+      point.m_pos = offset_pos;
     }
 
     {
       CameraSystem::Target& camTarget = m_cameraSystem.getTarget(ship.m_cameraTargetId);
-      camTarget.m_pos = body.m_pos;
+      camTarget.m_pos = body.m_pos; // Only RenderSystem objects get the origin shift...is that right?
     }
   }
 
@@ -73,7 +75,7 @@ void EntitySystem::update(double const _dt, const orVec3 _origin)
   // TODO?
 }
 
-void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, RenderSystem::Orbit& o_params)
+void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, Vector3d const& cam_pos, RenderSystem::Orbit& o_params)
 {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
@@ -127,5 +129,5 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
 
   o_params.y_dir = y_dir;
 
-  o_params.m_pos = parentBody.m_pos;
+  o_params.m_pos = orVec3(Vector3d(parentBody.m_pos) - cam_pos);
 }

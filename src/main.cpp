@@ -8,7 +8,9 @@ int CDECL main()
 {
   Timer::StaticInit();
 
+#if 0
   run_tests();
+#endif
 
   orApp::Config appConfig;
 
@@ -20,8 +22,8 @@ int CDECL main()
   appConfig.renderWidth = 2*640;
   appConfig.renderHeight = 2*200;
 
-  // orApp app(appConfig);
-  // app.Run();
+  orApp app(appConfig);
+  app.Run();
 
   return 0;
 }

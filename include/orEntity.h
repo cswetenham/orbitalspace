@@ -56,7 +56,7 @@ public:
 
 private:
   // TODO not happy this lives here
-  void UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, RenderSystem::Orbit& o_params);
+  void UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, Vector3d const& cam_pos, RenderSystem::Orbit& o_params);
 
   CameraSystem& m_cameraSystem;
   RenderSystem& m_renderSystem;

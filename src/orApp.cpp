@@ -379,7 +379,7 @@ int orApp::spawnBody(
     sphere.m_pos = pos;
     sphere.m_col = RenderSystem::Colour(1.0, 1.0, 0); // TODO use this type throughout
   }
-  
+
   // Best to init parents before children for this to work!
   if (parent_grav_body_id)
   {
@@ -401,7 +401,7 @@ int orApp::spawnBody(
     label.m_col = orVec3(1.0, 1.0, 0.0);
     label.m_text = name;
   }
-  
+
   return body_id;
 }
 
@@ -484,7 +484,7 @@ void orApp::InitState()
   // Distances from COM of Earth-Body system
   double const earthOrbitRadius = earthBodyOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
   double const moonOrbitRadius = earthBodyOrbitRadius - earthOrbitRadius;
-  
+
   int earth_ephemeris_idx = 2;
 
   Vector3d const earthPos = ephemeris[earth_ephemeris_idx].pos + Vector3d(0.0, -earthOrbitRadius, 0.0);
@@ -505,58 +505,58 @@ void orApp::InitState()
     orVec3 const vel(0, 0, 0);
     m_sunBodyId = spawnBody("Sun", SUN_RADIUS, SUN_MASS, pos, vel, 0);
   }
-    
+
   // Set initial camera target to be the Sun
   m_cameraTargetId = m_entitySystem.getBody(m_sunBodyId).m_cameraTargetId;
-  
+
   // Create Mercury
   {
     int const ephemeris_idx = 0;
     m_mercuryBodyId = spawnBody("Mercury", MERCURY_RADIUS, MERCURY_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Venus
   {
     int const ephemeris_idx = 1;
     m_venusBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Mars
   {
     int const ephemeris_idx = 3;
     m_marsBodyId = spawnBody("Mars", MARS_RADIUS, MARS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Jupiter
   {
     int const ephemeris_idx = 4;
     m_jupiterBodyId = spawnBody("Jupiter", JUPITER_RADIUS, JUPITER_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Saturn
   {
     int const ephemeris_idx = 5;
     m_saturnBodyId = spawnBody("Saturn", SATURN_RADIUS, SATURN_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Neptune
   {
     int const ephemeris_idx = 6;
     m_neptuneBodyId = spawnBody("Neptune", NEPTUNE_RADIUS, NEPTUNE_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Uranus
   {
     int const ephemeris_idx = 7;
     m_uranusBodyId = spawnBody("Uranus", URANUS_RADIUS, URANUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-  
+
   // Create Uranus
   {
     int const ephemeris_idx = 8;
     m_plutoBodyId = spawnBody("Pluto", PLUTO_RADIUS, PLUTO_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
-    
+
   // Create Earth
 
   {
@@ -592,7 +592,7 @@ void orApp::InitState()
       earthCamTarget.m_pos = earthPos;
       earthCamTarget.m_name = std::string("Earth");
     }
-    
+
     {
       RenderSystem::Label3D& earthLabel3d = m_renderSystem.getLabel3D(earthBody.m_label3DId = m_renderSystem.makeLabel3D());
       earthLabel3d.m_pos = moonPos;
@@ -986,7 +986,7 @@ void orApp::UpdateState_Bodies(double const dt)
 
   m_physicsSystem.update(m_integrationMethod, dt);
 
-  m_entitySystem.update(dt, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
+  m_entitySystem.update(dt, m_cameraSystem.getCamera(m_cameraId).m_pos);
 
   // TODO eaghghgh not clear where these should live
 
@@ -1306,6 +1306,11 @@ void orApp::RenderState()
 
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
   Eigen::Matrix4d const projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
+
+  // TODO for better accuracy, want to avoid using a camera matrix for the translation
+  // Instead, subtract the camera position from everything before passing it to the render system
+  // TODO check that the camera position is updated at the correct time in the frame
+  // before we use it to update the render positions!
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up = Vector3d::UnitZ();
