@@ -67,6 +67,14 @@ public:
 
     return Fixed64(int_sum + (carry >> 63), frac_sum);
   }
+  Fixed64 operator-() const {
+    return Fixed64(~integral_part, ~fractional_part) + Fixed64(0, 1);
+  }
+  Fixed64 operator-(Fixed64 const& rhs) {
+    return *this + (-rhs);
+  }
+  // TODO operator*, operator/
+
 private:
    int64_t integral_part;
   uint64_t fractional_part;
@@ -81,7 +89,7 @@ void assert_equal(char const* msg, double t, double u) {
 
 #define ASSERT_EQ(LHS, RHS) do { assert_equal(#LHS " == " #RHS, LHS, RHS); } while (0)
 
-void run_tests() {
+inline void run_tests() {
   ASSERT_EQ(half_scale / (1UL << 32), 1.0);
   ASSERT_EQ((fractional_scale / (1UL << 32)) / (1UL << 32), 1.0);
   // Small positive integers
@@ -112,6 +120,28 @@ void run_tests() {
   ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-0.5) + Fixed64::fromDouble(-0.5)), -1.0);
   ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-0.25) + Fixed64::fromDouble(0.25)), 0.0);
   ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-2.625) + Fixed64::fromDouble(2.625)), 0.0);
+
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-0.0)), 0.0);
+  ASSERT_EQ(Fixed64::toDouble(-Fixed64::fromDouble(0.0)), 0.0);
+  ASSERT_EQ(Fixed64::toDouble(-Fixed64::fromDouble(1.0)), -1.0);
+  ASSERT_EQ(Fixed64::toDouble(-Fixed64::fromDouble(1.125)), -1.125);
+  ASSERT_EQ(Fixed64::toDouble(-Fixed64::fromDouble(-1.125)), 1.125);
+
+  // Ints
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(1.0) - Fixed64::fromDouble(0.0)), 1.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(1.0) - Fixed64::fromDouble(-1.0)), 2.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-2.0) - Fixed64::fromDouble(1.0)), -3.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(1.0) - Fixed64::fromDouble(1.0)), 0.0);
+  // Fractions
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(0.5) - Fixed64::fromDouble(-0.5)), 1.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(1.5) - Fixed64::fromDouble(-1.5)), 3.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-0.5) - Fixed64::fromDouble(0.5)), -1.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-0.25) - Fixed64::fromDouble(-0.25)), 0.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(-2.625) - Fixed64::fromDouble(-2.625)), 0.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(2.625) - Fixed64::fromDouble(2.625)), 0.0);
+  ASSERT_EQ(Fixed64::toDouble(Fixed64::fromDouble(2.625) + Fixed64::fromDouble(2.625)), 5.25);
+
+  // TODO tests for large integers
 
   printf("All tests passed.\n");
 }
