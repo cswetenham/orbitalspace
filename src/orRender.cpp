@@ -340,7 +340,7 @@ void RenderSystem::renderPoints() const
   }
 }
 
-
+// TODO these are still unstable
 void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
 {
   PERFTIMER("ProjectLabel3Ds");
@@ -488,7 +488,7 @@ void RenderSystem::renderSpheres() const
 
     drawSolidSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
-  
+
   glDisable(GL_LIGHTING);
   for (int si = 0; si < (int)m_instancedSpheres.size(); ++si) {
     int sid = si + 1;

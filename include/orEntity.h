@@ -52,7 +52,8 @@ public:
   };
   DECLARE_SYSTEM_TYPE(Poi, Pois);
 
-  void update(double const _dt, const orVec3 _origin);
+  void updateCamTargets(double const _dt, const orVec3 _origin);
+  void updateRenderObjects(double const _dt, const orVec3 _origin);
 
 private:
   // TODO not happy this lives here

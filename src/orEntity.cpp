@@ -6,7 +6,7 @@
 
 #include "constants.h"
 
-void EntitySystem::update(double const _dt, const orVec3 _origin)
+void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
 {
   // Update Bodies
   for (int i = 0; i < (int)m_instancedBodies.size(); ++i) {
@@ -29,11 +29,6 @@ void EntitySystem::update(double const _dt, const orVec3 _origin)
     {
       RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
       sphere.m_pos = offset_pos;
-    }
-
-    {
-      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(moon.m_cameraTargetId);
-      camTarget.m_pos = body.m_pos; // Only RenderSystem objects get the origin shift...is that right?
     }
 
     if (moon.m_label3DId)
@@ -64,7 +59,32 @@ void EntitySystem::update(double const _dt, const orVec3 _origin)
       RenderSystem::Point& point = m_renderSystem.getPoint(ship.m_pointId);
       point.m_pos = offset_pos;
     }
+  }
 
+  // Update POIs
+  // TODO?
+}
+
+void EntitySystem::updateCamTargets(double const _dt, const orVec3 _origin)
+{
+  // Update Bodies
+  for (int i = 0; i < (int)m_instancedBodies.size(); ++i) {
+    int id = i + 1;
+    Body& moon = getBody(id);
+
+    PhysicsSystem::GravBody& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
+    {
+      CameraSystem::Target& camTarget = m_cameraSystem.getTarget(moon.m_cameraTargetId);
+      camTarget.m_pos = body.m_pos; // Only RenderSystem objects get the origin shift...is that right?
+    }
+  }
+
+  // Update ships
+  for (int i = 0; i < (int)m_instancedShips.size(); ++i) {
+    int id = i + 1;
+    Ship& ship = getShip(id);
+
+    PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
     {
       CameraSystem::Target& camTarget = m_cameraSystem.getTarget(ship.m_cameraTargetId);
       camTarget.m_pos = body.m_pos; // Only RenderSystem objects get the origin shift...is that right?

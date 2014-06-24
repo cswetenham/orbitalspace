@@ -85,6 +85,8 @@ private:
 
   void UpdateState();
     void UpdateState_Bodies(double const dt);
+    void UpdateState_CamTargets(double const dt);
+    void UpdateState_RenderObjects(double const dt);
 
   void RenderState();
 
@@ -224,10 +226,10 @@ private:
   int m_suspectShipId;
 
   int m_sunBodyId;
-  
+
   int m_earthBodyId;
   int m_moonBodyId;
-  
+
   int m_mercuryBodyId;
   int m_venusBodyId;
   int m_marsBodyId;
@@ -237,8 +239,10 @@ private:
   int m_uranusBodyId;
   int m_plutoBodyId;
 
+#if 0
   int m_comPoiId;
   int m_lagrangePoiIds[5];
+#endif
 
   // Input
 

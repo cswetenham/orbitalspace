@@ -651,7 +651,7 @@ void orApp::InitState()
   }
 
   // Create Earth-Body COM
-
+#if 0
   EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
 
   orVec3 comPos = ephemeris[2].pos;
@@ -686,6 +686,7 @@ void orApp::InitState()
       lagrangeCamTarget.m_name = builder.str();
     }
   }
+#endif
 
   // Create ships
   {
@@ -986,10 +987,8 @@ void orApp::UpdateState_Bodies(double const dt)
 
   m_physicsSystem.update(m_integrationMethod, dt);
 
-  m_entitySystem.update(dt, m_cameraSystem.getCamera(m_cameraId).m_pos);
-
   // TODO eaghghgh not clear where these should live
-
+#if 0
   PhysicsSystem::GravBody& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getBody(m_earthBodyId).m_gravBodyId);
   EntitySystem::Body& moon = m_entitySystem.getBody(m_moonBodyId);
   PhysicsSystem::GravBody& moonBody = m_physicsSystem.getGravBody(moon.m_gravBodyId);
@@ -1053,6 +1052,14 @@ void orApp::UpdateState_Bodies(double const dt)
     lagrangePoint.m_pos = lagrangePos[i];
     lagrangeTarget.m_pos = lagrangePos[i];
   }
+#endif
+}
+
+void orApp::UpdateState_CamTargets(double const dt) {
+  m_entitySystem.updateCamTargets(dt, m_cameraSystem.getCamera(m_cameraId).m_pos);
+}
+void orApp::UpdateState_RenderObjects(double const dt) {
+  m_entitySystem.updateRenderObjects(dt, m_cameraSystem.getCamera(m_cameraId).m_pos);
 }
 
 Vector3d orApp::CamPosFromCamParams(OrbitalCamParams const& params)
@@ -1083,6 +1090,8 @@ void orApp::UpdateState()
     m_paused = true;
   }
 
+  UpdateState_CamTargets(dt);
+
   {
     // Update camera
 
@@ -1094,6 +1103,10 @@ void orApp::UpdateState()
     if (m_camMode == CameraMode_FirstPerson) {
       camPos = Vector3d(m_physicsSystem.getParticleBody(m_entitySystem.getShip(m_playerShipId).m_particleBodyId).m_pos);
     } else if (m_camMode == CameraMode_ThirdPerson) {
+      // Camera position is based on its target's position
+      // TODO so now we need the physics update to happen before the camera
+      // but the render update to happen afterwards. This would also make sense
+      // since it would potentially move the camera while paused.
       camPos = CamPosFromCamParams(m_camParams) + camTargetPos;
     } else {
       assert(false);
@@ -1108,6 +1121,7 @@ void orApp::UpdateState()
     camera.m_pos[2] = camPosData[2];
   }
 
+  UpdateState_RenderObjects(dt);
 
   // Update debug text
   {
