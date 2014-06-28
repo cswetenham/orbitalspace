@@ -103,16 +103,6 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
 {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
-  // Find body whose sphere of influence we are in
-  // This is the one with the smallest sphere of influence
-
-  // Compute Kepler orbit
-
-  double const G = GRAV_CONSTANT;
-  double const M = parentBody.m_mass;
-
-  double const mu = M * G;
-
   Vector3d const bodyPos(body.m_pos);
   Vector3d const parentPos(parentBody.m_pos);
 
@@ -120,38 +110,12 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
   Vector3d const parentVel(parentBody.m_vel);
 
   Vector3d const v = bodyVel - parentVel;
+  Vector3d const r = bodyPos - parentPos;
 
-  Vector3d const r = parentPos - bodyPos;
-  double const r_mag = r.norm();
+  orbitParamsFromPosAndVel(r, v, parentBody.m_mass, o_params.m_params);
 
-  Vector3d const r_dir = r/r_mag;
-
-  double const vr_mag = r_dir.dot(v);
-  Vector3d const vr = r_dir * vr_mag; // radial velocity
-  Vector3d const vt = v - vr; // tangent velocity
-  double const vt_mag = vt.norm();
-  Vector3d const t_dir = vt/vt_mag;
-
-  double const p = pow(r_mag * vt_mag, 2) / mu;
-  double const v0 = sqrt(mu/p); // todo compute more accurately/efficiently?
-
-  Vector3d const ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
-  double const e = ex.norm();
-
-  double const ec = (vt_mag / v0) - 1;
-  double const es = (vr_mag / v0);
-  double const theta = atan2(es, ec);
-
-  Vector3d const x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
-  Vector3d const y_dir = sin(theta) * r_dir + cos(theta) * t_dir;
-
-  o_params.e = e;
-  o_params.p = p;
-  o_params.theta = theta;
-
-  o_params.x_dir = x_dir;
-
-  o_params.y_dir = y_dir;
-
+  // Origin of an orbit is the position of the parent body
+  // For all rendering objects we subtract the camera position to reduce error
+  // in the render pipeline
   o_params.m_pos = orVec3(Vector3d(parentBody.m_pos) - cam_pos);
 }

@@ -23,7 +23,7 @@ public:
   static void InstallHandlers();
 
   // Dumps the stack to standard error
-  
+
   // orDebug
   static void DumpStack();
 
@@ -36,7 +36,7 @@ public:
 
     return _a - _b * floor(_a / _b);
   }
-  
+
   template <typename T>
   static T Clamp(T const _v, T const _min, T const _max)
   {
@@ -55,15 +55,10 @@ public:
   static T Max(T const _a, T const _b) {
     return (_a > _b) ? _a : _b;
   }
-  
+
   template <typename T>
   static T Min(T const _a, T const _b) {
       return (_a < _b) ? _a : _b;
-  }
-
-  template <typename T, typename A>
-  static T Lerp(T const _x0, T const _x1, A const _a) {
-      return _x0 * (1 - _a) + _x1 * _a;
   }
 
   // SmootherStep interpolation function from http://en.wikipedia.org/wiki/Smoothstep
@@ -94,7 +89,7 @@ private:
 
 
 /******************************** Macros *********************************/
- 
+
 
 
 #endif // UTIL_H

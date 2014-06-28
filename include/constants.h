@@ -1,5 +1,8 @@
 #pragma once
 
+#define M_TAU      6.28318530717958647693
+#define M_TAU_F    6.28318530717958647693f
+
 // m^3 kg^-1 s^-2
 #define GRAV_CONSTANT 6.6738480e-11
 

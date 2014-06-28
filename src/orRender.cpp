@@ -299,12 +299,12 @@ void glVertex3d(Vector3d const pos)
 void drawLine(Vector3d const start, Vector3d const end, Vector3d const col)
 {
   glBegin(GL_LINE_STRIP);
-  enum { STEPS = 1 };
-  Vector3d const inc = (end - start) / STEPS;
+  enum { NUM_STEPS = 1 };
+  Vector3d const inc = (end - start) / NUM_STEPS;
   Vector3d cur_pos = start;
   glColor3d(col);
   glVertex3d(cur_pos);
-  for (int i = 0; i < STEPS; ++i) {
+  for (int i = 0; i < NUM_STEPS; ++i) {
     cur_pos += inc;
     glVertex3d(cur_pos);
   }
@@ -498,6 +498,8 @@ void RenderSystem::renderSpheres() const
   }
 }
 
+// TODO extract orbit functions to orMath
+
 void RenderSystem::renderOrbits() const
 {
   PERFTIMER("RenderOrbits");
@@ -508,54 +510,21 @@ void RenderSystem::renderOrbits() const
 
     glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
-    int const steps = 10000;
-    // e = 2.0; // TODO 1.0 sometimes works, > 1 doesn't - do we need to just
-    // restrict the range of theta?
-    double const delta = .0001;
-    double const HAX_RANGE = .9; // limit range to stay out of very large values
+    enum { NUM_STEPS = 10000 };
+
     // TODO want to instead limit the range based on... some viewing area?
     // might be two visible segments, one from +ve and one from -ve theta, with
     // different visible ranges. Could determine
+    // Could detemine what??
+    // TODO will want orbit segments with start and end (which might be -infty +infty)
     // TODO and want to take steps of fixed length/distance
-    double range;
-    if (orbit.e < 1 - delta) { // ellipse
-        range = .5 * M_TAU;
-    } else if (orbit.e < 1 + delta) { // parabola
-        range = .5 * M_TAU * HAX_RANGE;
-    } else { // hyperbola
-        range = acos(-1/orbit.e) * HAX_RANGE;
-    }
-    double const mint = -range;
-    double const maxt = range;
 
-    Vector3d const orbit_x(orbit.x_dir);
-    Vector3d const orbit_y(orbit.y_dir);
-    Vector3d const orbit_pos(orbit.m_pos);
+    orVec3 posData[NUM_STEPS];
+    sampleOrbit(orbit.m_params, orbit.m_pos, NUM_STEPS, &posData[0]);
 
     glBegin(GL_LINE_STRIP);
-    for (int i = 0; i <= steps; ++i) {
-#if 0 // Original version (correct implementation)
-        double const ct = Util::Lerp(mint, maxt, (double)i / steps);
-        double const cr = orbit.p / (1 + orbit.e * cos(ct));
-
-        double const x_len = cr * -cos(ct);
-        double const y_len = cr * -sin(ct);
-        Vector3d const pos = (orbit_x * x_len) + (orbit_y * y_len) + orbit_pos;
-        const double* const posData = pos.data();
-        glVertex3d(posData[0], posData[1], posData[2]);
-#else // No vector version (correct implementation, faster...)
-        double const ct = Util::Lerp(mint, maxt, (double)i / steps);
-        double const cr = orbit.p / (1 + orbit.e * cos(ct));
-
-        double const x_len = cr * -cos(ct);
-        double const y_len = cr * -sin(ct);
-        double posData[3];
-        posData[0] = (orbit.x_dir[0] * x_len) + (orbit.y_dir[0] * y_len) + orbit_pos[0];
-        posData[1] = (orbit.x_dir[1] * x_len) + (orbit.y_dir[1] * y_len) + orbit_pos[1];
-        posData[2] = (orbit.x_dir[2] * x_len) + (orbit.y_dir[2] * y_len) + orbit_pos[2];
-        glVertex3d(posData[0], posData[1], posData[2]);
-#endif
-        // TODO normals? If we want lighting. Otherwise, disable lighting.
+    for (int i = 0; i < NUM_STEPS; ++i) {
+      glVertex3d(posData[i][0], posData[i][1], posData[i][2]);
     }
     glEnd();
   }
@@ -578,7 +547,7 @@ void RenderSystem::renderTrails() const
       Vector3d v = Vector3d(&trail.m_trailPts[3*idx]) + Vector3d(trail.m_HACKorigin);
 
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
-      Vector3d c = Util::Lerp(Vector3d(trail.m_colNew), Vector3d(trail.m_colOld), l);
+      Vector3d c = orLerp(Vector3d(trail.m_colNew), Vector3d(trail.m_colOld), l);
 
       glColor3d(c.x(), c.y(), c.z());
 

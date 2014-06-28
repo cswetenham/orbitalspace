@@ -1,3 +1,25 @@
+"Core game loop"
+exploring orbits and placing maneuver nodes; picking 'dock' and 'fire' commands
+higher-level: strategy, choice of orbits
+
+Core resources: time, delta-v budget
+sinks: time sinks itself, delta-v sunk by maneuvers
+trades: can trade off time and delta-v by picking different orbits
+sources: refill delta-v by docking with a station or port
+
+TODO asap:
+- mouse pointer
+- for whatever ship you're controlling, moving mouse near orbit will highlight
+  the nearest point to the mouse (in screen space) on the orbit
+- ability to place and edit maneuver nodes
+  - create at point
+  - delete
+  - +/- in 3 axes
+  - slide along orbit
+- implement ship executing maneuvers
+- implement piecewise rendering of the orbits (stop at the node, start a new orbit of a different colour maybe)
+
+TODO: fixed-point for precision...want the physics to run in fixed-point if nothing else
 
 TODO:
 - Move all gl* calls out of orApp.cpp

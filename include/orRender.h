@@ -76,13 +76,9 @@ public:
   DECLARE_SYSTEM_TYPE(Sphere, Spheres);
 
   struct Orbit {
-    Orbit() : p(0), e(0), theta(0), x_dir(), y_dir(), m_pos(), m_col() {}
+    Orbit() : m_params(), m_pos(), m_col() {}
 
-    double p;
-    double e;
-    double theta;
-    orVec3 x_dir;
-    orVec3 y_dir;
+    orOrbitParams m_params;
 
     orVec3 m_pos;
 
