@@ -205,23 +205,19 @@ namespace orMath {
 // http://astro.if.ufrgs.br/trigesf/position.html
 inline double computeEccentricAnomaly(
   double mean_anomaly_rad,
-  double eccentricity_rad
+  double eccentricity
 ) {
-  double const tolerance_deg = 10e-6;
-  double const mean_anomaly_deg = mean_anomaly_rad * (360.0 / M_TAU);
-  double const eccentricity_deg = eccentricity_rad * (360.0 / M_TAU);
-  double eccentric_anomaly_deg = mean_anomaly_deg + eccentricity_deg * sin(mean_anomaly_deg);
-  double delta_mean_anomaly_deg = 0;
-  double delta_eccentric_anomaly_deg = 0;
+  double const tolerance_rad = 10e-6 * (M_TAU / 360.0);
+  double eccentric_anomaly_rad = mean_anomaly_rad + eccentricity * sin(mean_anomaly_rad);
+  double delta_eccentric_anomaly_rad = 0;
   do
   {
-    double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
-    delta_mean_anomaly_deg = mean_anomaly_deg - (eccentric_anomaly_deg - eccentricity_deg * sin(eccentric_anomaly_rad));
-    delta_eccentric_anomaly_deg = delta_mean_anomaly_deg / (1 - eccentricity_rad * cos(eccentric_anomaly_rad));
-    eccentric_anomaly_deg += delta_eccentric_anomaly_deg;
-  } while (delta_eccentric_anomaly_deg > tolerance_deg);
+    double const delta_mean_anomaly_rad = mean_anomaly_rad - (eccentric_anomaly_rad - eccentricity * sin(eccentric_anomaly_rad));
+    double const delta_eccentric_anomaly_rad = delta_mean_anomaly_rad / (1 - eccentricity * cos(eccentric_anomaly_rad));
+    eccentric_anomaly_rad += delta_eccentric_anomaly_rad;
+  } while (delta_eccentric_anomaly_rad > tolerance_rad);
 
-  return eccentric_anomaly_deg * (M_TAU / 360.0);
+  return eccentric_anomaly_rad;
 }
 
 } // namespace orMath

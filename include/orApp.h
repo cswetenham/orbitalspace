@@ -128,22 +128,22 @@ private:
     // C: century
     // deg: degree
     double semi_major_axis_AU;
-    double eccentricity_rad;
+    double eccentricity;
     double inclination_deg;
     double mean_longitude_deg;
     double longitude_of_perihelion_deg;
     double longitude_of_ascending_node_deg;
     double semi_major_axis_AU_per_C;
-    double eccentricity_rad_per_C;
+    double eccentricity_per_C;
     double inclination_deg_per_C;
     double mean_longitude_deg_per_C;
     double longitude_of_perihelion_deg_per_C;
     double longitude_of_ascending_node_deg_per_C;
 
-    double error_b;
-    double error_c;
-    double error_s;
-    double error_f;
+    double error_b_deg;
+    double error_c_deg;
+    double error_s_deg;
+    double error_f_deg;
   };
 
   struct Ephemeris {
@@ -151,7 +151,7 @@ private:
     Eigen::Vector3d vel;
   };
 
-  static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity_rad );
+  static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity );
 
   static Eigen::Vector3d ephemerisFromKeplerianElements(KeplerianElements const& elements, boost::posix_time::ptime const& time);
 

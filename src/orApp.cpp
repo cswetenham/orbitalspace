@@ -1253,33 +1253,31 @@ Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
   // Update elements for ephemerides
   KeplerianElements e(elements_t0);
   e.semi_major_axis_AU += e.semi_major_axis_AU_per_C * t_C;
-  e.eccentricity_rad += e.eccentricity_rad_per_C * t_C;
+  e.eccentricity += e.eccentricity_per_C * t_C;
   e.inclination_deg += e.inclination_deg_per_C * t_C;
   e.mean_longitude_deg += e.mean_longitude_deg_per_C * t_C;
   e.longitude_of_perihelion_deg += e.longitude_of_perihelion_deg_per_C * t_C;
   e.longitude_of_ascending_node_deg += e.longitude_of_ascending_node_deg_per_C * t_C;
 
   // arg: argument
-  double arg_of_perihelion_deg = e.longitude_of_perihelion_deg - e.longitude_of_ascending_node_deg;
+  double const arg_of_perihelion_deg = e.longitude_of_perihelion_deg - e.longitude_of_ascending_node_deg;
 
   // NOTE assuming error_f needs deg->rad conversion, since all other angles in the paper needed it
-  double error_f = e.error_f * t_C * (M_TAU / 360.0);
+  double const error_f_rad = e.error_f_deg * t_C * (M_TAU / 360.0);
 
-  double mean_anomaly_deg = e.mean_longitude_deg - e.longitude_of_perihelion_deg
-    + e.error_b * t_C * t_C
-    + e.error_c * cos(error_f)
-    + e.error_s * sin(error_f);
+  double const mean_anomaly_deg = e.mean_longitude_deg - e.longitude_of_perihelion_deg
+    + e.error_b_deg * t_C * t_C
+    + e.error_c_deg * cos(error_f_rad)
+    + e.error_s_deg * sin(error_f_rad);
 
-  mean_anomaly_deg = Util::Wrap(mean_anomaly_deg, -180.0, +180.0);
+  double const mean_anomaly_rad = Util::Wrap(mean_anomaly_deg * (M_TAU / 360.0), -0.5 * M_TAU, +0.5 * M_TAU);
 
-  double const mean_anomaly_rad = mean_anomaly_deg * (M_TAU / 360.0);
-  double eccentric_anomaly_rad = orMath::computeEccentricAnomaly(mean_anomaly_rad, e.eccentricity_rad);
+  double const eccentric_anomaly_rad = orMath::computeEccentricAnomaly(mean_anomaly_rad, e.eccentricity);
 
-  double const meters_per_AU = 149597870700.0;
-
-  double x_orbital = meters_per_AU * e.semi_major_axis_AU * (cos(eccentric_anomaly_rad) - e.eccentricity_rad);
-  double y_orbital = meters_per_AU * e.semi_major_axis_AU * sqrt(1 - e.eccentricity_rad * e.eccentricity_rad) * sin(eccentric_anomaly_rad);
-  double z_orbital = 0;
+  double const semi_major_axis_meters = METERS_PER_AU * e.semi_major_axis_AU;
+  double const x_orbital = semi_major_axis_meters * (cos(eccentric_anomaly_rad) - e.eccentricity);
+  double const y_orbital = semi_major_axis_meters * sqrt(1 - e.eccentricity * e.eccentricity) * sin(eccentric_anomaly_rad);
+  double const z_orbital = 0;
 
   Eigen::Vector3d r_orbital(x_orbital, y_orbital, z_orbital);
 
