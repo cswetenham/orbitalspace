@@ -78,9 +78,9 @@ struct orOrbitParams
   orOrbitParams(): p(0), e(0), theta(0), x_dir(), y_dir() {}
 
   // TODO document these parameters
-  double p;
-  double e;
-  double theta;
+  double p; // p is the 'semi-latus rectum' of the conic section
+  double e; // e is the 'orbital eccentricity'
+  double theta; // theta is the 'true anomaly'
   orVec3 x_dir;
   orVec3 y_dir;
 };
@@ -126,7 +126,9 @@ inline void orbitParamsFromPosAndVel(
   // p = h * h / mu = (L/mu) * (L/mu) / mu = (L*L) / (mu*mu*mu)
 
   // p is the 'semi-latus rectum' of the conic section
-  double const p = pow(h, 2) / mu; // TODO why pow(x, 2) instead of x * x?
+  // p = a * (1 - e * e)?
+  // p = b * b / a for an ellipse
+  double const p = (h * h) / mu; // TODO why pow(x, 2) instead of x * x?
   double const v0 = sqrt(mu/p); // TODO compute more accurately/efficiently? // TODO where did I suspect inaccuracy or efficiency here?
 
   Vector3d const ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;

@@ -153,7 +153,7 @@ private:
 
   static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity );
 
-  static Eigen::Vector3d ephemerisFromKeplerianElements(KeplerianElements const& elements, boost::posix_time::ptime const& time);
+  static Eigen::Vector3d ephemerisFromKeplerianElements(KeplerianElements const& elements, boost::posix_time::ptime const& time, Eigen::Vector3d* v_inertial);
 
   static double julianDateFromPosixTime(boost::posix_time::ptime const& ptime);
   static boost::posix_time::ptime posixTimeFromSimTime(float simTime);
