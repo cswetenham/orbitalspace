@@ -121,44 +121,6 @@ private:
 
   double m_simTime;
 
-  // TODO compute coordinates according to JPL formulas
-  // TODO convert to SI units
-  struct KeplerianElements {
-    // AU: astrononmical unit
-    // C: century
-    // deg: degree
-    double semi_major_axis_AU;
-    double eccentricity;
-    double inclination_deg;
-    double mean_longitude_deg;
-    double longitude_of_perihelion_deg;
-    double longitude_of_ascending_node_deg;
-    double semi_major_axis_AU_per_C;
-    double eccentricity_per_C;
-    double inclination_deg_per_C;
-    double mean_longitude_deg_per_C;
-    double longitude_of_perihelion_deg_per_C;
-    double longitude_of_ascending_node_deg_per_C;
-
-    double error_b_deg;
-    double error_c_deg;
-    double error_s_deg;
-    double error_f_deg;
-  };
-
-  struct Ephemeris {
-    Eigen::Vector3d pos;
-    Eigen::Vector3d vel;
-  };
-
-  static double computeEccentricAnomaly(double mean_anomaly_deg, double eccentricity );
-
-  static Eigen::Vector3d ephemerisFromKeplerianElements(KeplerianElements const& elements, boost::posix_time::ptime const& time, Eigen::Vector3d* v_inertial);
-
-  static double julianDateFromPosixTime(boost::posix_time::ptime const& ptime);
-  static boost::posix_time::ptime posixTimeFromSimTime(float simTime);
-  static std::string calendarDateFromSimTime(float simTime);
-
   Config m_config;
 
   // Simulation options
@@ -274,7 +236,7 @@ private:
   Music* m_music;
 
   static char const* s_jpl_names[];
-  static KeplerianElements s_jpl_elements_t0[];
+  static orEphemerisJPL s_jpl_elements_t0[];
 };
 
 #endif	/* ORBITALSPACEAPP_H */

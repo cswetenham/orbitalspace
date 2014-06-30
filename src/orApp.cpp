@@ -125,13 +125,13 @@ void orApp::Shutdown()
 // TODO put elsewhere
 void runTests() {
   // Test FMod
-  double const a = Util::FMod(3.0, 2.0);
+  double const a = orFMod(3.0, 2.0);
   if ( a != 1.0 ) {
     DEBUGBREAK;
   }
 
   // Test Wrap
-  double const b = Util::Wrap(3.5, 1.0, 2.0);
+  double const b = orWrap(3.5, 1.0, 2.0);
   if (b != 1.5) {
     DEBUGBREAK;
   }
@@ -201,7 +201,7 @@ void orApp::HandleInput()
     SDL_GetMouseState(&x, &y);
     SDL_WarpMouseInWindow(m_window, m_config.windowWidth / 2, m_config.windowHeight / 2);
     double const dx = (x - m_config.windowWidth / 2) * M_TAU / 300.0;
-    m_camParams.theta = Util::Wrap(m_camParams.theta + dx, 0.0, M_TAU);
+    m_camParams.theta = orWrap(m_camParams.theta + dx, 0.0, M_TAU);
     double const dy = (y - m_config.windowHeight / 2) * M_TAU / 300.0;
     m_camParams.phi = Util::Clamp(m_camParams.phi + dy, -.249 * M_TAU, .249 * M_TAU);
   }
@@ -452,27 +452,13 @@ void orApp::InitState()
 
   // For now, just get initial ephemeris from JPL data and sim using RK4 integrator
   enum { NUM_PLANETS = 9 };
-  Ephemeris ephemeris[NUM_PLANETS]; // TODO
+  orEphemerisCartesian ephemeris[NUM_PLANETS]; // TODO
   for (int i = 0; i < NUM_PLANETS; ++i) {
-    Eigen::Vector3d vel;
-    Eigen::Vector3d pos = orApp::ephemerisFromKeplerianElements(
+    ephemerisCartesianFromJPL(
       s_jpl_elements_t0[i],
       posixTimeFromSimTime(m_simTime),
-      &vel
+      ephemeris[i]
     );
-#if 0
-    // lol hax :/
-    // This probably isn't giving a very accurate result, since I'm subtracting
-    // two large values close together
-    double const delta_t = 60.0;
-    Eigen::Vector3d pos_1 = orApp::ephemerisFromKeplerianElements(
-      s_jpl_elements_t0[i],
-      posixTimeFromSimTime(m_simTime + delta_t)
-    );
-    Eigen::Vector3d vel = (pos_1 - pos) / delta_t;
-#endif
-    ephemeris[i].pos = pos;
-    ephemeris[i].vel = vel;
   }
 
   // TODO get some better data on Moon's orbit
@@ -1182,41 +1168,6 @@ Vector3d lerp(Vector3d const& _x0, Vector3d const& _x1, double const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
 
-boost::posix_time::ptime orApp::posixTimeFromSimTime(float simTime) {
-  using namespace boost::posix_time;
-  using namespace boost::gregorian;
-  typedef boost::posix_time::ptime posix_time;
-
-  // Astronomical Epoch: 1200 hours, 1 January 2000
-  posix_time epoch(date(2000, Jan, 1), hours(12));
-  // Game start date: 1753 hours, Mar 15 2025 (Did I pick this for any reason?)
-  posix_time gameStart(date(2025, Mar, 15), hours(1753));
-  // Note: the (long) here limits us to ~68 years game time.
-  // Should be enough, otherwise just need to keep adding seconds to the
-  // dateTime to match the simTime.
-  posix_time curDateTime = gameStart + seconds((long)simTime);
-  return curDateTime;
-}
-
-std::string orApp::calendarDateFromSimTime(float simTime) {
-  using namespace boost::posix_time;
-  return to_simple_string(posixTimeFromSimTime(simTime));
-}
-
-double orApp::julianDateFromPosixTime(
-  boost::posix_time::ptime const& ptime
-) {
-  using namespace boost::posix_time;
-  using namespace boost::gregorian;
-  typedef boost::posix_time::ptime posix_time;
-  // wikipedia: posix_time = (julian_date - 2440587.5) * 86400
-  // => (posix_time / 86400.0) + 2440587.5 = julian_date
-  posix_time posix_epoch(date(1970, Jan, 1), hours(0));
-  boost::posix_time::time_duration d = (ptime - posix_epoch);
-  double posix_time_s = (double)d.ticks() / (double)d.ticks_per_second();
-  return (posix_time_s / SECONDS_PER_DAY) + 2440587.5;
-}
-
 char const* orApp::s_jpl_names[] = {
   "Mercury",
   "Venus",
@@ -1234,7 +1185,7 @@ char const* orApp::s_jpl_names[] = {
 // TODO make a function that renders RGB axes for XYZ
 // TODO render XYZ frame for each planet + sun + moon
 
-orApp::KeplerianElements orApp::s_jpl_elements_t0[] = {
+orEphemerisJPL orApp::s_jpl_elements_t0[] = {
   {  0.38709843, 0.20563661,  7.00559432, 252.25166724,  77.45771895,  48.33961819,  0.00000000,  0.00002123, -0.00590158, 149472.67486623,  0.15940013, -0.12214182,           0,           0,           0,           0 },
   {  0.72332102, 0.00676399,  3.39777545, 181.97970850, 131.76755713,  76.67261496, -0.00000026, -0.00005107,  0.00043494,  58517.81560260,  0.05679648, -0.27274174,           0,           0,           0,           0 },
   {  1.00000018, 0.01673163, -0.00054346, 100.46691572, 102.93005885,  -5.11260389, -0.00000003, -0.00003661, -0.01337178,  35999.37306329,  0.31795260, -0.24123856,           0,           0,           0,           0 },
@@ -1245,81 +1196,6 @@ orApp::KeplerianElements orApp::s_jpl_elements_t0[] = {
   { 30.06952752, 0.00895439,  1.77005520, 304.22289287,  46.68158724, 131.78635853,  0.00006447,  0.00000818,  0.00022400,    218.46515314,  0.01009938, -0.00606302, -0.00041348,  0.68346318, -0.10162547,  7.67025000 },
   { 39.48686035, 0.24885238, 17.14104260, 238.96535011, 224.09702598, 110.30167986,  0.00449751,  0.00006016,  0.00000501,    145.18042903, -0.00968827, -0.00809981, -0.01262724,           0,           0,           0 }
 };
-
-Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
-  KeplerianElements const& elements_t0,
-  boost::posix_time::ptime const& ptime,
-  Eigen::Vector3d* v_inertial
-) {
-  // Compute time in centuries since J2000
-
-  // julian date in days
-  double julian_date = julianDateFromPosixTime(ptime);
-  double t_C = (julian_date - 2451545.0) / DAYS_PER_CENTURY;
-
-  // Update elements for ephemerides
-  KeplerianElements e(elements_t0);
-  e.semi_major_axis_AU += e.semi_major_axis_AU_per_C * t_C;
-  e.eccentricity += e.eccentricity_per_C * t_C;
-  e.inclination_deg += e.inclination_deg_per_C * t_C;
-  e.mean_longitude_deg += e.mean_longitude_deg_per_C * t_C;
-  e.longitude_of_perihelion_deg += e.longitude_of_perihelion_deg_per_C * t_C;
-  e.longitude_of_ascending_node_deg += e.longitude_of_ascending_node_deg_per_C * t_C;
-
-  // arg: argument
-  double const arg_of_perihelion_deg = e.longitude_of_perihelion_deg - e.longitude_of_ascending_node_deg;
-
-  // NOTE assuming error_f needs deg->rad conversion, since all other angles in the paper needed it
-  double const error_f_rad = e.error_f_deg * t_C * RAD_PER_DEG;
-
-  double const mean_anomaly_deg = e.mean_longitude_deg - e.longitude_of_perihelion_deg
-    + e.error_b_deg * t_C * t_C
-    + e.error_c_deg * cos(error_f_rad)
-    + e.error_s_deg * sin(error_f_rad);
-
-  double const mean_anomaly_rad = Util::Wrap(mean_anomaly_deg * RAD_PER_DEG, -0.5 * M_TAU, +0.5 * M_TAU);
-
-  double const eccentric_anomaly_rad = orMath::computeEccentricAnomaly(mean_anomaly_rad, e.eccentricity);
-
-  double const semi_major_axis_meters = METERS_PER_AU * e.semi_major_axis_AU;
-  double const x_orbital = semi_major_axis_meters * (cos(eccentric_anomaly_rad) - e.eccentricity);
-  double const y_orbital = semi_major_axis_meters * sqrt(1 - e.eccentricity * e.eccentricity) * sin(eccentric_anomaly_rad);
-
-  Eigen::Vector3d r_orbital(x_orbital, y_orbital, 0);
-
-  Eigen::Matrix3d rot_inertial_frame;
-  rot_inertial_frame = Eigen::AngleAxisd(-e.longitude_of_ascending_node_deg * RAD_PER_DEG, Eigen::Vector3d::UnitZ())
-                     * Eigen::AngleAxisd(-e.inclination_deg * RAD_PER_DEG, Eigen::Vector3d::UnitX())
-                     * Eigen::AngleAxisd(-arg_of_perihelion_deg * RAD_PER_DEG, Eigen::Vector3d::UnitZ());
-
-  // Mean motion n = sqrt(mu / (a*a*a))
-  // n * n = mu / (a * a * a)
-  // mu = n * n * a * a * a
-  // n is d/dt mean anomaly
-  // mean anomaly (outside corrections) is e.mean_longitude_rad - e.longitude_of_perihelion_rad
-  // n is e.mean_longitude_rad_per_s - e.longitude_of_perihelion_rad_per_s?
-
-  // Ignoring the error corrections - could differentiate wrt time for more precision!
-  double const a = semi_major_axis_meters;
-  double const mean_longitude_rad_per_s = e.mean_longitude_deg_per_C * RAD_PER_DEG / (SECONDS_PER_DAY * DAYS_PER_CENTURY);
-  double const longitude_of_perihelion_rad_per_s = e.longitude_of_perihelion_deg_per_C * RAD_PER_DEG / (SECONDS_PER_DAY * DAYS_PER_CENTURY);
-  // Mean anomaly in rad/sec
-  double const n = mean_longitude_rad_per_s - longitude_of_perihelion_rad_per_s;
-  double const mu = n * n * a * a * a;
-  double const p = semi_major_axis_meters * (1 - e.eccentricity * e.eccentricity);
-  // From wikipedia article on True Anomaly
-  double const true_anomaly_rad = 2 * atan2(sqrt(1+e.eccentricity) * sin(eccentric_anomaly_rad / 2), sqrt(1-e.eccentricity) * cos(eccentric_anomaly_rad / 2));
-  // From Orbital Mechanics Ch 3
-  double const v0 = sqrt(mu/p); // or mu * h
-  double const vr = v0 * e.eccentricity * sin(true_anomaly_rad);
-  double const vn = v0 * (1 + e.eccentricity * cos(true_anomaly_rad));
-  Eigen::Vector3d unit_radial = r_orbital.normalized();
-  Eigen::Vector3d unit_normal = Eigen::AngleAxisd(M_TAU / 4.0, Eigen::Vector3d::UnitZ()) * unit_radial; // In this frame we have Z=0 as orbital plane
-  Eigen::Vector3d v_orbital = vr * unit_radial + vn * unit_normal;
-  *v_inertial = rot_inertial_frame * v_orbital;
-
-  return rot_inertial_frame * r_orbital;
-}
 
 void orApp::RenderState()
 {

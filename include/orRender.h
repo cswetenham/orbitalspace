@@ -78,7 +78,7 @@ public:
   struct Orbit {
     Orbit() : m_params(), m_pos(), m_col() {}
 
-    orOrbitParams m_params;
+    orEphemerisHybrid m_params;
 
     orVec3 m_pos;
 

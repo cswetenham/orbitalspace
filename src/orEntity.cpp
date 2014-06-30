@@ -109,10 +109,11 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
   Vector3d const bodyVel(body.m_vel);
   Vector3d const parentVel(parentBody.m_vel);
 
-  Vector3d const v = bodyVel - parentVel;
-  Vector3d const r = bodyPos - parentPos;
+  orEphemerisCartesian cart;
+  cart.pos = bodyPos - parentPos;
+  cart.vel = bodyVel - parentVel;
 
-  orbitParamsFromPosAndVel(r, v, parentBody.m_mass, o_params.m_params);
+  ephemerisHybridFromCartesian(cart, parentBody.m_mass, o_params.m_params);
 
   // Origin of an orbit is the position of the parent body
   // For all rendering objects we subtract the camera position to reduce error

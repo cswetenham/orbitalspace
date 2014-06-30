@@ -27,28 +27,12 @@ public:
   // orDebug
   static void DumpStack();
 
-  // Floating-point modulus - handles negative values correctly
-  // From http://stackoverflow.com/questions/4633177/c-how-to-wrap-a-float-to-the-interval-pi-pi
-  template <typename T>
-  static T FMod(T const _a, T const _b)
-  {
-    if (_b == 0) { return _a; } // Welp
-
-    return _a - _b * floor(_a / _b);
-  }
-
   template <typename T>
   static T Clamp(T const _v, T const _min, T const _max)
   {
     return (_v < _min) ? _min :
            (_max < _v) ? _max :
                          _v;
-  }
-
-  /* Wrap a value into the given range, for example -.5f*M_TAU to +.5f*M_TAU */
-  template <typename T>
-  static T Wrap(T const _x, T const _min, T const _max) {
-      return FMod(_x - _min, _max - _min) + _min;
   }
 
   template <typename T>
