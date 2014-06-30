@@ -1213,31 +1213,6 @@ double orApp::julianDateFromPosixTime(
   return (posix_time_s / 86400.0) + 2440587.5;
 }
 
-// returns eccentric anomaly
-// from http://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
-
-// "If this iteration formula won't converge, the eccentricity is probably too close to one. Then you should instead use the formulae for near-parabolic or parabolic orbits."
-// http://astro.if.ufrgs.br/trigesf/position.html
-double orApp::computeEccentricAnomaly(
-  double mean_anomaly_deg,
-  double eccentricity_rad
-) {
-  double tolerance_deg = 10e-6;
-  double eccentricity_deg = eccentricity_rad * (360.0 / M_TAU);
-  double eccentric_anomaly_deg = mean_anomaly_deg + eccentricity_deg * sin(mean_anomaly_deg);
-  double delta_mean_anomaly_deg = 0;
-  double delta_eccentric_anomaly_deg = 0;
-  do
-  {
-    double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
-    delta_mean_anomaly_deg = mean_anomaly_deg - (eccentric_anomaly_deg - eccentricity_deg * sin(eccentric_anomaly_rad));
-    delta_eccentric_anomaly_deg = delta_mean_anomaly_deg / (1 - eccentricity_rad * cos(eccentric_anomaly_rad));
-    eccentric_anomaly_deg += delta_eccentric_anomaly_deg;
-  } while (delta_eccentric_anomaly_deg > tolerance_deg);
-
-  return eccentric_anomaly_deg;
-}
-
 char const* orApp::s_jpl_names[] = {
   "Mercury",
   "Venus",
@@ -1297,8 +1272,8 @@ Eigen::Vector3d orApp::ephemerisFromKeplerianElements(
 
   mean_anomaly_deg = Util::Wrap(mean_anomaly_deg, -180.0, +180.0);
 
-  double eccentric_anomaly_deg = computeEccentricAnomaly(mean_anomaly_deg, e.eccentricity_rad);
-  double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
+  double const mean_anomaly_rad = mean_anomaly_deg * (M_TAU / 360.0);
+  double eccentric_anomaly_rad = orMath::computeEccentricAnomaly(mean_anomaly_rad, e.eccentricity_rad);
 
   double const meters_per_AU = 149597870700.0;
 

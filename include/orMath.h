@@ -85,6 +85,14 @@ struct orOrbitParams
   orVec3 y_dir;
 };
 
+// TODO want to support multiple ways of computing pos+vel of an object at a
+// given time:
+// - the JPL approximations we already have,
+// - 'on-rails' keplerian orbits (but we want to be able to get the pos and vel at a time in the future, so existing code is bad; see Chap 4 in Orbital Mechanics textbook maybe?
+// Want to get the keplerian params of the moon from http://ssd.jpl.nasa.gov/?sat_elem and ideally offset the earth from its barycenter too
+// - RK4 propagator (maybe others in future, STI Astrogator recommends adaptive RK7 with RK8 error correction - of course that takes more forces into account)
+// TODO will want to include the fuel/propellant mass in calculations; ship mass should lower after each maneuver
+
 inline void orbitParamsFromPosAndVel(
   Vector3d const& r2, // body pos relative to parent
   Vector3d const& v, // body vel relative to parent
@@ -109,14 +117,26 @@ inline void orbitParamsFromPosAndVel(
   double const vt_mag = vt.norm();
   Vector3d const t_dir = vt/vt_mag;
 
-  double const p = pow(r_mag * vt_mag, 2) / mu;
-  double const v0 = sqrt(mu/p); // todo compute more accurately/efficiently?
+  // h is the 'specific relative angular momentum' of the body with respect to the parent
+  // (actually, this is the magnitude; including direction it is r.cross(vt))
+  double const h = r_mag * vt_mag;
+
+  // L is the magnitude of the total angular momentum
+  // double const L = h * mu;
+  // p = h * h / mu = (L/mu) * (L/mu) / mu = (L*L) / (mu*mu*mu)
+
+  // p is the 'semi-latus rectum' of the conic section
+  double const p = pow(h, 2) / mu; // TODO why pow(x, 2) instead of x * x?
+  double const v0 = sqrt(mu/p); // TODO compute more accurately/efficiently? // TODO where did I suspect inaccuracy or efficiency here?
 
   Vector3d const ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
+  // e is the 'orbital eccentricity'
   double const e = ex.norm();
 
   double const ec = (vt_mag / v0) - 1;
   double const es = (vr_mag / v0);
+
+  // theta is the 'true anomaly'
   double const theta = atan2(es, ec);
 
   Vector3d const x_dir = cos(theta) * r_dir - sin(theta) * t_dir;
@@ -172,8 +192,39 @@ inline void sampleOrbit(
         o_posData[i][2] = (params.x_dir[2] * x_len) + (params.y_dir[2] * y_len) + origin[2];
 #endif
     }
-
 }
+
+namespace orMath {
+
+// returns eccentric anomaly in radians
+// from http://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
+
+// "If this iteration formula won't converge, the eccentricity is probably too
+// close to one. Then you should instead use the formulae for near-parabolic or
+// parabolic orbits."
+// http://astro.if.ufrgs.br/trigesf/position.html
+inline double computeEccentricAnomaly(
+  double mean_anomaly_rad,
+  double eccentricity_rad
+) {
+  double const tolerance_deg = 10e-6;
+  double const mean_anomaly_deg = mean_anomaly_rad * (360.0 / M_TAU);
+  double const eccentricity_deg = eccentricity_rad * (360.0 / M_TAU);
+  double eccentric_anomaly_deg = mean_anomaly_deg + eccentricity_deg * sin(mean_anomaly_deg);
+  double delta_mean_anomaly_deg = 0;
+  double delta_eccentric_anomaly_deg = 0;
+  do
+  {
+    double eccentric_anomaly_rad = eccentric_anomaly_deg * (M_TAU / 360.0);
+    delta_mean_anomaly_deg = mean_anomaly_deg - (eccentric_anomaly_deg - eccentricity_deg * sin(eccentric_anomaly_rad));
+    delta_eccentric_anomaly_deg = delta_mean_anomaly_deg / (1 - eccentricity_rad * cos(eccentric_anomaly_rad));
+    eccentric_anomaly_deg += delta_eccentric_anomaly_deg;
+  } while (delta_eccentric_anomaly_deg > tolerance_deg);
+
+  return eccentric_anomaly_deg * (M_TAU / 360.0);
+}
+
+} // namespace orMath
 
 #endif	/* ORMATH_H */
 
