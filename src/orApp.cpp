@@ -450,10 +450,9 @@ void orApp::InitState()
 
   m_uiTextBottomLabel2D.m_col = m_colG[4];
 
-  // For now, just get initial ephemeris from JPL data and sim using RK4 integrator
-  enum { NUM_PLANETS = 9 };
-  orEphemerisCartesian ephemeris[NUM_PLANETS]; // TODO
-  for (int i = 0; i < NUM_PLANETS; ++i) {
+  enum { NUM_BODIES = 10 };
+  orEphemerisCartesian ephemeris[NUM_BODIES]; // TODO
+  for (int i = 0; i < NUM_BODIES; ++i) {
     ephemerisCartesianFromJPL(
       s_jpl_elements_t0[i],
       posixTimeFromSimTime(m_simTime),
@@ -461,35 +460,7 @@ void orApp::InitState()
     );
   }
 
-  // TODO get some better data on Moon's orbit
-  // TODO have all planets on rails and better handling of earth-moon special case
-
-  // For now, give the moon a circular orbit
-
-  double const muEarthBody = (EARTH_MASS + MOON_MASS) * GRAV_CONSTANT;
-  double const angularSpeed = MOON_PERIOD / M_TAU;
-
-  double const earthBodyOrbitRadius = pow(muEarthBody * angularSpeed * angularSpeed, 1.0/3.0); // meters
-
-  // Distances from COM of Earth-Body system
-  double const earthOrbitRadius = earthBodyOrbitRadius * MOON_MASS / (EARTH_MASS + MOON_MASS);
-  double const moonOrbitRadius = earthBodyOrbitRadius - earthOrbitRadius;
-
-  int earth_ephemeris_idx = 2;
-
-  Vector3d const earthPos = ephemeris[earth_ephemeris_idx].pos + Vector3d(0.0, -earthOrbitRadius, 0.0);
-  Vector3d const moonPos = ephemeris[earth_ephemeris_idx].pos + Vector3d(0.0, moonOrbitRadius, 0.0 );
-
-  double const earthSpeed = earthOrbitRadius / angularSpeed;
-  double const moonSpeed = moonOrbitRadius / angularSpeed;
-
-  Vector3d const earthVel = ephemeris[earth_ephemeris_idx].vel + Vector3d(-earthSpeed, 0.0, 0.0);
-  Vector3d const moonVel = ephemeris[earth_ephemeris_idx].vel + Vector3d(moonSpeed, 0.0, 0.0);
-
-  m_lightDir = orVec3(earthPos.normalized());
-
   // Create Sun
-
   {
     orVec3 const pos(0, 0, 0);
     orVec3 const vel(0, 0, 0);
@@ -509,6 +480,20 @@ void orApp::InitState()
   {
     int const ephemeris_idx = 1;
     m_venusBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+
+  // Create Earth
+  // TODO earth and moon should orbit about common barycenter, but I don't have good data on that.
+  {
+    int const ephemeris_idx = 2;
+    m_earthBodyId = spawnBody("Earth", EARTH_RADIUS, EARTH_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+  }
+
+  // Create Moon
+  {
+    int const earth_ephemeris_idx = 2;
+    int const ephemeris_idx = 9;
+    m_moonBodyId = spawnBody("Moon", MOON_RADIUS, MOON_MASS, orVec3(ephemeris[ephemeris_idx].pos + ephemeris[earth_ephemeris_idx].pos), orVec3(ephemeris[ephemeris_idx].vel + ephemeris[earth_ephemeris_idx].vel), m_entitySystem.getBody(m_earthBodyId).m_gravBodyId);
   }
 
   // Create Mars
@@ -547,102 +532,7 @@ void orApp::InitState()
     m_plutoBodyId = spawnBody("Pluto", PLUTO_RADIUS, PLUTO_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
-  // Create Earth
-
-  {
-    EntitySystem::Body& earthBody = m_entitySystem.getBody(m_earthBodyId = m_entitySystem.makeBody());
-
-    double radius = EARTH_RADIUS;
-    {
-      PhysicsSystem::GravBody& earthGravBody = m_physicsSystem.getGravBody(earthBody.m_gravBodyId = m_physicsSystem.makeGravBody());
-      earthGravBody.m_mass = EARTH_MASS;
-      earthGravBody.m_radius = radius;
-      earthGravBody.m_pos = orVec3(earthPos);
-      earthGravBody.m_vel = orVec3(earthVel);
-      earthGravBody.m_soiParentBody = m_entitySystem.getBody(m_sunBodyId).m_gravBodyId;
-    }
-
-    {
-      // TODO this should be the orbit of the earth-moon system
-      RenderSystem::Orbit& earthOrbit = m_renderSystem.getOrbit(earthBody.m_orbitId = m_renderSystem.makeOrbit());
-      // Orbit pos is pos of parent body
-      earthOrbit.m_pos = orVec3(0, 0, 0);
-      earthOrbit.m_col = m_colG[1];
-    }
-
-    {
-      RenderSystem::Sphere& earthSphere = m_renderSystem.getSphere(earthBody.m_sphereId = m_renderSystem.makeSphere());
-      earthSphere.m_radius = radius;
-      earthSphere.m_pos = earthPos;
-      earthSphere.m_col = RenderSystem::Colour(0.2, 0.5, 1.0);
-    }
-
-    {
-      CameraSystem::Target& earthCamTarget = m_cameraSystem.getTarget(earthBody.m_cameraTargetId = m_cameraSystem.makeTarget());
-      earthCamTarget.m_pos = earthPos;
-      earthCamTarget.m_name = std::string("Earth");
-    }
-
-    {
-      RenderSystem::Label3D& earthLabel3d = m_renderSystem.getLabel3D(earthBody.m_label3DId = m_renderSystem.makeLabel3D());
-      earthLabel3d.m_pos = moonPos;
-      earthLabel3d.m_col = m_colG[4];
-      earthLabel3d.m_text = std::string("Earth");
-    }
-  }
-
-  // Create Moon
-
-  EntitySystem::Body& moonBody = m_entitySystem.getBody(m_moonBodyId = m_entitySystem.makeBody());
-
-  double const radius = MOON_RADIUS;
-
-  {
-    PhysicsSystem::GravBody& moonGravBody = m_physicsSystem.getGravBody(moonBody.m_gravBodyId = m_physicsSystem.makeGravBody());
-    moonGravBody.m_mass = MOON_MASS;
-    moonGravBody.m_radius = radius;
-    moonGravBody.m_pos = moonPos;
-    moonGravBody.m_vel = moonVel;
-    moonGravBody.m_soiParentBody = m_entitySystem.getBody(m_earthBodyId).m_gravBodyId;
-  }
-
-  {
-    RenderSystem::Sphere& moonSphere = m_renderSystem.getSphere(moonBody.m_sphereId = m_renderSystem.makeSphere());
-    moonSphere.m_radius = radius;
-    moonSphere.m_pos = moonPos;
-    moonSphere.m_col = RenderSystem::Colour(0.4, 0.4, 0.4);
-  }
-
-  {
-    RenderSystem::Orbit& moonOrbit = m_renderSystem.getOrbit(moonBody.m_orbitId = m_renderSystem.makeOrbit());
-    // Orbit pos is pos of parent body
-    moonOrbit.m_pos = earthPos;
-    moonOrbit.m_col = m_colG[1];
-  }
-
-#if 0
-  {
-    RenderSystem::Trail& moonTrail = m_renderSystem.getTrail(moonBody.m_trailId = m_renderSystem.makeTrail());
-    moonTrail.Init(5000.0, moonPos, m_cameraSystem.getTarget(m_cameraTargetId).m_pos);
-    moonTrail.m_colOld = m_colG[0];
-    moonTrail.m_colNew = m_colG[4];
-  }
-#endif
-
-  {
-    CameraSystem::Target& moonCamTarget = m_cameraSystem.getTarget(moonBody.m_cameraTargetId = m_cameraSystem.makeTarget());
-    moonCamTarget.m_pos = moonPos;
-    moonCamTarget.m_name = std::string("Moon");
-  }
-
-  {
-    RenderSystem::Label3D& moonLabel3D = m_renderSystem.getLabel3D(moonBody.m_label3DId = m_renderSystem.makeLabel3D());
-    moonLabel3D.m_pos = moonPos;
-    moonLabel3D.m_col = m_colG[4];
-    moonLabel3D.m_text = std::string("Moon");
-  }
-
-  // Create Earth-Body COM
+  // Create Earth-Body COM and Lagrange points
 #if 0
   EntitySystem::Poi& comPoi = m_entitySystem.getPoi(m_comPoiId = m_entitySystem.makePoi());
 
@@ -681,6 +571,8 @@ void orApp::InitState()
 #endif
 
   // Create ships
+  Vector3d earthPos = ephemeris[2].pos;
+  Vector3d earthVel = ephemeris[2].vel;
   {
     EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
 
@@ -1180,11 +1072,6 @@ char const* orApp::s_jpl_names[] = {
   "Pluto"
 };
 
-
-// TODO just throw in every planet for now
-// TODO make a function that renders RGB axes for XYZ
-// TODO render XYZ frame for each planet + sun + moon
-
 orEphemerisJPL orApp::s_jpl_elements_t0[] = {
   {  0.38709843, 0.20563661,  7.00559432, 252.25166724,  77.45771895,  48.33961819,  0.00000000,  0.00002123, -0.00590158, 149472.67486623,  0.15940013, -0.12214182,           0,           0,           0,           0 },
   {  0.72332102, 0.00676399,  3.39777545, 181.97970850, 131.76755713,  76.67261496, -0.00000026, -0.00005107,  0.00043494,  58517.81560260,  0.05679648, -0.27274174,           0,           0,           0,           0 },
@@ -1194,7 +1081,25 @@ orEphemerisJPL orApp::s_jpl_elements_t0[] = {
   {  9.54149883, 0.05550825,  2.49424102,  50.07571329,  92.86136063, 113.63998702, -0.00003065, -0.00032044,  0.00451969,   1222.11494724,  0.54179478, -0.25015002,  0.00025899, -0.13434469,  0.87320147, 38.35125000 },
   { 19.18797948, 0.04685740,  0.77298127, 314.20276625, 172.43404441,  73.96250215, -0.00020455, -0.00001550, -0.00180155,    428.49512595,  0.09266985,  0.05739699,  0.00058331, -0.97731848,  0.17689245,  7.67025000 },
   { 30.06952752, 0.00895439,  1.77005520, 304.22289287,  46.68158724, 131.78635853,  0.00006447,  0.00000818,  0.00022400,    218.46515314,  0.01009938, -0.00606302, -0.00041348,  0.68346318, -0.10162547,  7.67025000 },
-  { 39.48686035, 0.24885238, 17.14104260, 238.96535011, 224.09702598, 110.30167986,  0.00449751,  0.00006016,  0.00000501,    145.18042903, -0.00968827, -0.00809981, -0.01262724,           0,           0,           0 }
+  { 39.48686035, 0.24885238, 17.14104260, 238.96535011, 224.09702598, 110.30167986,  0.00449751,  0.00006016,  0.00000501,    145.18042903, -0.00968827, -0.00809981, -0.01262724,           0,           0,           0 },
+  { // Moon TODO this is wrt earth ecliptic
+    384400.0 * 1000.0 / METERS_PER_AU, // semi-major axis, AU
+    0.0554, // eccentricity
+    5.16, // inclination, deg
+    135.27 + 125.08 + 318.15, // mean longitude, deg = mean anomaly + longitude of periapsis = Mean anomaly + longitude of ascending node + argument of periapsis
+    125.08 + 318.15, // longitude of periapsis, deg
+    125.08, // longitude of ascending node, deg
+    0, // semi major axis, AU per C
+    0, // eccentricity, per C
+    0, // inclination, deg per C
+    13.176358 * DAYS_PER_CENTURY, // mean longitude, deg per C
+    0, // longitude of perihelion, deg per C
+    0, // longitude of ascending node, deg per C
+    0, // error b deg
+    0, // error c deg
+    0, // error s deg
+    0  // error f deg
+  }
 };
 
 void orApp::RenderState()

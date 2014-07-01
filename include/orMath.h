@@ -325,7 +325,7 @@ inline void ephemerisCartesianFromJPL(
   double const a = semi_major_axis_meters;
   double const mean_longitude_rad_per_s = e.mean_longitude_deg_per_C * RAD_PER_DEG / (SECONDS_PER_DAY * DAYS_PER_CENTURY);
   double const longitude_of_perihelion_rad_per_s = e.longitude_of_perihelion_deg_per_C * RAD_PER_DEG / (SECONDS_PER_DAY * DAYS_PER_CENTURY);
-  // Mean anomaly in rad/sec
+  // Mean motion in rad/sec
   double const n = mean_longitude_rad_per_s - longitude_of_perihelion_rad_per_s;
   double const mu = n * n * a * a * a;
   double const p = semi_major_axis_meters * (1 - e.eccentricity * e.eccentricity);

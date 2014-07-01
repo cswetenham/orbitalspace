@@ -42,6 +42,21 @@
 // Some bodies - let's say the ParticleBodies - can also have a thrust from user or AI input / nodes.
 // Might eventually just have impulse based calculations instead? Or proper prediction + arcs with finite thrust over time?
 
+// TODO simplification:
+// - grav bodies will always be based on JPL data or equivalent
+// - particle bodies will always be based on cartesian position + RK4 propagation
+// - Once that's implemented, will worry about maneuver nodes
+// -- Probably the best way of handling that is: if a time step contains a node,
+// split the time step into time before node and time after node. Simulate the
+// first part, then apply node modifiers, then simulate the later part. Probably
+// best to give the app some priority queue of events, and use that to drive
+// calls to the physics system. During any timestep the user thrust should be
+// constant. If we want to simulate finite thrust, will have two events for a
+// node: start thrust and end thrust. Should be symmetric about the node, if we
+// simulate light lag we'll have to take into consideration that thrust can't
+// start earlier than the command horizon
+
+
 void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const dt) {
 
   int numParticles = (int)numParticleBodies();
