@@ -5,6 +5,43 @@
 
 #include "constants.h"
 
+// TODO new concept is to have some bodies 'on rails' with their position
+// computed according to the current mean anomaly (this is the parameter than
+// increases at a constant rate with time, the rate is the mean motion 'n')
+// 'on rails' bodies could be using JPL planets approximations
+// for 3000BC to 3000AD from http://ssd.jpl.nasa.gov/?planet_pos
+// or for satellites, using http://ssd.jpl.nasa.gov/?sat_elem (TODO: will need
+// a different structure for the data, or reuse other JPL structure; will need
+// ability to define the transformation from the ecliptic to the inertial plane
+// to apply it to the Moon, and whatever transforms are required for other
+// satellites)
+
+// TODO I didn't apply the final part of the JPL computation; values are in the J2000 ecliptic rather than J2000 frame?
+// difference is 23.umpt degrees, which isn't the same as the earth's ecliptic inclination of 7.umpt degrees...
+
+// Let's assume we can stuff the parameters for satellites into the existing JPL structure setting most
+// So we will have on-rails bodies, with:
+// - mass
+// - parent body (Sun, Earth, etc)
+// - parent frame (ICRF, parent Ecliptic, laplace plane?) (laplace planes seem to need some extra parameters of their own)
+// - orbital elements
+
+// And propagated bodies, with:
+// - mass
+// - parent body (for orbit drawing - the actual parent can change and should be recomputed based on SOI each frame)
+// - orbital elements (cartesian)
+
+// For both on-rails and propagated bodies, we can have some bodies which
+// contribute to gravity computation and some which don't - currently called
+// ParticleBody and GravBody.
+
+// Every frame, we will want to compute the new position + velocity of each body.
+
+// For the RK4 integration for propagated bodies, we want to be able to compute the accelerations from gravity at intermediate times - this should include the calculation of the on-rails bodies (at least the ones that contribute to gravity calcs)
+
+// Some bodies - let's say the ParticleBodies - can also have a thrust from user or AI input / nodes.
+// Might eventually just have impulse based calculations instead? Or proper prediction + arcs with finite thrust over time?
+
 void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const dt) {
 
   int numParticles = (int)numParticleBodies();
@@ -200,31 +237,49 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
   return getGravBody(minDistId);
 }
 
-void PhysicsSystem::CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0)
-{
+void PhysicsSystem::CalcDxDt(
+  int numParticles,
+  int numGravBodies,
+  Eigen::VectorXd const& mgravs, // masses of GravBodies
+  Eigen::Array3Xd const& x0, // initial states (pos+vel)
+  Eigen::Array3Xd& dxdt0 // output, rate of change in state
+) {
   // State: positions, velocities
   // DStateDt: velocities, accelerations
   dxdt0.block(0, 0, 3, numParticles + numGravBodies) = x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies);
-  CalcAccel(numParticles, numGravBodies, x0.block(0, 0, 3, numParticles + numGravBodies), x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies), mgravs, dxdt0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies));
+  CalcAccel(numParticles, numGravBodies, x0.block(0, 0, 3, numParticles + numGravBodies), mgravs, dxdt0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies));
 }
 
-template< class P, class V, class OA >
-void PhysicsSystem::CalcAccel(int numParticles, int numGravBodies, P const& p, V const& v, Eigen::VectorXd const& mgravs, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
+template< class P, class OA >
+void PhysicsSystem::CalcAccel(
+  int numParticles,
+  int numGravBodies,
+  P const& p, // position for each body
+  Eigen::VectorXd const& mgravs,
+  OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a // output, accelerations
+)
 {
-  CalcParticleAccel(numParticles, p.block(0, 0, 3, numParticles), v.block(0, 0, 3, numParticles), numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, 0, 3, numParticles));
-  CalcGravAccel(numGravBodies, p.block(0, numParticles, 3, numGravBodies), v.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, numParticles, 3, numGravBodies));
+  CalcParticleAccel(numParticles, p.block(0, 0, 3, numParticles), numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, 0, 3, numParticles));
+  CalcGravAccel(numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, numParticles, 3, numGravBodies));
 }
 
-template< class PP, class VP, class PG, class OA >
-void PhysicsSystem::CalcParticleAccel(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
+template< class PP, class PG, class OA >
+void PhysicsSystem::CalcParticleAccel(
+  int numParticles,
+  PP const& pp, // position of particle bodies
+  int numGravBodies,
+  PG const& pg, // position of grav bodies
+  Eigen::VectorXd const& mg,
+  OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a // output, accelerations
+)
 {
-  CalcParticleGrav(numParticles, pp, vp, numGravBodies, pg, mg, o_a);
-  CalcParticleUserAcc(numParticles, pp, vp, o_a);
+  CalcParticleGrav(numParticles, pp, numGravBodies, pg, mg, o_a);
+  CalcParticleUserAcc(numParticles, o_a);
 }
 
 // Calculates acceleration on first body by second body
-template< class PP, class VP, class PG, class OA >
-void PhysicsSystem::CalcParticleGrav(int numParticles, PP const& pp, VP const& vp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
+template< class PP, class PG, class OA >
+void PhysicsSystem::CalcParticleGrav(int numParticles, PP const& pp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   double const G = GRAV_CONSTANT;
 
@@ -249,8 +304,8 @@ void PhysicsSystem::CalcParticleGrav(int numParticles, PP const& pp, VP const& v
   }
 }
 
-template< class PP, class VP, class OA >
-void PhysicsSystem::CalcParticleUserAcc(int numParticles, PP const& pp, VP const& vp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
+template< class OA >
+void PhysicsSystem::CalcParticleUserAcc(int numParticles, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   // TODO need a better way of iterating over instances
   for (int pi = 0; pi < numParticles; ++pi) {
@@ -259,8 +314,8 @@ void PhysicsSystem::CalcParticleUserAcc(int numParticles, PP const& pp, VP const
   }
 }
 
-template< class PG, class VG, class OA >
-void PhysicsSystem::CalcGravAccel(int numGravBodies, PG const& pg, VG const& vg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
+template< class PG, class OA >
+void PhysicsSystem::CalcGravAccel(int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   double const G = GRAV_CONSTANT;
 
