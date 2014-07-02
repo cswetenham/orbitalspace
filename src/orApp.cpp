@@ -455,7 +455,7 @@ void orApp::InitState()
   for (int i = 0; i < NUM_BODIES; ++i) {
     ephemerisCartesianFromJPL(
       s_jpl_elements_t0[i],
-      posixTimeFromSimTime(m_simTime),
+      m_simTime,
       ephemeris[i]
     );
   }

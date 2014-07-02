@@ -79,7 +79,6 @@ static T orLerp(T const _x0, T const _x1, A const _a) {
     return _x0 * (1 - _a) + _x1 * _a;
 }
 
-
 // Floating-point modulus - handles negative values correctly
 // From http://stackoverflow.com/questions/4633177/c-how-to-wrap-a-float-to-the-interval-pi-pi
 template <typename T>
@@ -270,12 +269,13 @@ inline void ephemerisHybridFromCartesian(
 
 inline void ephemerisCartesianFromJPL(
   orEphemerisJPL const& elements_t0,
-  boost::posix_time::ptime const& ptime,
+  double sim_time,
   orEphemerisCartesian& o_cart
 ) {
   // Compute time in centuries since J2000
 
   // julian date in days
+  boost::posix_time::ptime ptime = posixTimeFromSimTime(sim_time);
   double julian_date = julianDateFromPosixTime(ptime);
   double t_C = (julian_date - 2451545.0) / DAYS_PER_CENTURY;
 
