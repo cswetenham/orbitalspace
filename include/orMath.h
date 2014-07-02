@@ -332,10 +332,13 @@ inline void ephemerisCartesianFromJPL(
   // From wikipedia article on True Anomaly
   double const true_anomaly_rad = 2 * atan2(sqrt(1+e.eccentricity) * sin(eccentric_anomaly_rad / 2), sqrt(1-e.eccentricity) * cos(eccentric_anomaly_rad / 2));
   // From Orbital Mechanics Ch 3
-  double const v0 = sqrt(mu/p); // or mu * h
+  // TODO totally arbitrary thresholds, and haven't given thought to correct behaviour
+  // when only one of them is close to 0...
+  double const mu_over_p = (mu > 0.000000001 && fabs(p) > 0.000000001)? mu/p : 0;
+  double const v0 = sqrt(mu_over_p); // mu * h
   double const vr = v0 * e.eccentricity * sin(true_anomaly_rad);
   double const vn = v0 * (1 + e.eccentricity * cos(true_anomaly_rad));
-  Eigen::Vector3d unit_radial = r_orbital.normalized();
+  Eigen::Vector3d unit_radial = (r_orbital.norm() > 0.000000001) ? r_orbital.normalized() : Eigen::Vector3d::UnitX();
   Eigen::Vector3d unit_normal = Eigen::AngleAxisd(M_TAU / 4.0, Eigen::Vector3d::UnitZ()) * unit_radial; // In this frame we have Z=0 as orbital plane
   Eigen::Vector3d v_orbital = vr * unit_radial + vn * unit_normal;
 
