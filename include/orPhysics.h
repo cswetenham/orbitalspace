@@ -36,13 +36,6 @@ public:
 
   DECLARE_SYSTEM_TYPE(GravBody, GravBodies);
 
-  struct KeplerBody : public Body
-  {
-    KeplerBody() : Body() {}
-  };
-
-  DECLARE_SYSTEM_TYPE(KeplerBody, KeplerBodies);
-
   enum IntegrationMethod {
     IntegrationMethod_ExplicitEuler = 0,
     IntegrationMethod_ImprovedEuler,
