@@ -356,16 +356,35 @@ int orApp::spawnBody(
   std::string const& name,
   double const radius,
   double const mass,
-  orVec3 const pos,
-  orVec3 const vel,
+  orEphemerisJPL const& ephemeris_jpl,
   int const parent_grav_body_id
 )
 {
+  orEphemerisCartesian ephemeris_cart;
+
+  Eigen::Vector3d parent_pos(0, 0, 0);
+  Eigen::Vector3d parent_vel(0, 0, 0);
+  if (parent_grav_body_id) {
+    PhysicsSystem::GravBody const& parentBody = m_physicsSystem.getGravBody(parent_grav_body_id);
+    parent_pos = parentBody.m_pos;
+    parent_vel = parentBody.m_vel;
+  }
+
+  ephemerisCartesianFromJPL(
+    ephemeris_jpl,
+    m_simTime,
+    ephemeris_cart
+  );
+
+  orVec3 pos(ephemeris_cart.pos + parent_pos);
+  orVec3 vel(ephemeris_cart.vel + parent_vel);
+
   int body_id;
   EntitySystem::Body& body = m_entitySystem.getBody(body_id = m_entitySystem.makeBody());
 
   {
     PhysicsSystem::GravBody& gravBody = m_physicsSystem.getGravBody(body.m_gravBodyId = m_physicsSystem.makeGravBody());
+    gravBody.m_ephemeris = ephemeris_jpl;
     gravBody.m_mass = mass;
     gravBody.m_radius = radius;
     gravBody.m_pos = pos;
@@ -450,21 +469,12 @@ void orApp::InitState()
 
   m_uiTextBottomLabel2D.m_col = m_colG[4];
 
-  enum { NUM_BODIES = 10 };
-  orEphemerisCartesian ephemeris[NUM_BODIES]; // TODO
-  for (int i = 0; i < NUM_BODIES; ++i) {
-    ephemerisCartesianFromJPL(
-      s_jpl_elements_t0[i],
-      m_simTime,
-      ephemeris[i]
-    );
-  }
+  // TODO s_jpl_elements_t0[ephemeris_id]
 
   // Create Sun
   {
-    orVec3 const pos(0, 0, 0);
-    orVec3 const vel(0, 0, 0);
-    m_sunBodyId = spawnBody("Sun", SUN_RADIUS, SUN_MASS, pos, vel, 0);
+    orEphemerisJPL sun_ephemeris = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    m_sunBodyId = spawnBody("Sun", SUN_RADIUS, SUN_MASS, sun_ephemeris, 0);
   }
 
   // Set initial camera target to be the Sun
@@ -473,63 +483,62 @@ void orApp::InitState()
   // Create Mercury
   {
     int const ephemeris_idx = 0;
-    m_mercuryBodyId = spawnBody("Mercury", MERCURY_RADIUS, MERCURY_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_mercuryBodyId = spawnBody("Mercury", MERCURY_RADIUS, MERCURY_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Venus
   {
     int const ephemeris_idx = 1;
-    m_venusBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_venusBodyId = spawnBody("Venus", VENUS_RADIUS, VENUS_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Earth
   // TODO earth and moon should orbit about common barycenter, but I don't have good data on that.
   {
     int const ephemeris_idx = 2;
-    m_earthBodyId = spawnBody("Earth", EARTH_RADIUS, EARTH_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_earthBodyId = spawnBody("Earth", EARTH_RADIUS, EARTH_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Moon
   {
-    int const earth_ephemeris_idx = 2;
     int const ephemeris_idx = 9;
-    m_moonBodyId = spawnBody("Moon", MOON_RADIUS, MOON_MASS, orVec3(ephemeris[ephemeris_idx].pos + ephemeris[earth_ephemeris_idx].pos), orVec3(ephemeris[ephemeris_idx].vel + ephemeris[earth_ephemeris_idx].vel), m_entitySystem.getBody(m_earthBodyId).m_gravBodyId);
+    m_moonBodyId = spawnBody("Moon", MOON_RADIUS, MOON_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_earthBodyId).m_gravBodyId);
   }
 
   // Create Mars
   {
     int const ephemeris_idx = 3;
-    m_marsBodyId = spawnBody("Mars", MARS_RADIUS, MARS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_marsBodyId = spawnBody("Mars", MARS_RADIUS, MARS_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Jupiter
   {
     int const ephemeris_idx = 4;
-    m_jupiterBodyId = spawnBody("Jupiter", JUPITER_RADIUS, JUPITER_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_jupiterBodyId = spawnBody("Jupiter", JUPITER_RADIUS, JUPITER_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Saturn
   {
     int const ephemeris_idx = 5;
-    m_saturnBodyId = spawnBody("Saturn", SATURN_RADIUS, SATURN_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_saturnBodyId = spawnBody("Saturn", SATURN_RADIUS, SATURN_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Neptune
   {
     int const ephemeris_idx = 6;
-    m_neptuneBodyId = spawnBody("Neptune", NEPTUNE_RADIUS, NEPTUNE_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_neptuneBodyId = spawnBody("Neptune", NEPTUNE_RADIUS, NEPTUNE_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Uranus
   {
     int const ephemeris_idx = 7;
-    m_uranusBodyId = spawnBody("Uranus", URANUS_RADIUS, URANUS_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_uranusBodyId = spawnBody("Uranus", URANUS_RADIUS, URANUS_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Uranus
   {
     int const ephemeris_idx = 8;
-    m_plutoBodyId = spawnBody("Pluto", PLUTO_RADIUS, PLUTO_MASS, ephemeris[ephemeris_idx].pos, ephemeris[ephemeris_idx].vel, m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
+    m_plutoBodyId = spawnBody("Pluto", PLUTO_RADIUS, PLUTO_MASS, s_jpl_elements_t0[ephemeris_idx], m_entitySystem.getBody(m_sunBodyId).m_gravBodyId);
   }
 
   // Create Earth-Body COM and Lagrange points
@@ -571,8 +580,9 @@ void orApp::InitState()
 #endif
 
   // Create ships
-  Vector3d earthPos = ephemeris[2].pos;
-  Vector3d earthVel = ephemeris[2].vel;
+  PhysicsSystem::GravBody const& earthBody = m_physicsSystem.getGravBody(m_entitySystem.getBody(m_earthBodyId).m_gravBodyId);
+  Vector3d earthPos = earthBody.m_pos;
+  Vector3d earthVel = earthBody.m_vel;
   {
     EntitySystem::Ship& playerShip = m_entitySystem.getShip(m_playerShipId = m_entitySystem.makeShip());
 

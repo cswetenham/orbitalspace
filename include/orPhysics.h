@@ -31,6 +31,7 @@ public:
 
     double m_radius;
     double m_mass;
+    orEphemerisJPL m_ephemeris; // constant
     int m_soiParentBody; // TODO want to avoid this later.
   };
 

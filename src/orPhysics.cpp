@@ -220,7 +220,7 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
 
   for (int i = 0; i < numGravBodies(); ++i)
   {
-    int curId = i + 1;
+    int const curId = i + 1;
     GravBody const& soiBody = getGravBody(curId);
     Vector3d const soiPos(soiBody.m_pos);
 

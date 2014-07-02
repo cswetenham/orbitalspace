@@ -96,8 +96,7 @@ private:
     std::string const& name,
     double const radius,
     double const mass,
-    orVec3 const pos,
-    orVec3 const vel,
+    orEphemerisJPL const& ephemeris_jpl,
     int const parent_grav_body_id
   );
 
