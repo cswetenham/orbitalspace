@@ -27,12 +27,12 @@ public:
 
   struct GravBody : public Body
   {
-    GravBody() : Body(), m_radius(0), m_mass(0), m_soiParentBody(0) {}
+    GravBody() : Body(), m_radius(0), m_mass(0), m_parentBodyId(0) {}
 
     double m_radius;
     double m_mass;
     orEphemerisJPL m_ephemeris; // constant
-    int m_soiParentBody; // TODO want to avoid this later.
+    int m_parentBodyId; // TODO want to avoid this later.
   };
 
   DECLARE_SYSTEM_TYPE(GravBody, GravBodies);

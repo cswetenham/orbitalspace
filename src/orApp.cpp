@@ -389,7 +389,7 @@ int orApp::spawnBody(
     gravBody.m_radius = radius;
     gravBody.m_pos = pos;
     gravBody.m_vel = vel;
-    gravBody.m_soiParentBody = parent_grav_body_id;
+    gravBody.m_parentBodyId = parent_grav_body_id;
   }
 
   {
@@ -751,8 +751,8 @@ void orApp::HandleEvent(SDL_Event const& _event)
       if (_event.key.keysym.sym == SDLK_PLUS || _event.key.keysym.sym == SDLK_EQUALS)
       {
         m_timeScale *= 2;
-        if (m_timeScale > 1<<16) {
-          m_timeScale = 1<<16;
+        if (m_timeScale > 1LL<<32) {
+          m_timeScale = 1LL<<32;
         }
       }
 

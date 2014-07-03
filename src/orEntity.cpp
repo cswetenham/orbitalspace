@@ -16,9 +16,9 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
     PhysicsSystem::GravBody& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
     orVec3 offset_pos = orVec3(Vector3d(body.m_pos) - Vector3d(_origin));
 
-    if (moon.m_orbitId && body.m_soiParentBody) {
+    if (moon.m_orbitId && body.m_parentBodyId) {
       RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
-      UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_soiParentBody), _origin, orbit);
+      UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_parentBodyId), _origin, orbit);
     }
 
 #if 0

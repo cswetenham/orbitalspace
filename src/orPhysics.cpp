@@ -91,7 +91,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
       // Vector3d const v1 = v0 + a0 * dt;
 
       Eigen::Array3Xd dxdt_0(3, 2*stateSize);
-      CalcDxDt(t, numParticles, x_0, dxdt_0);
+      CalcDxDt(numParticles, t, x_0, dxdt_0);
 
       x_1 = x_0 + dxdt_0 * dt;
 
@@ -166,6 +166,21 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
     body.m_vel[1] = bodyVel[1];
     body.m_vel[2] = bodyVel[2];
   }
+
+  // Update grav body state at end of timestep
+  std::vector<orEphemerisCartesian> gravCartesian;
+  gravCartesian.resize(numGravs);
+  for (int gi = 0; gi < numGravs; ++gi) {
+    int const gid = gi + 1;
+    GravBody& gravBody = getGravBody(gid);
+    ephemerisCartesianFromJPL(gravBody.m_ephemeris, t+dt, gravCartesian[gi]);
+    if (gravBody.m_parentBodyId != 0) {
+      gravCartesian[gi].pos += gravCartesian[gravBody.m_parentBodyId-1].pos;
+      gravCartesian[gi].vel += gravCartesian[gravBody.m_parentBodyId-1].vel;
+    }
+    gravBody.m_pos = orVec3(gravCartesian[gi].pos);
+    gravBody.m_vel = orVec3(gravCartesian[gi].vel);
+  }
 }
 
 PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const& _body) const {
@@ -186,11 +201,11 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
     Vector3d const soiPos(soiBody.m_pos);
 
     double soi;
-    if (soiBody.m_soiParentBody == 0) {
+    if (soiBody.m_parentBodyId == 0) {
       // If body has no own parent, set infinite SOI
       soi = DBL_MAX;
     } else {
-      GravBody const& parentBody = getGravBody(soiBody.m_soiParentBody);
+      GravBody const& parentBody = getGravBody(soiBody.m_parentBodyId);
       Vector3d const parentPos(parentBody.m_pos);
 
       double const orbitRadius = (parentPos - soiPos).norm();
@@ -255,12 +270,18 @@ void PhysicsSystem::CalcParticleGrav(double t, int numParticles, PP const& pp, O
 {
   double const G = GRAV_CONSTANT;
 
+  // TODO pull out this code into its own function
   int numGravs = (int)numGravBodies();
   std::vector<orEphemerisCartesian> gravCartesian;
   gravCartesian.resize(numGravs);
   for (int gi = 0; gi < numGravs; ++gi) {
     int const gid = gi + 1;
-    ephemerisCartesianFromJPL(getGravBody(gid).m_ephemeris, t, gravCartesian[gi]);
+    GravBody const& gravBody = getGravBody(gid);
+    ephemerisCartesianFromJPL(gravBody.m_ephemeris, t, gravCartesian[gi]);
+    if (gravBody.m_parentBodyId != 0) {
+      gravCartesian[gi].pos += gravCartesian[gravBody.m_parentBodyId-1].pos;
+      gravCartesian[gi].vel += gravCartesian[gravBody.m_parentBodyId-1].vel;
+    }
   }
 
   for (int pi = 0; pi < numParticles; ++pi) {
