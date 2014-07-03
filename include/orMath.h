@@ -167,8 +167,8 @@ struct orEphemerisHybrid
   double e; // e is the 'orbital eccentricity'
   double theta; // theta is the 'true anomaly'
   // TODO document
-  orVec3 x_dir;
-  orVec3 y_dir;
+  orVec3 x_dir; // Radial direction at periapsis?
+  orVec3 y_dir; // Tangent direction at periapsis?
 };
 
 // TODO convert to SI units
@@ -200,18 +200,12 @@ struct orEphemerisHybrid
     Eigen::Vector3d vel;
   };
 
-// TODO want to support multiple ways of computing pos+vel of an object at a
-// given time:
-// - the JPL approximations we already have,
-// - 'on-rails' keplerian orbits (but we want to be able to get the pos and vel at a time in the future, so existing code is bad; see Chap 4 in Orbital Mechanics textbook maybe?
-// Want to get the keplerian params of the moon from http://ssd.jpl.nasa.gov/?sat_elem and ideally offset the earth from its barycenter too
-// - RK4 propagator (maybe others in future, STI Astrogator recommends adaptive RK7 with RK8 error correction - of course that takes more forces into account)
+// TODO do better than RK4 propagator? (STI Astrogator recommends adaptive RK7 with RK8 error correction - of course that takes more forces into account)
 // TODO will want to include the fuel/propellant mass in calculations; ship mass should lower after each maneuver
 
 inline void ephemerisHybridFromCartesian(
   orEphemerisCartesian const& cart,
   double const M, // parent body mass
-  // TODO want to also return some representation of the current position in the orbit
   orEphemerisHybrid& o_params
 ) {
   // Compute Kepler orbit
@@ -223,7 +217,7 @@ inline void ephemerisHybridFromCartesian(
   Vector3d const r = -cart.pos; // TODO substitute through
 
   double const r_mag = r.norm();
-  Vector3d const r_dir = r/r_mag;
+  Vector3d const r_dir = r/r_mag; // radial direction
 
   double const vr_mag = r_dir.dot(cart.vel);
   Vector3d const vr = r_dir * vr_mag; // radial velocity
@@ -242,7 +236,8 @@ inline void ephemerisHybridFromCartesian(
   // p is the 'semi-latus rectum' of the conic section
   // p = a * (1 - e * e)?
   // p = b * b / a for an ellipse
-  double const p = (h * h) / mu; // TODO why pow(x, 2) instead of x * x?
+  double const p = (h * h) / mu;
+  // TODO behaves very poorly when mu and p are near 0
   double const v0 = sqrt(mu/p); // TODO compute more accurately/efficiently? // TODO where did I suspect inaccuracy or efficiency here?
 
   Vector3d const ex = ((vt_mag - v0) * r_dir - vr_mag * t_dir) / v0;
@@ -324,7 +319,7 @@ inline void ephemerisCartesianFromJPL(
   // mean anomaly (outside corrections) is e.mean_longitude_rad - e.longitude_of_perihelion_rad
   // n is e.mean_longitude_rad_per_s - e.longitude_of_perihelion_rad_per_s?
 
-  // Ignoring the error corrections - could differentiate wrt time for more precision!
+  // Ignoring the error corrections - could differentiate those wrt time for more precision!
   double const a = semi_major_axis_meters;
   double const mean_longitude_rad_per_s = e.mean_longitude_deg_per_C * RAD_PER_DEG / (SECONDS_PER_DAY * DAYS_PER_CENTURY);
   double const longitude_of_perihelion_rad_per_s = e.longitude_of_perihelion_deg_per_C * RAD_PER_DEG / (SECONDS_PER_DAY * DAYS_PER_CENTURY);
@@ -358,16 +353,16 @@ inline void sampleOrbit(
     double const delta = .0001;
     double const HAX_RANGE = .9; // limit range to stay out of very large values
 
-    double range;
+    double range_rad;
     if (params.e < 1 - delta) { // ellipse
-        range = .5 * M_TAU;
+        range_rad = .5 * M_TAU;
     } else if (params.e < 1 + delta) { // parabola
-        range = .5 * M_TAU * HAX_RANGE;
+        range_rad = .5 * M_TAU * HAX_RANGE;
     } else { // hyperbola
-        range = acos(-1/params.e) * HAX_RANGE;
+        range_rad = acos(-1/params.e) * HAX_RANGE;
     }
-    double const mint = -range;
-    double const maxt = range;
+    double const mint = -range_rad;
+    double const maxt = range_rad;
 
 #if 0
     Vector3d const orbit_x(params.x_dir);
@@ -376,15 +371,25 @@ inline void sampleOrbit(
 #endif
 
     for (int i = 0; i < num_steps; ++i) {
-        double const ct = orLerp(mint, maxt, (double)i / num_steps);
-        double const cr = params.p / (1 + params.e * cos(ct));
-        double const x_len = cr * -cos(ct);
-        double const y_len = cr * -sin(ct);
+        double const true_anomaly = orLerp(mint, maxt, (double)i / num_steps);
+        double const radial_distance = params.p / (1 + params.e * cos(true_anomaly));
+        double const x_len = radial_distance * -cos(true_anomaly);
+        double const y_len = radial_distance * -sin(true_anomaly);
+
+        // Mean anomaly M = E - e sin(E) where E is the eccentric anomaly
+        // eccentric anomaly E = atan2(sE, cE)
+        // sE = sqrt(1 - e * e) * cos(true_anomaly)
+        // cE = e + cos(true_anomaly)
+
+        // mean motion n = sqrt(G * parent_body.mass / (a * a * a))
+        // semi-major axis a = p / (1 - e * e)
+
+        // time since current time = (mean anomaly - current mean anomaly) / mean motion
 
 #if 0 // Original version (correct implementation)
-        Vector3d const pos = (orbit_x * x_len) + (orbit_y * y_len) + orbit_pos;
+        Vector3d const pos = Vector3d(params.x_dir) * x_len + Vector3d(params.y_dir) * y_len + Vector3d(origin);
         o_posData[i] = orVec3(pos);
-#else // No vector version (correct implementation, faster...)
+#else // No vector version (correct implementation, much faster :/)
         o_posData[i][0] = (params.x_dir[0] * x_len) + (params.y_dir[0] * y_len) + origin[0];
         o_posData[i][1] = (params.x_dir[1] * x_len) + (params.y_dir[1] * y_len) + origin[1];
         o_posData[i][2] = (params.x_dir[2] * x_len) + (params.y_dir[2] * y_len) + origin[2];

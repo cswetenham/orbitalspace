@@ -498,8 +498,6 @@ void RenderSystem::renderSpheres() const
   }
 }
 
-// TODO extract orbit functions to orMath
-
 void RenderSystem::renderOrbits() const
 {
   PERFTIMER("RenderOrbits");
@@ -514,9 +512,10 @@ void RenderSystem::renderOrbits() const
 
     // TODO want to instead limit the range based on... some viewing area?
     // might be two visible segments, one from +ve and one from -ve theta, with
-    // different visible ranges. Could determine
-    // Could detemine what??
+    // different visible ranges.
+
     // TODO will want orbit segments with start and end (which might be -infty +infty)
+
     // TODO and want to take steps of fixed length/distance
 
     orVec3 posData[NUM_STEPS];

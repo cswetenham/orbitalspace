@@ -11,14 +11,20 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
   // Update Bodies
   for (int i = 0; i < (int)m_instancedBodies.size(); ++i) {
     int id = i + 1;
-    Body& moon = getBody(id);
+    Body& body = getBody(id);
 
-    PhysicsSystem::GravBody& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
-    orVec3 offset_pos = orVec3(Vector3d(body.m_pos) - Vector3d(_origin));
+    PhysicsSystem::GravBody& gravBody = m_physicsSystem.getGravBody(body.m_gravBodyId);
+    orVec3 offset_pos = orVec3(Vector3d(gravBody.m_pos) - Vector3d(_origin));
 
-    if (moon.m_orbitId && body.m_parentBodyId) {
-      RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(moon.m_orbitId);
-      UpdateOrbit(body, m_physicsSystem.getGravBody(body.m_parentBodyId), _origin, orbit);
+    if (body.m_orbitId && gravBody.m_parentBodyId) {
+      RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(body.m_orbitId);
+      PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.getGravBody(gravBody.m_parentBodyId);
+      UpdateOrbit(gravBody, parentGravBody, orbit.m_params);
+
+      // Origin of an orbit is the position of the parent body
+      // For all rendering objects we subtract the camera position to reduce error
+      // in the render pipeline
+      orbit.m_pos = orVec3(Vector3d(parentGravBody.m_pos) - Vector3d(_origin));
     }
 
 #if 0
@@ -29,13 +35,13 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
 #endif
 
     {
-      RenderSystem::Sphere& sphere = m_renderSystem.getSphere(moon.m_sphereId);
+      RenderSystem::Sphere& sphere = m_renderSystem.getSphere(body.m_sphereId);
       sphere.m_pos = offset_pos;
     }
 
-    if (moon.m_label3DId)
+    if (body.m_label3DId)
     {
-      RenderSystem::Label3D& label3d = m_renderSystem.getLabel3D(moon.m_label3DId);
+      RenderSystem::Label3D& label3d = m_renderSystem.getLabel3D(body.m_label3DId);
       label3d.m_pos = offset_pos;
     }
   }
@@ -49,7 +55,13 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
     orVec3 offset_pos = orVec3(Vector3d(body.m_pos) - Vector3d(_origin));
 
     RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
-    UpdateOrbit(body, m_physicsSystem.findSOIGravBody(body), _origin, orbit);
+    PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.findSOIGravBody(body);
+    UpdateOrbit(body, parentGravBody, orbit.m_params);
+
+    // Origin of an orbit is the position of the parent body
+    // For all rendering objects we subtract the camera position to reduce error
+    // in the render pipeline
+    orbit.m_pos = orVec3(Vector3d(parentGravBody.m_pos) - Vector3d(_origin));
 
 #if 0
     {
@@ -99,7 +111,7 @@ void EntitySystem::updateCamTargets(double const _dt, const orVec3 _origin)
   // TODO?
 }
 
-void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, Vector3d const& cam_pos, RenderSystem::Orbit& o_params)
+void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, orEphemerisHybrid& o_params)
 {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
@@ -113,10 +125,5 @@ void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::G
   cart.pos = bodyPos - parentPos;
   cart.vel = bodyVel - parentVel;
 
-  ephemerisHybridFromCartesian(cart, parentBody.m_mass, o_params.m_params);
-
-  // Origin of an orbit is the position of the parent body
-  // For all rendering objects we subtract the camera position to reduce error
-  // in the render pipeline
-  o_params.m_pos = orVec3(Vector3d(parentBody.m_pos) - cam_pos);
+  ephemerisHybridFromCartesian(cart, parentBody.m_mass, o_params);
 }

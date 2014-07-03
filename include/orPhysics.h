@@ -21,6 +21,7 @@ public:
   {
     ParticleBody() : Body(), m_userAcc() {}
     orVec3 m_userAcc;
+    orEphemerisHybrid m_osculatingOrbit;
   };
 
   DECLARE_SYSTEM_TYPE(ParticleBody, ParticleBodies);
@@ -32,7 +33,7 @@ public:
     double m_radius;
     double m_mass;
     orEphemerisJPL m_ephemeris; // constant
-    int m_parentBodyId; // TODO want to avoid this later.
+    int m_parentBodyId;
   };
 
   DECLARE_SYSTEM_TYPE(GravBody, GravBodies);
