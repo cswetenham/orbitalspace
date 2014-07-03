@@ -44,19 +44,38 @@ public:
     IntegrationMethod_Count
   };
 
-  void update(IntegrationMethod const integrationMethod, double const dt);
+  void update(IntegrationMethod const integrationMethod, double const t, double const dt);
   GravBody const& findSOIGravBody(ParticleBody const& body) const;
 
 private:
-  void CalcDxDt(int numParticles, int numGravBodies, Eigen::VectorXd const& mgravs, Eigen::Array3Xd const& x0, Eigen::Array3Xd& dxdt0);
-  template< class P, class OA >
-  void CalcAccel(int numParticles, int numGravBodies, P const& p, Eigen::VectorXd const& mgravs, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
-  template< class PP, class PG, class OA >
-  void CalcParticleAccel(int numParticles, PP const& pp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
-  template< class PP, class PG, class OA >
-  void CalcParticleGrav(int numParticles, PP const& pp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
-  template< class OA >
-  void CalcParticleUserAcc(int numParticles, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
-  template< class PG, class OA >
-  void CalcGravAccel(int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
+
+void CalcDxDt(
+  int numParticles,
+  double t,
+  Eigen::Array3Xd const& x0, // initial states (pos+vel)
+  Eigen::Array3Xd& dxdt0 // output, rate of change in state
+);
+
+template< class P, class OA >
+void CalcAccel(
+  double t,
+  int numParticles,
+  P const& p, // position for each body
+  OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a // output, accelerations
+);
+
+template< class PP, class OA >
+void CalcParticleAccel(
+  double t,
+  int numParticles,
+  PP const& pp, // position of particle bodies
+  OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a // output, accelerations
+);
+
+template< class PP, class OA >
+void CalcParticleGrav(double t, int numParticles, PP const& pp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
+
+template< class OA >
+void CalcParticleUserAcc(int numParticles, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
+
 }; // class PhysicsSystem

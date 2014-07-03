@@ -883,7 +883,7 @@ void orApp::UpdateState_Bodies(double const dt)
 
   playerShipBody.m_userAcc = userAcc;
 
-  m_physicsSystem.update(m_integrationMethod, dt);
+  m_physicsSystem.update(m_integrationMethod, m_simTime, dt);
 
   // TODO eaghghgh not clear where these should live
 #if 0

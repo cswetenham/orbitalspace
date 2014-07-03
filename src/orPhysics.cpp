@@ -57,48 +57,29 @@
 // start earlier than the command horizon
 
 
-void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const dt) {
+void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const t, double const dt) {
 
-  int numParticles = (int)numParticleBodies();
-  int numGravs = (int)numGravBodies();
-  int stateSize = numParticles + numGravs;
+  int const numParticles = (int)numParticleBodies();
+  int const numGravs = (int)numGravBodies();
+  int const stateSize = numParticles;
 
   // State:
   // numParticles * particle positions
-  // numGravs * grav body positions
   // numParticles * particle velocities
-  // numGravs * grav body velocities
   Eigen::Array3Xd x_0(3, 2*stateSize);
   Eigen::Array3Xd x_1;
 
   // Load world state into state array
 
-  int curId = 0;
-  for (int i = 0; i < numParticles; ++i, ++curId) {
+  int curIdx = 0;
+  for (int i = 0; i < numParticles; ++i, ++curIdx) {
     Body& body = m_instancedParticleBodies[i];
-    x_0.col(curId) = Vector3d(body.m_pos);
+    x_0.col(curIdx) = Vector3d(body.m_pos);
   }
 
-  for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_instancedGravBodies[i];
-    x_0.col(curId) = Vector3d(body.m_pos);
-  }
-
-  for (int i = 0; i < numParticles; ++i, ++curId) {
+  for (int i = 0; i < numParticles; ++i, ++curIdx) {
     Body& body = m_instancedParticleBodies[i];
-    x_0.col(curId) = Vector3d(body.m_vel);
-  }
-
-  for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_instancedGravBodies[i];
-    x_0.col(curId) = Vector3d(body.m_vel);
-  }
-
-  Eigen::VectorXd mgravs(numGravs);
-
-  for (int i = 0; i < numGravs; ++i, ++curId) {
-    GravBody& body = m_instancedGravBodies[i];
-    mgravs[i] = body.m_mass;
+    x_0.col(curIdx) = Vector3d(body.m_vel);
   }
 
   switch (integrationMethod) {
@@ -110,7 +91,7 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
       // Vector3d const v1 = v0 + a0 * dt;
 
       Eigen::Array3Xd dxdt_0(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime, */ x_0, dxdt_0);
+      CalcDxDt(t, numParticles, x_0, dxdt_0);
 
       x_1 = x_0 + dxdt_0 * dt;
 
@@ -130,14 +111,14 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
       // Vector3d const v1 = v0 + .5f * (a0 + at) * dt;
 
       Eigen::Array3Xd dxdt_0(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime, */ x_0, dxdt_0);
+      CalcDxDt(numParticles, t, x_0, dxdt_0);
 
       x_1 = x_0 + dxdt_0 * dt;
 
       Eigen::Array3Xd x_t = x_0 + dxdt_0 * dt;
 
       Eigen::Array3Xd dxdt_t(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime + dt, */ x_t, dxdt_t);
+      CalcDxDt(numParticles, t + dt, x_t, dxdt_t);
 
       x_1 = x_0 + .5 * (dxdt_0 + dxdt_t) * dt;
       break;
@@ -145,13 +126,13 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
     case IntegrationMethod_RK4: { // Stable up to around 65535x...
 
       Eigen::Array3Xd k_1(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime, */ x_0, k_1);
+      CalcDxDt(numParticles, t,           x_0,                 k_1);
       Eigen::Array3Xd k_2(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime + .5 * dt, */ x_0 + k_1 * .5 * dt, k_2);
+      CalcDxDt(numParticles, t + .5 * dt, x_0 + k_1 * .5 * dt, k_2);
       Eigen::Array3Xd k_3(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime + .5 * dt, */ x_0 + k_2 * .5 * dt, k_3);
+      CalcDxDt(numParticles, t + .5 * dt, x_0 + k_2 * .5 * dt, k_3);
       Eigen::Array3Xd k_4(3, 2*stateSize);
-      CalcDxDt(numParticles, numGravs, mgravs, /* m_simTime + dt, */ x_0 + k_3 * dt, k_4);
+      CalcDxDt(numParticles, t + dt,      x_0 + k_3 * dt,      k_4);
 
       x_1 = x_0 + ((k_1 + 2.0 * k_2 + 2.0 * k_3 + k_4) / 6.0) * dt;
 
@@ -165,41 +146,21 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   // Store world state from array
 
-  curId = 0;
-  for (int i = 0; i < numParticles; ++i, ++curId) {
+  curIdx = 0;
+  for (int i = 0; i < numParticles; ++i, ++curIdx) {
     Body& body = m_instancedParticleBodies[i];
 
-    const double* const bodyPos = x_1.col(curId).data();
+    const double* const bodyPos = x_1.col(curIdx).data();
 
     body.m_pos[0] = bodyPos[0];
     body.m_pos[1] = bodyPos[1];
     body.m_pos[2] = bodyPos[2];
   }
 
-  for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_instancedGravBodies[i];
-
-    const double* const bodyPos = x_1.col(curId).data();
-
-    body.m_pos[0] = bodyPos[0];
-    body.m_pos[1] = bodyPos[1];
-    body.m_pos[2] = bodyPos[2];
-  }
-
-  for (int i = 0; i < numParticles; ++i, ++curId) {
+  for (int i = 0; i < numParticles; ++i, ++curIdx) {
     Body& body = m_instancedParticleBodies[i];
 
-    const double* const bodyVel = x_1.col(curId).data();
-
-    body.m_vel[0] = bodyVel[0];
-    body.m_vel[1] = bodyVel[1];
-    body.m_vel[2] = bodyVel[2];
-  }
-
-  for (int i = 0; i < numGravs; ++i, ++curId) {
-    Body& body = m_instancedGravBodies[i];
-
-    const double* const bodyVel = x_1.col(curId).data();
+    const double* const bodyVel = x_1.col(curIdx).data();
 
     body.m_vel[0] = bodyVel[0];
     body.m_vel[1] = bodyVel[1];
@@ -254,60 +215,64 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
 
 void PhysicsSystem::CalcDxDt(
   int numParticles,
-  int numGravBodies,
-  Eigen::VectorXd const& mgravs, // masses of GravBodies
+  double t,
   Eigen::Array3Xd const& x0, // initial states (pos+vel)
   Eigen::Array3Xd& dxdt0 // output, rate of change in state
 ) {
   // State: positions, velocities
   // DStateDt: velocities, accelerations
-  dxdt0.block(0, 0, 3, numParticles + numGravBodies) = x0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies);
-  CalcAccel(numParticles, numGravBodies, x0.block(0, 0, 3, numParticles + numGravBodies), mgravs, dxdt0.block(0, numParticles + numGravBodies, 3, numParticles + numGravBodies));
+  dxdt0.block(0, 0, 3, numParticles) = x0.block(0, numParticles, 3, numParticles);
+  CalcAccel(t, numParticles, x0.block(0, 0, 3, numParticles), dxdt0.block(0, numParticles, 3, numParticles));
 }
 
 template< class P, class OA >
 void PhysicsSystem::CalcAccel(
+  double t,
   int numParticles,
-  int numGravBodies,
   P const& p, // position for each body
-  Eigen::VectorXd const& mgravs,
   OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a // output, accelerations
 )
 {
-  CalcParticleAccel(numParticles, p.block(0, 0, 3, numParticles), numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, 0, 3, numParticles));
-  CalcGravAccel(numGravBodies, p.block(0, numParticles, 3, numGravBodies), mgravs, o_a.block(0, numParticles, 3, numGravBodies));
+  CalcParticleAccel(t, numParticles, p.block(0, 0, 3, numParticles), o_a.block(0, 0, 3, numParticles));
 }
 
-template< class PP, class PG, class OA >
+template< class PP, class OA >
 void PhysicsSystem::CalcParticleAccel(
+  double t,
   int numParticles,
   PP const& pp, // position of particle bodies
-  int numGravBodies,
-  PG const& pg, // position of grav bodies
-  Eigen::VectorXd const& mg,
   OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a // output, accelerations
 )
 {
-  CalcParticleGrav(numParticles, pp, numGravBodies, pg, mg, o_a);
+  CalcParticleGrav(t, numParticles, pp, o_a);
   CalcParticleUserAcc(numParticles, o_a);
 }
 
 // Calculates acceleration on first body by second body
-template< class PP, class PG, class OA >
-void PhysicsSystem::CalcParticleGrav(int numParticles, PP const& pp, int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
+// TODO make this make sense again. Vectorise better?
+template< class PP, class OA >
+void PhysicsSystem::CalcParticleGrav(double t, int numParticles, PP const& pp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   double const G = GRAV_CONSTANT;
 
+  int numGravs = (int)numGravBodies();
+  std::vector<orEphemerisCartesian> gravCartesian;
+  gravCartesian.resize(numGravs);
+  for (int gi = 0; gi < numGravs; ++gi) {
+    int const gid = gi + 1;
+    ephemerisCartesianFromJPL(getGravBody(gid).m_ephemeris, t, gravCartesian[gi]);
+  }
+
   for (int pi = 0; pi < numParticles; ++pi) {
     Vector3d a(0.0, 0.0, 0.0);
-    for (int gi = 0; gi < numGravBodies; ++gi) {
-
-      double const M = mg[gi];
+    for (int gi = 0; gi < numGravs; ++gi) {
+      int const gid = gi + 1;
+      double const M = getGravBody(gid).m_mass;
 
       double const mu = M * G;
 
       // Calc acceleration due to gravity
-      Vector3d const r = (pg.col(gi) - pp.col(pi));
+      Vector3d const r = gravCartesian[gi].pos - Vector3d(pp.col(pi));
       double const r_mag = r.norm();
 
       Vector3d const r_dir = r / r_mag;
@@ -326,31 +291,6 @@ void PhysicsSystem::CalcParticleUserAcc(int numParticles, OA /* would be & but d
   for (int pi = 0; pi < numParticles; ++pi) {
     int pid = pi + 1;
     o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pid).m_userAcc.data);
-  }
-}
-
-template< class PG, class OA >
-void PhysicsSystem::CalcGravAccel(int numGravBodies, PG const& pg, Eigen::VectorXd const& mg, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
-{
-  double const G = GRAV_CONSTANT;
-
-  for (int g1i = 0; g1i < numGravBodies; ++g1i) {
-    for (int g2i = 0; g2i < numGravBodies; ++g2i) {
-      if (g1i == g2i) { continue; }
-
-      double const M = mg[g2i];
-
-      // Calc acceleration due to gravity
-      Vector3d const r = (pg.col(g2i) - pg.col(g1i));
-      double const r_mag = r.norm();
-
-      Vector3d const r_dir = r / r_mag;
-
-      double const a_mag = (M * G) / (r_mag * r_mag);
-      Vector3d const a_grav = a_mag * r_dir;
-
-      o_a.col(g1i) = a_grav;
-    }
   }
 }
 
