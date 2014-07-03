@@ -131,9 +131,9 @@ inline boost::posix_time::ptime posixTimeFromSimTime(float simTime) {
 
   // Astronomical Epoch: 1200 hours, 1 January 2000
   posix_time epoch(date(2000, Jan, 1), hours(12));
-  // Game start date: 1753 hours, Mar 15 2025 (Did I pick this for any reason?)
-  posix_time gameStart(date(2025, Mar, 15), hours(1753));
-  // Note: the (long) here limits us to ~68 years game time.
+  // Game start date: 1753 hours, Mar 15 1981 (Did I pick this for any reason?)
+  posix_time gameStart(date(1981, Mar, 15), hours(1753));
+  // TODO Note: the (long) here limits us to ~68 years game time.
   // Should be enough, otherwise just need to keep adding seconds to the
   // dateTime to match the simTime.
   posix_time curDateTime = gameStart + seconds((long)simTime);
@@ -267,6 +267,9 @@ inline void ephemerisHybridFromCartesian(
   o_params.y_dir = y_dir;
 }
 
+// TODO this is no good, posix time wraps after 2080 or so
+// Should store m_simTime as seconds since J2000
+// Would also need a way to display times far enough into the future without going through posix time
 inline void ephemerisCartesianFromJPL(
   orEphemerisJPL const& elements_t0,
   double sim_time,
