@@ -227,6 +227,10 @@ private:
   SDL_Window* m_window;
   SDL_GLContext m_gl_context;
 
+  int m_lastMouseX;
+  int m_lastMouseY;
+  int m_mousePointId;
+  int m_mouseLabelId;
   int m_savedMouseX;
   int m_savedMouseY;
   struct Music {}; // TODO replace with appropriate type

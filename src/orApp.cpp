@@ -193,18 +193,21 @@ void orApp::HandleInput()
 
   // Input handling
 
-  // TODO Relative mouse mode doesn't work right on linux;
+  // Relative mouse mode doesn't work right on linux;
   // implement manually with Grab and GetState
+  int x;
+  int y;
+  SDL_GetMouseState(&x, &y);
   if (m_hasFocus && m_inputMode == InputMode_RotateCamera) {
-    int x;
-    int y;
-    SDL_GetMouseState(&x, &y);
+
     SDL_WarpMouseInWindow(m_window, m_config.windowWidth / 2, m_config.windowHeight / 2);
     double const dx = (x - m_config.windowWidth / 2) * M_TAU / 300.0;
     m_camParams.theta = orWrap(m_camParams.theta + dx, 0.0, M_TAU);
     double const dy = (y - m_config.windowHeight / 2) * M_TAU / 300.0;
     m_camParams.phi = Util::Clamp(m_camParams.phi + dy, -.249 * M_TAU, .249 * M_TAU);
   }
+  m_lastMouseX = x;
+  m_lastMouseY = y;
 }
 
 // TODO cleanup
@@ -683,6 +686,12 @@ void orApp::InitState()
   }
   delete[] rnds;
 #endif
+
+  RenderSystem::Point& mousePoint = m_renderSystem.getPoint(m_mousePointId = m_renderSystem.makePoint());
+  mousePoint.m_col = orVec3(1.0, 0.0, 0.0);
+  RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId = m_renderSystem.makeLabel2D());
+  mouseLabel.m_col = orVec3(1.0, 0.0, 0.0);
+  mouseLabel.m_text = ":O";
 }
 
 
@@ -1123,10 +1132,8 @@ void orApp::RenderState()
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
   Eigen::Matrix4d const projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
-  // TODO for better accuracy, want to avoid using a camera matrix for the translation
-  // Instead, subtract the camera position from everything before passing it to the render system
-  // TODO check that the camera position is updated at the correct time in the frame
-  // before we use it to update the render positions!
+  // For better accuracy, want to avoid using a camera matrix for the translation
+  // Instead, we subtract the camera position from everything before passing it to the render system
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up = Vector3d::UnitZ();
@@ -1135,9 +1142,55 @@ void orApp::RenderState()
   // Used to translate a 3d position into a 2d framebuffer position
   Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
 
+  // Compute the mouse ray from the mouse position
+#if 1
+  {
+    Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
+    Eigen::Matrix4d inv = (screenMatrix * projMatrix * camMatrix).inverse();
+    // TODO Okay, this works for some reason. Is it the screen resolution vs framebuffer resolution?
+    // TODO Fix it by including the real transform between screen and framebuffer coords
+    orVec2 hackMousePos(m_lastMouseX, m_lastMouseY/2.0);
+    Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(hackMousePos[0], hackMousePos[1], -0.5, 1.0);
+    Eigen::Vector3d mouseRay = /*camPos + */Eigen::Vector3d(mouseRay4.x()/mouseRay4.w(), mouseRay4.y()/mouseRay4.w(), mouseRay4.z()/mouseRay4.w());
+    m_renderSystem.getLabel2D(m_mouseLabelId).m_pos = hackMousePos;
+    // TODO player orbit, find (true anomaly, pos) for closest pos to mouse ray
+    EntitySystem::Ship const& playerShip = m_entitySystem.getShip(m_playerShipId);
+    PhysicsSystem::ParticleBody const& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId);
+    orEphemerisHybrid const& orbitParams = playerBody.m_osculatingOrbit;
+    // TODO subdivide based on some threshold
+    enum { NUM_STEPS = 1000 };
+    orVec3 posData[NUM_STEPS];
+    double trueAnomalyData[NUM_STEPS];
+    orVec3 origin = playerBody.m_soiParentPos;
+    // TODO only sample future
+    sampleOrbit(orbitParams, origin, NUM_STEPS, posData, trueAnomalyData);
+    int closest_idx = -1;
+    double closest_dist = DBL_MAX;
+    for (int i = 0; i < NUM_STEPS; ++i) {
+      Eigen::Vector3d mouseOrigin = camPos;
+      Eigen::Vector3d mouseUnit = mouseRay.normalized();
+
+      // double = mouseUnit.dot(Eigen::Vector3d(posData[i]) - mouseOrigin);
+      // ray.origin + ray.direction * Vector3.Dot(ray.direction, point - ray.origin)
+      Eigen::Vector3d point(posData[i]);
+      double dist = mouseUnit.cross(point - mouseOrigin).norm();
+      if (dist < closest_dist) {
+        closest_idx = i;
+        closest_dist = dist;
+      }
+    }
+    assert(closest_idx != -1);
+    m_renderSystem.getPoint(m_mousePointId).m_pos = orVec3(Eigen::Vector3d(posData[closest_idx]) - camPos);
+  }
+#endif
+
   RenderSystem::Colour clearCol = m_colG[0];
 
   m_renderSystem.render(m_frameBuffer, clearCol, minZ, screenMatrix, projMatrix, camMatrix);
+
+  glColor3d(1.0, 1.0, 1.0); // TODO ??? this colour seems to affect the colour
+  // of everything else afterwards. Setting it to white makes everything look
+  // fine except the planets which come out white.
 
   {
     PERFTIMER("PostEffect");

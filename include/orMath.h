@@ -346,9 +346,10 @@ inline void ephemerisCartesianFromJPL(
 
 inline void sampleOrbit(
   orEphemerisHybrid const& params,
-  orVec3 const& origin,
+  orVec3 const& origin, // Added on to every position in result
   int const num_steps,
-  orVec3* const o_posData
+  orVec3* const o_posData,
+  double* const o_trueAnomalyData = NULL
 ) {
     double const delta = .0001;
     double const HAX_RANGE = .9; // limit range to stay out of very large values
@@ -394,6 +395,9 @@ inline void sampleOrbit(
         o_posData[i][1] = (params.x_dir[1] * x_len) + (params.y_dir[1] * y_len) + origin[1];
         o_posData[i][2] = (params.x_dir[2] * x_len) + (params.y_dir[2] * y_len) + origin[2];
 #endif
+        if (o_trueAnomalyData) {
+          o_trueAnomalyData[i] = true_anomaly;
+        }
     }
 }
 

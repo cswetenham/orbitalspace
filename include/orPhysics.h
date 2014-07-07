@@ -21,6 +21,9 @@ public:
   {
     ParticleBody() : Body(), m_userAcc() {}
     orVec3 m_userAcc;
+
+    // Computed each frame
+    orVec3 m_soiParentPos;
     orEphemerisHybrid m_osculatingOrbit;
   };
 

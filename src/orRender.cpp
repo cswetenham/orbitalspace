@@ -332,7 +332,7 @@ void RenderSystem::renderPoints() const
 
     glColor3d(point.m_col[0], point.m_col[1], point.m_col[2]);
 
-    glPointSize(3.0);
+    glPointSize(8.0);
     glBegin(GL_POINTS);
     glVertex3d(point.m_pos[0], point.m_pos[1], point.m_pos[2]);
     glEnd();

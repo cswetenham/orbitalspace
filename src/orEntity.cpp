@@ -51,17 +51,21 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
     int id = i + 1;
     Ship& ship = getShip(id);
 
+    // TODO more of this should be in PhysicsSystem
+
     PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
     orVec3 offset_pos = orVec3(Vector3d(body.m_pos) - Vector3d(_origin));
 
     RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
     PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.findSOIGravBody(body);
-    UpdateOrbit(body, parentGravBody, orbit.m_params);
+    UpdateOrbit(body, parentGravBody, body.m_osculatingOrbit);
+    body.m_soiParentPos = parentGravBody.m_pos;
 
     // Origin of an orbit is the position of the parent body
     // For all rendering objects we subtract the camera position to reduce error
     // in the render pipeline
     orbit.m_pos = orVec3(Vector3d(parentGravBody.m_pos) - Vector3d(_origin));
+    orbit.m_params = body.m_osculatingOrbit;
 
 #if 0
     {
@@ -111,8 +115,11 @@ void EntitySystem::updateCamTargets(double const _dt, const orVec3 _origin)
   // TODO?
 }
 
-void EntitySystem::UpdateOrbit(PhysicsSystem::Body const& body, PhysicsSystem::GravBody const& parentBody, orEphemerisHybrid& o_params)
-{
+void EntitySystem::UpdateOrbit(
+  PhysicsSystem::Body const& body,
+  PhysicsSystem::GravBody const& parentBody,
+  orEphemerisHybrid& o_params
+) {
   // TODO will want to just forward-project instead, this is broken with >1 body
 
   Vector3d const bodyPos(body.m_pos);

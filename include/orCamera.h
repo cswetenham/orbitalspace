@@ -33,4 +33,5 @@ public:
   Eigen::Matrix4d calcScreenMatrix( int width, int height );
   Eigen::Matrix4d calcProjMatrix( int cameraId, int width, int height, double minZ, double maxZ, double aspect );
   Eigen::Matrix4d calcCameraMatrix( int cameraId, int targetId, Vector3d up  );
+  Eigen::Vector3d getMouseRay( int cameraId, int mouse_x, int mouse_y );
 }; // class CameraSystem
