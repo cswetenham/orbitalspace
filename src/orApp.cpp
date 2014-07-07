@@ -986,9 +986,16 @@ void orApp::UpdateState()
   double const dt = m_timeScale * Util::Min((double)Timer::PerfTimeToMillis(m_lastFrameDuration), 100.0) / 1000.0; // seconds
 
   if (!m_paused) {
-    UpdateState_Bodies(dt);
+    double const max_single_step = 400.0; // seconds
+    double remaining_dt = dt;
+    while (remaining_dt > max_single_step) {
+      remaining_dt -= max_single_step;
 
-    m_simTime += dt;
+      UpdateState_Bodies(max_single_step);
+      m_simTime += max_single_step;
+    }
+    UpdateState_Bodies(remaining_dt);
+    m_simTime += remaining_dt;
   }
 
   if (m_singleStep) {
