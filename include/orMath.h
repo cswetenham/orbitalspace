@@ -123,39 +123,41 @@ inline double computeEccentricAnomaly(
 
 } // namespace orMath
 
-
-inline boost::posix_time::ptime posixTimeFromSimTime(float simTime) {
-  using namespace boost::posix_time;
+inline boost::posix_time::ptime getGameStartDate() {
   using namespace boost::gregorian;
-  typedef boost::posix_time::ptime posix_time;
+  using namespace boost::posix_time;
+  // TODO will want a start date for each mission later
+  // Game start date: 1753 hours, Mar 15 1981
+  return boost::posix_time::ptime(date(1981, Mar, 15), hours(1753));
+}
 
+inline boost::posix_time::ptime getJ2000Epoch() {
+  using namespace boost::gregorian;
+  using namespace boost::posix_time;
   // Astronomical Epoch: 1200 hours, 1 January 2000
-  posix_time epoch(date(2000, Jan, 1), hours(12));
-  // Game start date: 1753 hours, Mar 15 1981 (Did I pick this for any reason?)
-  posix_time gameStart(date(1981, Mar, 15), hours(1753));
-  // TODO Note: the (long) here limits us to ~68 years game time.
-  // Should be enough, otherwise just need to keep adding seconds to the
-  // dateTime to match the simTime.
-  posix_time curDateTime = gameStart + seconds((long)simTime);
-  return curDateTime;
+  return boost::posix_time::ptime(date(2000, Jan, 1), hours(12));
+}
+
+inline boost::posix_time::ptime getPosixEpoch() {
+  using namespace boost::gregorian;
+  using namespace boost::posix_time;
+  return boost::posix_time::ptime(date(1970, Jan, 1), hours(0));
 }
 
 inline std::string calendarDateFromSimTime(float simTime) {
+  using namespace boost::gregorian;
   using namespace boost::posix_time;
-  return to_simple_string(posixTimeFromSimTime(simTime));
+  return to_simple_string(getGameStartDate() + seconds((long)simTime));
 }
 
-inline double julianDateFromPosixTime(
-  boost::posix_time::ptime const& ptime
+inline double julianDateFromSimTime(
+  double simTime
 ) {
-  using namespace boost::posix_time;
-  using namespace boost::gregorian;
-  typedef boost::posix_time::ptime posix_time;
   // wikipedia: posix_time = (julian_date - 2440587.5) * 86400
   // => (posix_time / 86400.0) + 2440587.5 = julian_date
-  posix_time posix_epoch(date(1970, Jan, 1), hours(0));
-  boost::posix_time::time_duration d = (ptime - posix_epoch);
-  double posix_time_s = (double)d.ticks() / (double)d.ticks_per_second();
+
+  boost::posix_time::time_duration d = getGameStartDate() - getPosixEpoch();
+  double posix_time_s = simTime + ((double)d.ticks() / (double)d.ticks_per_second());
   return (posix_time_s / SECONDS_PER_DAY) + 2440587.5;
 }
 
@@ -273,8 +275,7 @@ inline void ephemerisCartesianFromJPL(
   // Compute time in centuries since J2000
 
   // julian date in days
-  boost::posix_time::ptime ptime = posixTimeFromSimTime(sim_time);
-  double julian_date = julianDateFromPosixTime(ptime);
+  double julian_date = julianDateFromSimTime(sim_time);
   double t_C = (julian_date - 2451545.0) / DAYS_PER_CENTURY;
 
   // Update elements for ephemerides
