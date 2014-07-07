@@ -5,8 +5,10 @@ project (OrbitalSpace)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake/")
 
 set(CMAKE_BUILD_TYPE Debug)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -D_DEBUG")
+
+#set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 find_package(Threads REQUIRED)
 
