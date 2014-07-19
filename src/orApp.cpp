@@ -1159,7 +1159,7 @@ void orApp::RenderState()
     orVec2 hackMousePos(m_lastMouseX, m_lastMouseY/2.0);
     Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(hackMousePos[0], hackMousePos[1], -0.5, 1.0);
     Eigen::Vector3d mouseRay = /*camPos + */Eigen::Vector3d(mouseRay4.x()/mouseRay4.w(), mouseRay4.y()/mouseRay4.w(), mouseRay4.z()/mouseRay4.w());
-    m_renderSystem.getLabel2D(m_mouseLabelId).m_pos = hackMousePos;
+
     // TODO player orbit, find (true anomaly, pos) for closest pos to mouse ray
     EntitySystem::Ship const& playerShip = m_entitySystem.getShip(m_playerShipId);
     PhysicsSystem::ParticleBody const& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId);
@@ -1173,6 +1173,7 @@ void orApp::RenderState()
     sampleOrbit(orbitParams, origin, NUM_STEPS, posData, trueAnomalyData);
     int closest_idx = -1;
     double closest_dist = DBL_MAX;
+    double mouse_true_anomaly = DBL_MAX;
     for (int i = 0; i < NUM_STEPS; ++i) {
       Eigen::Vector3d mouseOrigin = camPos;
       Eigen::Vector3d mouseUnit = mouseRay.normalized();
@@ -1184,10 +1185,17 @@ void orApp::RenderState()
       if (dist < closest_dist) {
         closest_idx = i;
         closest_dist = dist;
+        mouse_true_anomaly = trueAnomalyData[i];
       }
     }
     assert(closest_idx != -1);
     m_renderSystem.getPoint(m_mousePointId).m_pos = orVec3(Eigen::Vector3d(posData[closest_idx]) - camPos);
+
+    RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId);
+    mouseLabel.m_pos = hackMousePos;
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%3.3f", mouse_true_anomaly);
+    mouseLabel.m_text = std::string(buf);
   }
 #endif
 
