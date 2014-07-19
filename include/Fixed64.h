@@ -4,6 +4,10 @@
 double const half_scale = (1ULL<<32);
 double const fractional_scale = half_scale * half_scale;
 
+// TODO look at celestia-1.6.1/src/celutil/bigfix.cpp - it's a fixed 64.64
+// implementation, unfortunately it's GPLv2 so I can't just use it but can
+// look at some of the ideas.
+
 class Fixed64
 {
 public:
@@ -64,6 +68,7 @@ public:
 
     // This is about as much as it simplifies
     uint64_t const carry = (frac_lhs & frac_rhs) | ((frac_lhs ^ frac_rhs) & ~frac_sum);
+    // TODO celestia bigfix does this: uint64_t const carry = frac_sum < frac_rhs;
 
     return Fixed64(int_sum + (carry >> 63), frac_sum);
   }

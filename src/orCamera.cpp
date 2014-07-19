@@ -2,6 +2,25 @@
 
 #include "orGfx.h"
 
+// TODO just an idea for rendering - instead of zooming out camera by moving it
+// far away, scale down the entire world? Scale it around camera target.
+// Third option is to modify FOV for a zooming effect.
+// Whatever the method, it would also be nice to automatically pick z near/far planes
+// based on what we send to the renderer - maybe track near (>0) / far (>0) for
+// each orbit for now? Later could include near/far for spheres too since they
+// can be much closer to the camera than their respective orbit.
+
+// Worked through the math and found that scaling the world around the camera has
+// no effect as long as the view frustum is scaled in the same way; if the view
+// frustum isn't scaled then it's equivalent to changing the FOV and z planes.
+
+// As for picking z planes, a better approach would be to follow the example of
+// the blog posts I found (saved in Reference/Orbital Space) and use a log(z)
+// buffer.
+
+// For reference there is also the open-source Celestia project, which renders
+// the solar system without issues and I've not yet looked into how.
+
 // Normalised Device Coordinates -> Screen Space Coordinates
 Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
 {
