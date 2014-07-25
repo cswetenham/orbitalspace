@@ -100,7 +100,7 @@ namespace orMath {
 // returns eccentric anomaly in radians
 // from http://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
 
-// "If this iteration formula won't converge, the eccentricity is probably too
+// "If this iteration formula won't converge, the eph.e is probably too
 // close to one. Then you should instead use the formulae for near-parabolic or
 // parabolic orbits."
 // http://astro.if.ufrgs.br/trigesf/position.html
@@ -378,16 +378,6 @@ inline void sampleOrbit(
         double const x_len = radial_distance * -cos(true_anomaly);
         double const y_len = radial_distance * -sin(true_anomaly);
 
-        // Mean anomaly M = E - e sin(E) where E is the eccentric anomaly
-        // eccentric anomaly E = atan2(sE, cE)
-        // sE = sqrt(1 - e * e) * cos(true_anomaly)
-        // cE = e + cos(true_anomaly)
-
-        // mean motion n = sqrt(G * parent_body.mass / (a * a * a))
-        // semi-major axis a = p / (1 - e * e)
-
-        // time since current time = (mean anomaly - current mean anomaly) / mean motion
-
 #if 0 // Original version (correct implementation)
         Vector3d const pos = Vector3d(params.x_dir) * x_len + Vector3d(params.y_dir) * y_len + Vector3d(origin);
         o_posData[i] = orVec3(pos);
@@ -400,6 +390,49 @@ inline void sampleOrbit(
           o_trueAnomalyData[i] = true_anomaly;
         }
     }
+}
+
+inline double getMeanAnomalyFromTrueAnomaly(orEphemerisHybrid const& eph, double true_anomaly)
+{
+  // e is the eph.e
+  double const sE = sqrt(1 - eph.e * eph.e) * sin(true_anomaly);
+  double const cE = eph.e + cos(true_anomaly);
+  // eccentric anomaly E
+  double const E = atan2(sE, cE);
+  // Mean anomaly M
+  double const M = E - eph.e * sin(E);
+
+  return M;
+}
+
+inline void getTimeFromTrueAnomaly(double parent_mass, orEphemerisHybrid const& eph, int count, double const* true_anomalies, double* times)
+{
+  double current_mean_anomaly = getMeanAnomalyFromTrueAnomaly(eph, eph.theta);
+
+  for (int i = 0; i < count; i++)
+  {
+    double const mean_anomaly = getMeanAnomalyFromTrueAnomaly(eph, true_anomalies[i]);
+    // semi-major axis a. // p is the 'semi-latus rectum', look up again
+    double const a = eph.p / (1 - eph.e * eph.e);
+    // mean motion n
+    double const mean_motion = sqrt(GRAV_CONSTANT * parent_mass / (a * a * a));
+
+    // time since current time = (mean anomaly - current mean anomaly) / mean motion
+    double const dt = (mean_anomaly - current_mean_anomaly) / mean_motion;
+
+    double const period = M_TAU / mean_motion;
+
+    // TODO -ve dt works but I don't know why
+    double dt_fixed = -dt;
+
+    // ellipse? show everything in future times
+    if (eph.e < 1 && dt_fixed < 0) {
+      dt_fixed += period;
+    }
+
+    times[i] = dt_fixed;
+    // testing times[i] = mean_anomaly;
+  }
 }
 
 #endif	/* ORMATH_H */

@@ -1168,12 +1168,16 @@ void orApp::RenderState()
     enum { NUM_STEPS = 1000 };
     orVec3 posData[NUM_STEPS];
     double trueAnomalyData[NUM_STEPS];
+    double times[NUM_STEPS];
     orVec3 origin = playerBody.m_soiParentPos;
     // TODO only sample future
     sampleOrbit(orbitParams, origin, NUM_STEPS, posData, trueAnomalyData);
+    PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.findSOIGravBody(playerBody);
+    getTimeFromTrueAnomaly(parentGravBody.m_mass, orbitParams, NUM_STEPS, trueAnomalyData, times);
     int closest_idx = -1;
     double closest_dist = DBL_MAX;
     double mouse_true_anomaly = DBL_MAX;
+    double mouse_time = DBL_MAX;
     for (int i = 0; i < NUM_STEPS; ++i) {
       Eigen::Vector3d mouseOrigin = camPos;
       Eigen::Vector3d mouseUnit = mouseRay.normalized();
@@ -1186,6 +1190,7 @@ void orApp::RenderState()
         closest_idx = i;
         closest_dist = dist;
         mouse_true_anomaly = trueAnomalyData[i];
+        mouse_time = times[i];
       }
     }
     assert(closest_idx != -1);
@@ -1193,8 +1198,11 @@ void orApp::RenderState()
 
     RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId);
     mouseLabel.m_pos = hackMousePos;
+    mouseLabel.m_pos[0] += 10.0;
+    mouseLabel.m_pos[1] += 10.0;
     char buf[128];
-    snprintf(buf, sizeof(buf), "%3.3f", mouse_true_anomaly);
+    snprintf(buf, sizeof(buf), "%3.3f", mouse_time);
+    //snprintf(buf, sizeof(buf), "%3.3f", mouse_true_anomaly);
     mouseLabel.m_text = std::string(buf);
   }
 #endif
