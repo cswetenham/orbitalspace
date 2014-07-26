@@ -394,15 +394,24 @@ inline void sampleOrbit(
 
 inline double getMeanAnomalyFromTrueAnomaly(orEphemerisHybrid const& eph, double true_anomaly)
 {
-  // e is the eph.e
-  double const sE = sqrt(1 - eph.e * eph.e) * sin(true_anomaly);
-  double const cE = eph.e + cos(true_anomaly);
-  // eccentric anomaly E
-  double const E = atan2(sE, cE);
-  // Mean anomaly M
-  double const M = E - eph.e * sin(E);
-
-  return M;
+  // TODO probably want better test with some thresholds, maybe special case for eph.e near 1
+  if (eph.e <= 1) {
+    double const sE = sqrt(1 - eph.e * eph.e) * sin(true_anomaly);
+    double const cE = eph.e + cos(true_anomaly);
+    // eccentric anomaly E
+    double const E = atan2(sE, cE);
+    // Mean anomaly M
+    double const M = E - eph.e * sin(E);
+    assert(!std::isnan(M));
+    return M;
+  } else {
+    // hyperbolic orbit
+    double const chE = (eph.e + cos(true_anomaly)) / (1 + eph.e * cos(true_anomaly));
+    double const E = (true_anomaly > 0) ? acosh(chE) : -acosh(chE); // cosh doesn't have unique inverse (cosh(-x) = -cosh(x)) so use sign of true anomaly to pick
+    double const M = eph.e * sinh(E) - E; // in which case M could be +M or -M
+    assert(!std::isnan(M));
+    return M;
+  }
 }
 
 inline void getTimeFromTrueAnomaly(double parent_mass, orEphemerisHybrid const& eph, int count, double const* true_anomalies, double* times)
@@ -413,7 +422,9 @@ inline void getTimeFromTrueAnomaly(double parent_mass, orEphemerisHybrid const& 
   {
     double const mean_anomaly = getMeanAnomalyFromTrueAnomaly(eph, true_anomalies[i]);
     // semi-major axis a. // p is the 'semi-latus rectum', look up again
-    double const a = eph.p / (1 - eph.e * eph.e);
+    // abs() is because a will be -ve for a hyperbolic orbit otherwise and causes a NaN for the mean motion;
+    // not sure if this is right though
+    double const a = abs(eph.p / (1 - eph.e * eph.e));
     // mean motion n
     double const mean_motion = sqrt(GRAV_CONSTANT * parent_mass / (a * a * a));
 
@@ -429,6 +440,8 @@ inline void getTimeFromTrueAnomaly(double parent_mass, orEphemerisHybrid const& 
     if (eph.e < 1 && dt_fixed < 0) {
       dt_fixed += period;
     }
+
+    assert(!std::isnan(dt_fixed));
 
     times[i] = dt_fixed;
     // testing times[i] = mean_anomaly;
