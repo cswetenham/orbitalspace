@@ -22,7 +22,7 @@
 // the solar system without issues and I've not yet looked into how.
 
 // Normalised Device Coordinates -> Screen Space Coordinates
-Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
+Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height) const
 {
   Eigen::Matrix4d screenMatrix;
   // NDC: -1 to 1
@@ -42,12 +42,12 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height)
 }
 
 // Camera Space Coordinates -> Normalised Device Coordinates
-Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, double minZ, double maxZ, double aspect)
+Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, double minZ, double maxZ, double aspect) const
 {
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
 
-  Camera& camera = getCamera( cameraId );
+  Camera const& camera = getCamera( cameraId );
   double const fov_y = camera.m_fov;
 
   double const heightZ = tan(0.5 * M_TAU * fov_y / 360.0);
@@ -65,12 +65,12 @@ Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height
 }
 
 // World Space Coordinates -> Camera Space Coordinates
-Eigen::Matrix4d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vector3d up )
+Eigen::Matrix4d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vector3d up ) const
 {
   // Camera matrix (GL_MODELVIEW)
 
-  Camera& camera = getCamera( cameraId );
-  Target& target = getTarget( targetId );
+  Camera const& camera = getCamera( cameraId );
+  Target const& target = getTarget( targetId );
 
   Vector3d const targetPos(target.m_pos);
   Vector3d const cameraPos(camera.m_pos);
