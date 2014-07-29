@@ -41,6 +41,11 @@ struct orVec2 {
 
   double&       operator[] (int i)       { return data[i]; }
   double const& operator[] (int i) const { return data[i]; }
+
+  operator Eigen::Vector2d() const {
+    return Eigen::Vector2d(data);
+  }
+
   double data[2];
 }; // struct orVec2
 
@@ -73,6 +78,23 @@ struct orVec3 {
 
   double data[3];
 }; // struct orVec3
+
+struct orRay3 {
+  orVec3 pos;
+  orVec3 dir;
+}; // struct orRay3
+
+inline double orRayPointDistance(orRay3 const& ray, orVec3 const& pt) {
+  Eigen::Vector3d point = pt;
+  Eigen::Vector3d rayPos = ray.pos;
+  Eigen::Vector3d rayDir = ray.dir;
+
+  double const dist = rayDir.cross(point - rayPos).norm();
+
+  return dist < 0 ? 0 : dist;
+}
+
+
 
 template <typename T, typename A>
 static T orLerp(T const _x0, T const _x1, A const _a) {
@@ -408,7 +430,7 @@ inline double getMeanAnomalyFromTrueAnomaly(orEphemerisHybrid const& eph, double
     // hyperbolic orbit
     double const chE = (eph.e + cos(true_anomaly)) / (1 + eph.e * cos(true_anomaly));
     double const E = (true_anomaly > 0) ? acosh(chE) : -acosh(chE); // cosh doesn't have unique inverse (cosh(-x) = -cosh(x)) so use sign of true anomaly to pick
-    double const M = eph.e * sinh(E) - E; // in which case M could be +M or -M
+    double const M = eph.e * sinh(E) - E;
     assert(!std::isnan(M));
     return M;
   }

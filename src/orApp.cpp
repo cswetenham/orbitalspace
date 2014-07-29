@@ -1154,11 +1154,16 @@ void orApp::RenderState()
   {
     Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
     Eigen::Matrix4d inv = (screenMatrix * projMatrix * camMatrix).inverse();
-    // TODO Okay, this works for some reason. Is it the screen resolution vs framebuffer resolution?
-    // TODO Fix it by including the real transform between screen and framebuffer coords
-    orVec2 hackMousePos(m_lastMouseX, m_lastMouseY/2.0);
-    Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(hackMousePos[0], hackMousePos[1], -0.5, 1.0);
-    Eigen::Vector3d mouseRay = /*camPos + */Eigen::Vector3d(mouseRay4.x()/mouseRay4.w(), mouseRay4.y()/mouseRay4.w(), mouseRay4.z()/mouseRay4.w());
+    orVec2 renderMousePos(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
+    Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
+
+    orRay3 mouseRay;
+    mouseRay.pos = camPos;
+    mouseRay.dir = Eigen::Vector3d(
+      mouseRay4.x()/mouseRay4.w(),
+      mouseRay4.y()/mouseRay4.w(),
+      mouseRay4.z()/mouseRay4.w()
+    ).normalized();
 
     // TODO player orbit, find (true anomaly, pos) for closest pos to mouse ray
     EntitySystem::Ship const& playerShip = m_entitySystem.getShip(m_playerShipId);
@@ -1179,13 +1184,8 @@ void orApp::RenderState()
     double mouse_true_anomaly = DBL_MAX;
     double mouse_time = DBL_MAX;
     for (int i = 0; i < NUM_STEPS; ++i) {
-      Eigen::Vector3d mouseOrigin = camPos;
-      Eigen::Vector3d mouseUnit = mouseRay.normalized();
+      double const dist = orRayPointDistance(mouseRay, posData[i]);
 
-      // double = mouseUnit.dot(Eigen::Vector3d(posData[i]) - mouseOrigin);
-      // ray.origin + ray.direction * Vector3.Dot(ray.direction, point - ray.origin)
-      Eigen::Vector3d point(posData[i]);
-      double dist = mouseUnit.cross(point - mouseOrigin).norm();
       if (dist < closest_dist) {
         closest_idx = i;
         closest_dist = dist;
@@ -1197,12 +1197,12 @@ void orApp::RenderState()
     m_renderSystem.getPoint(m_mousePointId).m_pos = orVec3(Eigen::Vector3d(posData[closest_idx]) - camPos);
 
     RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId);
-    mouseLabel.m_pos = hackMousePos;
+    // Offset label from cursor
+    mouseLabel.m_pos = renderMousePos;
     mouseLabel.m_pos[0] += 10.0;
     mouseLabel.m_pos[1] += 10.0;
     char buf[128];
     snprintf(buf, sizeof(buf), "%3.3f", mouse_time);
-    //snprintf(buf, sizeof(buf), "%3.3f", mouse_true_anomaly);
     mouseLabel.m_text = std::string(buf);
   }
 #endif
