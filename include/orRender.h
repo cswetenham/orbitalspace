@@ -112,7 +112,7 @@ public:
   DECLARE_SYSTEM_TYPE(Trail, Trails);
 #endif
 
-  void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
+  void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenFromWorld); // TODO not the best params...
   void render3D();
 
   void render(FrameBuffer const& frameBuffer, Colour clearCol, float clearDepth, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
@@ -127,7 +127,7 @@ private:
 
   void drawString(std::string const& str, int pos_x, int pos_y);
 
-  void projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx);
+  void projectLabel3Ds(Eigen::Matrix4d const& screenFromWorld);
 
   void renderPoints() const;
   void renderLabels( int w_px, int h_px );

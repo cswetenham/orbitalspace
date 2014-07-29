@@ -341,7 +341,7 @@ void RenderSystem::renderPoints() const
 }
 
 // TODO these are still unstable
-void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
+void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenFromWorld)
 {
   PERFTIMER("ProjectLabel3Ds");
   for (int li = 0; li < (int)m_instancedLabel3Ds.size(); ++li) {
@@ -354,7 +354,7 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenMtx, Eigen::Matr
     pos3d.z() = label3D.m_pos[2];
     pos3d.w() = 1.0;
 
-    Vector4d pos2d = screenMtx * projMtx * camMtx * pos3d;
+    Vector4d pos2d = screenFromWorld * pos3d;
 
     pos2d /= pos2d.w();
 
@@ -578,9 +578,9 @@ void RenderSystem::renderTrails() const
 }
 #endif
 
-void RenderSystem::render2D(int w_px, int h_px, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx)
+void RenderSystem::render2D(int w_px, int h_px, Eigen::Matrix4d const& screenFromWorld)
 {
-  projectLabel3Ds(screenMtx, projMtx, camMtx);
+  projectLabel3Ds(screenFromWorld);
   renderLabels(w_px, h_px);
 }
 
@@ -711,7 +711,8 @@ void RenderSystem::render(
 
   {
     PERFTIMER("Render2D");
-    render2D(frameBuffer.width, frameBuffer.height, screenFromProj, projFromCam, camFromWorld);
+    Eigen::Matrix4d screenFromWorld = screenFromProj * projFromCam * camFromWorld;
+    render2D(frameBuffer.width, frameBuffer.height, screenFromWorld);
   }
 }
 
