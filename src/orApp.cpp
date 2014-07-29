@@ -1137,23 +1137,23 @@ void orApp::RenderState()
   double const maxZ = 1e13; // meters
 
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
-  Eigen::Matrix4d const projMatrix = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
+  Eigen::Matrix4d const projFromCam = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
   // For better accuracy, want to avoid using a camera matrix for the translation
   // Instead, we subtract the camera position from everything before passing it to the render system
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up = Vector3d::UnitZ();
-  Eigen::Matrix4d const camMatrix = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+  Eigen::Matrix4d const camFromWorld = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
 
   // Used to translate a 3d position into a 2d framebuffer position
-  Eigen::Matrix4d const screenMatrix = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
+  Eigen::Matrix4d const screenFromProj = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
 
   // Compute the mouse ray from the mouse position
 #if 1
   {
     Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
-    Eigen::Matrix4d inv = (screenMatrix * projMatrix * camMatrix).inverse();
+    Eigen::Matrix4d inv = (screenFromProj * projFromCam * camFromWorld).inverse();
     orVec2 renderMousePos(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
     Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
 
@@ -1209,7 +1209,7 @@ void orApp::RenderState()
 
   RenderSystem::Colour clearCol = m_colG[0];
 
-  m_renderSystem.render(m_frameBuffer, clearCol, minZ, screenMatrix, projMatrix, camMatrix);
+  m_renderSystem.render(m_frameBuffer, clearCol, maxZ, screenFromProj, projFromCam, camFromWorld);
 
   glColor3d(1.0, 1.0, 1.0); // TODO ??? this colour seems to affect the colour
   // of everything else afterwards. Setting it to white makes everything look
