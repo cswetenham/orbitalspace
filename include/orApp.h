@@ -101,6 +101,8 @@ private:
   );
 
   orVec2 getRenderMousePos() const;
+  void calcRenderMatrices(
+  ) const;
 
 private:
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;

@@ -1132,9 +1132,14 @@ orVec2 orApp::getRenderMousePos() const {
   return orVec2(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
 }
 
+void orApp::calcRenderMatrices(
+) const {
+}
+
 void orApp::RenderState()
 {
   PERFTIMER("RenderState");
+  calcRenderMatrices();
 
   // Projection matrix (GL_PROJECTION)
   double const minZ = 1e6; // meters
