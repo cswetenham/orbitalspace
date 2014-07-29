@@ -100,6 +100,8 @@ private:
     int const parent_grav_body_id
   );
 
+  orVec2 getRenderMousePos() const;
+
 private:
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
 

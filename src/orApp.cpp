@@ -1128,6 +1128,10 @@ orEphemerisJPL orApp::s_jpl_elements_t0[] = {
   }
 };
 
+orVec2 orApp::getRenderMousePos() const {
+  return orVec2(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
+}
+
 void orApp::RenderState()
 {
   PERFTIMER("RenderState");
@@ -1154,7 +1158,7 @@ void orApp::RenderState()
   {
     Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
     Eigen::Matrix4d inv = (screenFromProj * projFromCam * camFromWorld).inverse();
-    orVec2 renderMousePos(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
+    orVec2 renderMousePos = getRenderMousePos();
     Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
 
     orRay3 mouseRay;
