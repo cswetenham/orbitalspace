@@ -1141,17 +1141,17 @@ void orApp::RenderState()
   double const maxZ = 1e13; // meters
 
   double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
-  Eigen::Matrix4d const projFromCam = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
+  Eigen::Matrix4d projFromCam = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
   // For better accuracy, want to avoid using a camera matrix for the translation
   // Instead, we subtract the camera position from everything before passing it to the render system
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up = Vector3d::UnitZ();
-  Eigen::Matrix4d const camFromWorld = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+  Eigen::Matrix4d camFromWorld = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
 
   // Used to translate a 3d position into a 2d framebuffer position
-  Eigen::Matrix4d const screenFromProj = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
+  Eigen::Matrix4d screenFromProj = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
 
   // Compute the mouse ray from the mouse position
 #if 1
