@@ -91,6 +91,7 @@ private:
   void RenderState();
 
 private:
+  // TODO change all methods to start with lowercase
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
   int spawnBody(
     std::string const& name,
@@ -100,12 +101,12 @@ private:
     int const parent_grav_body_id
   );
 
+  Eigen::Matrix4d calcScreenMatrix() const;
+  Eigen::Matrix4d calcProjMatrix() const;
+  Eigen::Matrix4d calcCamMatrix() const;
+
   orVec2 getRenderMousePos() const;
-
-  void calcRenderMatrices(
-    Eigen::Matrix4d& o_camFromWorld
-  ) const;
-
+  orRay3 getMouseRay() const;
 
 private:
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;

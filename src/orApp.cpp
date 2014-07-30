@@ -1128,54 +1128,76 @@ orEphemerisJPL orApp::s_jpl_elements_t0[] = {
   }
 };
 
-orVec2 orApp::getRenderMousePos() const {
-  return orVec2(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
+Eigen::Matrix4d orApp::calcScreenMatrix() const
+{
+  // Used to translate a 3d position into a 2d framebuffer position
+  return m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
 }
 
-void orApp::calcRenderMatrices(
-  Eigen::Matrix4d& o_camFromWorld
-) const {
+Eigen::Matrix4d orApp::calcProjMatrix() const
+{
+  double const minZ = 1e6; // meters
+  double const maxZ = 1e13; // meters
+
+  // window aspect is used to calculate the camera frustum (rather than render buffer aspect since we can have non-square pixels)
+  double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
+  // Projection matrix (GL_PROJECTION)
+  return m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
+}
+
+Eigen::Matrix4d orApp::calcCamMatrix() const
+{
   // For better accuracy, want to avoid using a camera matrix for the translation
   // Instead, we subtract the camera position from everything before passing it to the render system
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up = Vector3d::UnitZ();
-  o_camFromWorld = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+  return m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+}
+
+// mouse position in render coordinates
+orVec2 orApp::getRenderMousePos() const {
+  return orVec2(m_lastMouseX / (m_config.windowWidth / m_config.renderWidth), m_lastMouseY / (m_config.windowHeight / m_config.renderHeight));
+}
+
+orRay3 orApp::getMouseRay() const {
+  Eigen::Matrix4d screenFromProj = calcScreenMatrix();
+  Eigen::Matrix4d projFromCam = calcProjMatrix();
+  Eigen::Matrix4d camFromWorld = calcCamMatrix();
+
+  Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
+  Eigen::Matrix4d worldFromScreen = (screenFromProj * projFromCam * camFromWorld).inverse();
+  orVec2 renderMousePos = getRenderMousePos();
+  Eigen::Vector4d mouseRay4 = worldFromScreen * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
+
+  orRay3 mouseRay;
+  mouseRay.pos = camPos;
+  mouseRay.dir = Eigen::Vector3d(
+    mouseRay4.x()/mouseRay4.w(),
+    mouseRay4.y()/mouseRay4.w(),
+    mouseRay4.z()/mouseRay4.w()
+  ).normalized();
+
+  return mouseRay;
 }
 
 void orApp::RenderState()
 {
   PERFTIMER("RenderState");
 
-  Eigen::Matrix4d camFromWorld;
-  calcRenderMatrices(camFromWorld);
-
-  // Projection matrix (GL_PROJECTION)
+  // TODO remove duplicate constants
   double const minZ = 1e6; // meters
   double const maxZ = 1e13; // meters
 
-  // window aspect is used to calculate the camera frustum (rather than render buffer aspect since we can have non-square pixels)
-  double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
-  Eigen::Matrix4d projFromCam = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
-
-  // Used to translate a 3d position into a 2d framebuffer position
-  Eigen::Matrix4d screenFromProj = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
+  Eigen::Matrix4d screenFromProj = calcScreenMatrix();
+  Eigen::Matrix4d projFromCam = calcProjMatrix();
+  Eigen::Matrix4d camFromWorld = calcCamMatrix();
 
   // Compute the mouse ray from the mouse position
 #if 1
   {
+    orRay3 mouseRay = getMouseRay();
     Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
-    Eigen::Matrix4d worldFromScreen = (screenFromProj * projFromCam * camFromWorld).inverse();
-    orVec2 renderMousePos = getRenderMousePos();
-    Eigen::Vector4d mouseRay4 = worldFromScreen * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
-
-    orRay3 mouseRay;
-    mouseRay.pos = camPos;
-    mouseRay.dir = Eigen::Vector3d(
-      mouseRay4.x()/mouseRay4.w(),
-      mouseRay4.y()/mouseRay4.w(),
-      mouseRay4.z()/mouseRay4.w()
-    ).normalized();
 
     // TODO player orbit, find (true anomaly, pos) for closest pos to mouse ray
     EntitySystem::Ship const& playerShip = m_entitySystem.getShip(m_playerShipId);
@@ -1210,7 +1232,7 @@ void orApp::RenderState()
 
     RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId);
     // Offset label from cursor
-    mouseLabel.m_pos = renderMousePos;
+    mouseLabel.m_pos = getRenderMousePos();
     mouseLabel.m_pos[0] += 10.0;
     mouseLabel.m_pos[1] += 10.0;
     char buf[128];
