@@ -1133,27 +1133,30 @@ orVec2 orApp::getRenderMousePos() const {
 }
 
 void orApp::calcRenderMatrices(
+  Eigen::Matrix4d& o_camFromWorld
 ) const {
-}
-
-void orApp::RenderState()
-{
-  PERFTIMER("RenderState");
-  calcRenderMatrices();
-
-  // Projection matrix (GL_PROJECTION)
-  double const minZ = 1e6; // meters
-  double const maxZ = 1e13; // meters
-
-  double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
-  Eigen::Matrix4d projFromCam = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
-
   // For better accuracy, want to avoid using a camera matrix for the translation
   // Instead, we subtract the camera position from everything before passing it to the render system
 
   // Camera matrix (GL_MODELVIEW)
   Vector3d up = Vector3d::UnitZ();
-  Eigen::Matrix4d camFromWorld = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+  o_camFromWorld = m_cameraSystem.calcCameraMatrix(m_cameraId, m_cameraTargetId, up);
+}
+
+void orApp::RenderState()
+{
+  PERFTIMER("RenderState");
+
+  Eigen::Matrix4d camFromWorld;
+  calcRenderMatrices(camFromWorld);
+
+  // Projection matrix (GL_PROJECTION)
+  double const minZ = 1e6; // meters
+  double const maxZ = 1e13; // meters
+
+  // window aspect is used to calculate the camera frustum (rather than render buffer aspect since we can have non-square pixels)
+  double const aspect = m_config.windowWidth / (double)m_config.windowHeight;
+  Eigen::Matrix4d projFromCam = m_cameraSystem.calcProjMatrix(m_cameraId, m_config.renderWidth, m_config.renderHeight, minZ, maxZ, aspect);
 
   // Used to translate a 3d position into a 2d framebuffer position
   Eigen::Matrix4d screenFromProj = m_cameraSystem.calcScreenMatrix(m_config.renderWidth, m_config.renderHeight);
@@ -1162,9 +1165,9 @@ void orApp::RenderState()
 #if 1
   {
     Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
-    Eigen::Matrix4d inv = (screenFromProj * projFromCam * camFromWorld).inverse();
+    Eigen::Matrix4d worldFromScreen = (screenFromProj * projFromCam * camFromWorld).inverse();
     orVec2 renderMousePos = getRenderMousePos();
-    Eigen::Vector4d mouseRay4 = inv * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
+    Eigen::Vector4d mouseRay4 = worldFromScreen * Eigen::Vector4d(renderMousePos[0], renderMousePos[1], -0.5, 1.0);
 
     orRay3 mouseRay;
     mouseRay.pos = camPos;
