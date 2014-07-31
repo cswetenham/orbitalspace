@@ -1037,6 +1037,8 @@ void orApp::UpdateState()
 
   UpdateState_RenderObjects(dt);
 
+  updateOrbitHighlight(); // TODO refactor further
+
   // Update debug text
   {
     PERFTIMER("DebugText");
@@ -1181,6 +1183,53 @@ orRay3 orApp::getMouseRay() const {
   return mouseRay;
 }
 
+void orApp::updateOrbitHighlight()
+{
+  // Compute the mouse ray from the mouse position
+  orRay3 mouseRay = getMouseRay();
+  Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
+
+  // TODO player orbit, find (true anomaly, pos) for closest pos to mouse ray
+  EntitySystem::Ship const& playerShip = m_entitySystem.getShip(m_playerShipId);
+  PhysicsSystem::ParticleBody const& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId);
+  orEphemerisHybrid const& orbitParams = playerBody.m_osculatingOrbit;
+  // TODO subdivide based on some threshold
+  enum { NUM_STEPS = 1000 };
+  orVec3 posData[NUM_STEPS];
+  double trueAnomalyData[NUM_STEPS];
+  double times[NUM_STEPS];
+  orVec3 origin = playerBody.m_soiParentPos;
+  // TODO only sample future
+  sampleOrbit(orbitParams, origin, NUM_STEPS, posData, trueAnomalyData);
+  PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.findSOIGravBody(playerBody);
+  getTimeFromTrueAnomaly(parentGravBody.m_mass, orbitParams, NUM_STEPS, trueAnomalyData, times);
+  int closest_idx = -1;
+  double closest_dist = DBL_MAX;
+  double mouse_true_anomaly = DBL_MAX;
+  double mouse_time = DBL_MAX;
+  for (int i = 0; i < NUM_STEPS; ++i) {
+    double const dist = orRayPointDistance(mouseRay, posData[i]);
+
+    if (dist < closest_dist) {
+      closest_idx = i;
+      closest_dist = dist;
+      mouse_true_anomaly = trueAnomalyData[i];
+      mouse_time = times[i];
+    }
+  }
+  assert(closest_idx != -1);
+  m_renderSystem.getPoint(m_mousePointId).m_pos = orVec3(Eigen::Vector3d(posData[closest_idx]) - camPos);
+
+  RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId);
+  // Offset label from cursor
+  mouseLabel.m_pos = getRenderMousePos();
+  mouseLabel.m_pos[0] += 10.0;
+  mouseLabel.m_pos[1] += 10.0;
+  char buf[128];
+  snprintf(buf, sizeof(buf), "%3.3f", mouse_time);
+  mouseLabel.m_text = std::string(buf);
+}
+
 void orApp::RenderState()
 {
   PERFTIMER("RenderState");
@@ -1192,54 +1241,6 @@ void orApp::RenderState()
   Eigen::Matrix4d screenFromProj = calcScreenMatrix();
   Eigen::Matrix4d projFromCam = calcProjMatrix();
   Eigen::Matrix4d camFromWorld = calcCamMatrix();
-
-  // Compute the mouse ray from the mouse position
-#if 1
-  {
-    orRay3 mouseRay = getMouseRay();
-    Eigen::Vector3d camPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
-
-    // TODO player orbit, find (true anomaly, pos) for closest pos to mouse ray
-    EntitySystem::Ship const& playerShip = m_entitySystem.getShip(m_playerShipId);
-    PhysicsSystem::ParticleBody const& playerBody = m_physicsSystem.getParticleBody(playerShip.m_particleBodyId);
-    orEphemerisHybrid const& orbitParams = playerBody.m_osculatingOrbit;
-    // TODO subdivide based on some threshold
-    enum { NUM_STEPS = 1000 };
-    orVec3 posData[NUM_STEPS];
-    double trueAnomalyData[NUM_STEPS];
-    double times[NUM_STEPS];
-    orVec3 origin = playerBody.m_soiParentPos;
-    // TODO only sample future
-    sampleOrbit(orbitParams, origin, NUM_STEPS, posData, trueAnomalyData);
-    PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.findSOIGravBody(playerBody);
-    getTimeFromTrueAnomaly(parentGravBody.m_mass, orbitParams, NUM_STEPS, trueAnomalyData, times);
-    int closest_idx = -1;
-    double closest_dist = DBL_MAX;
-    double mouse_true_anomaly = DBL_MAX;
-    double mouse_time = DBL_MAX;
-    for (int i = 0; i < NUM_STEPS; ++i) {
-      double const dist = orRayPointDistance(mouseRay, posData[i]);
-
-      if (dist < closest_dist) {
-        closest_idx = i;
-        closest_dist = dist;
-        mouse_true_anomaly = trueAnomalyData[i];
-        mouse_time = times[i];
-      }
-    }
-    assert(closest_idx != -1);
-    m_renderSystem.getPoint(m_mousePointId).m_pos = orVec3(Eigen::Vector3d(posData[closest_idx]) - camPos);
-
-    RenderSystem::Label2D& mouseLabel = m_renderSystem.getLabel2D(m_mouseLabelId);
-    // Offset label from cursor
-    mouseLabel.m_pos = getRenderMousePos();
-    mouseLabel.m_pos[0] += 10.0;
-    mouseLabel.m_pos[1] += 10.0;
-    char buf[128];
-    snprintf(buf, sizeof(buf), "%3.3f", mouse_time);
-    mouseLabel.m_text = std::string(buf);
-  }
-#endif
 
   RenderSystem::Colour clearCol = m_colG[0];
 

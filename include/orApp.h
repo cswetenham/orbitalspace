@@ -108,6 +108,8 @@ private:
   orVec2 getRenderMousePos() const;
   orRay3 getMouseRay() const;
 
+  void updateOrbitHighlight();
+
 private:
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
 
