@@ -1246,6 +1246,19 @@ void orApp::RenderState()
 
   m_renderSystem.render(m_frameBuffer, clearCol, maxZ, screenFromProj, projFromCam, camFromWorld);
 
+  int pid = m_entitySystem.getShip(m_playerShipId).m_particleBodyId;
+  Eigen::Vector3d cameraPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
+  Eigen::Vector3d pos = m_physicsSystem.getParticleBody(pid).m_pos;
+  Eigen::Vector3d dir = m_physicsSystem.getParticleBody(pid).m_userAcc;
+  double scale = 1000000;
+  m_renderSystem.drawLine(pos - cameraPos, pos - cameraPos + scale * dir, Eigen::Vector3d(1.0, 1.0, 1.0));
+
+  {
+    PERFTIMER("Render2D");
+    Eigen::Matrix4d screenFromWorld = screenFromProj * projFromCam * camFromWorld;
+    m_renderSystem.render2D(m_frameBuffer.width, m_frameBuffer.height, screenFromWorld);
+  }
+
   glColor3d(1.0, 1.0, 1.0); // TODO ??? this colour seems to affect the colour
   // of everything else afterwards. Setting it to white makes everything look
   // fine except the planets which come out white.

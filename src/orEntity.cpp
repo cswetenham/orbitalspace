@@ -19,7 +19,7 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
     if (body.m_orbitId && gravBody.m_parentBodyId) {
       RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(body.m_orbitId);
       PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.getGravBody(gravBody.m_parentBodyId);
-      UpdateOrbit(gravBody, parentGravBody, orbit.m_params);
+      updateOrbit(gravBody, parentGravBody, orbit.m_params);
 
       // Origin of an orbit is the position of the parent body
       // For all rendering objects we subtract the camera position to reduce error
@@ -58,7 +58,7 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
 
     RenderSystem::Orbit& orbit = m_renderSystem.getOrbit(ship.m_orbitId);
     PhysicsSystem::GravBody const& parentGravBody = m_physicsSystem.findSOIGravBody(body);
-    UpdateOrbit(body, parentGravBody, body.m_osculatingOrbit);
+    updateOrbit(body, parentGravBody, body.m_osculatingOrbit);
     body.m_soiParentPos = parentGravBody.m_pos;
 
     // Origin of an orbit is the position of the parent body
@@ -115,7 +115,7 @@ void EntitySystem::updateCamTargets(double const _dt, const orVec3 _origin)
   // TODO?
 }
 
-void EntitySystem::UpdateOrbit(
+void EntitySystem::updateOrbit(
   PhysicsSystem::Body const& body,
   PhysicsSystem::GravBody const& parentBody,
   orEphemerisHybrid& o_params

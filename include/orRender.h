@@ -112,6 +112,7 @@ public:
   DECLARE_SYSTEM_TYPE(Trail, Trails);
 #endif
 
+  void drawLine(Vector3d const start, Vector3d const end, Vector3d const col) const;
   void render2D(int w_px, int h_px, Eigen::Matrix4d const& screenFromWorld); // TODO not the best params...
   void render3D();
 

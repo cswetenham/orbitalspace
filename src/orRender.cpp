@@ -296,7 +296,7 @@ void glVertex3d(Vector3d const pos)
   glVertex3d(pos.x(), pos.y(), pos.z());
 }
 
-void drawLine(Vector3d const start, Vector3d const end, Vector3d const col)
+void RenderSystem::drawLine(Vector3d const start, Vector3d const end, Vector3d const col) const
 {
   glBegin(GL_LINE_STRIP);
   enum { NUM_STEPS = 1 };
@@ -707,12 +707,6 @@ void RenderSystem::render(
   {
     PERFTIMER("Render3D");
     render3D();
-  }
-
-  {
-    PERFTIMER("Render2D");
-    Eigen::Matrix4d screenFromWorld = screenFromProj * projFromCam * camFromWorld;
-    render2D(frameBuffer.width, frameBuffer.height, screenFromWorld);
   }
 }
 
