@@ -446,7 +446,7 @@ inline void getTimeFromTrueAnomaly(double parent_mass, orEphemerisHybrid const& 
     // semi-major axis a. // p is the 'semi-latus rectum', look up again
     // abs() is because a will be -ve for a hyperbolic orbit otherwise and causes a NaN for the mean motion;
     // not sure if this is right though
-    double const a = abs(eph.p / (1 - eph.e * eph.e));
+    double const a = fabs(eph.p / (1 - eph.e * eph.e));
     // mean motion n
     double const mean_motion = sqrt(GRAV_CONSTANT * parent_mass / (a * a * a));
 

@@ -20,7 +20,9 @@ int CDECL main()
   appConfig.windowHeight = 2*400;
 
   appConfig.renderWidth = 2*640;
-  appConfig.renderHeight = 2*200;
+  appConfig.renderHeight = 2*400;
+  // appConfig.renderWidth = 160;
+  // appConfig.renderHeight = 144;
 
   orApp app(appConfig);
   app.Run();

@@ -853,8 +853,10 @@ void orApp::HandleEvent(SDL_Event const& _event)
 
 Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 {
-  Vector3d const origin(m_physicsSystem.findSOIGravBody(playerBody).m_pos);
+  PhysicsSystem::GravBody const& parentBody = m_physicsSystem.findSOIGravBody(playerBody);
+  Vector3d const origin(parentBody.m_pos);
   Vector3d const playerPos(playerBody.m_pos);
+  Vector3d const originVel(parentBody.m_vel);
   Vector3d const playerVel(playerBody.m_vel);
 
   // Calc acceleration due to gravity
@@ -868,14 +870,15 @@ Vector3d orApp::CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody)
 
   Vector3d thrustVec(0.0,0.0,0.0);
 
-  Vector3d const fwd = playerVel.normalized(); // Prograde
+  Vector3d const fwd = (playerVel - originVel).normalized(); // Prograde
   Vector3d const left = fwd.cross(r_dir); // name? (and is the order right?)
+  // Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
   Vector3d const dwn = left.cross(fwd); // name? (and is the order right?)
 
-  if (m_thrusters & ThrustFwd)  { thrustVec += fwd; }
-  if (m_thrusters & ThrustBack) { thrustVec -= fwd; }
+  if (m_thrusters & ThrustFwd)   { thrustVec += fwd; }
+  if (m_thrusters & ThrustBack)  { thrustVec -= fwd; }
   if (m_thrusters & ThrustDown)  { thrustVec += dwn; }
-  if (m_thrusters & ThrustUp) { thrustVec -= dwn; }
+  if (m_thrusters & ThrustUp)    { thrustVec -= dwn; }
   if (m_thrusters & ThrustLeft)  { thrustVec += left; }
   if (m_thrusters & ThrustRight) { thrustVec -= left; }
 

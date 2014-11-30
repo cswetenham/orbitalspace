@@ -22,6 +22,12 @@
               <df name="dummy">
                 <in>SDL_dummyaudio.c</in>
               </df>
+              <df name="esd">
+                <in>SDL_esdaudio.c</in>
+              </df>
+              <df name="nas">
+                <in>SDL_nasaudio.c</in>
+              </df>
               <df name="pulseaudio">
                 <in>SDL_pulseaudio.c</in>
               </df>
@@ -280,6 +286,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </item>
@@ -287,6 +295,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </item>
@@ -294,6 +304,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </item>
@@ -301,6 +313,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </item>
@@ -308,6 +322,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </item>
@@ -358,6 +374,16 @@
             flavor2="0">
       </item>
       <item path="3rdparty/SDL/src/audio/dummy/SDL_dummyaudio.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="3rdparty/SDL/src/audio/esd/SDL_esdaudio.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="3rdparty/SDL/src/audio/nas/SDL_nasaudio.c"
             ex="false"
             tool="0"
             flavor2="0">
@@ -865,14 +891,20 @@
           <preprocessorList>
             <Elem>HAVE_LINUX_VERSION_H</Elem>
             <Elem>USING_GENERATED_CONFIG_H</Elem>
+            <Elem>_OPTIMIZE__=1</Elem>
             <Elem>_REENTRANT</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/atomic">
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -880,6 +912,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -887,6 +921,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -894,6 +930,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -901,6 +939,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -908,6 +948,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -915,6 +957,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -922,6 +966,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -929,6 +975,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -936,6 +984,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -943,6 +993,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -950,6 +1002,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -957,6 +1011,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -964,6 +1020,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -971,6 +1029,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
@@ -978,6 +1038,8 @@
         <cTool>
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
+            <Elem>__PIC__=2</Elem>
+            <Elem>__pic__=2</Elem>
           </preprocessorList>
         </cTool>
       </folder>
