@@ -348,13 +348,13 @@ void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenFromWorld)
     int lid = li + 1;
     RenderSystem::Label3D const& label3D = getLabel3D(lid);
 
-    Vector4d pos3d;
+    Eigen::Vector4d pos3d;
     pos3d.x() = label3D.m_pos[0]; // is this really the best way?
     pos3d.y() = label3D.m_pos[1];
     pos3d.z() = label3D.m_pos[2];
     pos3d.w() = 1.0;
 
-    Vector4d pos2d = screenFromWorld * pos3d;
+    Eigen::Vector4d pos2d = screenFromWorld * pos3d;
 
     pos2d /= pos2d.w();
 

@@ -79,7 +79,7 @@ Eigen::Matrix4d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vect
   Vector3d camR = camF.cross(up).normalized();
   Vector3d camU = camF.cross(camR).normalized();
 
-  Matrix3d camRot;
+  Eigen::Matrix3d camRot;
   camRot.col(0) = camR;
   camRot.col(1) = -camU;
   camRot.col(2) = -camF;

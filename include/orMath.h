@@ -10,7 +10,8 @@
 
 # include <cmath>
 # include <Eigen/Eigen>
-EIGEN_USING_MATRIX_TYPEDEFS;
+
+using Eigen::Vector3d;
 
 // Boost
 
