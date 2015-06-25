@@ -319,17 +319,24 @@ void orApp::InitRender()
 #endif
   // TODO backbuffer settings as above?
 
+  // TODO
+  // See https://open.gl/context
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
   // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
   m_window = SDL_CreateWindow(
     "Orbital Space", 0, 0, m_config.windowWidth, m_config.windowHeight,
     SDL_WINDOW_OPENGL);
-
+  
   // Create an OpenGL context associated with the window.
   m_gl_context = SDL_GL_CreateContext(m_window);
 
   // TODO some part of the SDL init causes a spurious error.
   // Find it, and add a loop calling glGetError() until it returns 0...
 
+  glewExperimental = GL_TRUE;
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     /* Problem: glewInit failed, something is seriously wrong. */
