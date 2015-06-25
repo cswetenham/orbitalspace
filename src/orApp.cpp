@@ -111,6 +111,11 @@ void orApp::Init()
   // Show anything with priority of Info and above
   SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
 
+  // Init Eigen for multithreading... not clear what this actually does
+#if EIGEN_VERSION_AT_LEAST(3,1,0)
+  Eigen::initParallel();
+#endif
+
   InitState();
   InitRender();
 }
@@ -335,10 +340,11 @@ void orApp::InitRender()
 
   m_renderSystem.initRender();
 
-#ifdef WIN32 // TODO linux
-  sf::WindowHandle winHandle = m_window->getSystemHandle();
-  orPlatform::FocusWindow(winHandle);
+#ifdef WIN32 // TODO reimplement: set window focus
+  //sf::WindowHandle winHandle = m_window->getSystemHandle();
+  //orPlatform::FocusWindow(winHandle);
 #endif
+
   m_hasFocus = true;
 }
 

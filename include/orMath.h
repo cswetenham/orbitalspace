@@ -32,7 +32,7 @@ struct orVec2 {
     data[1] = y;
   }
 
-  orVec2(Eigen::Vector2d v) {
+  orVec2(Eigen::Vector2d const& v) {
     double const* vdata = v.data();
     for (int i = 0; i < 2; ++i) {
       data[i] = vdata[i];

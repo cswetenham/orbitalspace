@@ -61,6 +61,10 @@
 #endif
 
 #ifdef _MSC_VER
+  #define snprintf _snprintf
+#endif
+
+#ifdef _MSC_VER
 extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA( char const* lpOutputString );
 extern "C" __declspec(dllimport) int _vsnprintf( char *buffer, size_t count, const char *format, va_list argptr );
 inline void orDbgPrintf(char const* lpszFormat, ...)
