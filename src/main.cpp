@@ -4,7 +4,9 @@
 
 #include "Fixed64.h"
 
-int CDECL main()
+#include <memory>
+
+int main()
 {
   Timer::StaticInit();
 
@@ -24,8 +26,8 @@ int CDECL main()
   // appConfig.renderWidth = 160;
   // appConfig.renderHeight = 144;
 
-  orApp app(appConfig);
-  app.Run();
+  auto app = std::make_unique<orApp>(appConfig);
+  app->Run();
 
   return 0;
 }

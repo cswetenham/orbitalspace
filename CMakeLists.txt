@@ -5,7 +5,7 @@ project (OrbitalSpace)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake/")
 
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -fno-operator-names -std=c++1y -D_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -Wno-deprecated -fno-operator-names -std=c++1y -D_DEBUG")
 
 #set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
@@ -24,13 +24,13 @@ find_package(GLUT REQUIRED)
 
 # TODO? find_package(GLEW REQUIRED)
 
-# TODO? find_package(Eigen3 REQUIRED)
-
 # No include for Threads
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OpenGL_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_DIRS})
+
 # TODO what?? Fix plz
+# TODO? find_package(Eigen3 REQUIRED)
 include_directories("/usr/include/eigen3")
 include_directories("/usr/include/eigen3/unsupported")
 include_directories("./include")
@@ -52,10 +52,13 @@ add_executable(OrbitalSpace
   src/orProfile/perftimer.cpp
   src/timer.cpp
 )
-target_link_libraries(OrbitalSpace ${CMAKE_THREAD_LIBS_INIT}) # special case because pthread isn't always called pthread
-target_link_libraries(OrbitalSpace ${Boost_LIBRARIES})
-target_link_libraries(OrbitalSpace ${OpenGL_LIBRARIES})
-target_link_libraries(OrbitalSpace GLU)
-target_link_libraries(OrbitalSpace ${GLUT_LIBRARIES})
-target_link_libraries(OrbitalSpace GLEW) # TODO # TODO...what?
-target_link_libraries(OrbitalSpace SDL2)
+
+target_link_libraries(OrbitalSpace
+  ${CMAKE_THREAD_LIBS_INIT} # special case because pthread isn't always called pthread
+  ${Boost_LIBRARIES}
+  ${OpenGL_LIBRARIES}
+  GLU
+  ${GLUT_LIBRARIES}
+  GLEW
+  SDL2
+)
