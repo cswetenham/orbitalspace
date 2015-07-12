@@ -9,9 +9,8 @@
 void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
 {
   // Update Bodies
-  for (int i = 0; i < (int)m_instancedBodies.size(); ++i) {
-    int id = i + 1;
-    Body& body = getBody(id);
+  for (uint32_t i = 0; i < ::orbital::id_array::num_objects(m_instancedBodies); ++i) {
+    Body& body = ::orbital::id_array::objects(m_instancedBodies)[i];
 
     PhysicsSystem::GravBody& gravBody = m_physicsSystem.getGravBody(body.m_gravBodyId);
     orVec3 offset_pos = orVec3(Vector3d(gravBody.m_pos) - Vector3d(_origin));
@@ -47,9 +46,9 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
   }
 
   // Update ships
-  for (int i = 0; i < (int)m_instancedShips.size(); ++i) {
-    int id = i + 1;
-    Ship& ship = getShip(id);
+  // TODO put orEntity in orbital namespace and remove the ::orbital::
+  for (uint32_t i = 0; i < ::orbital::id_array::num_objects(m_instancedShips); ++i) {
+    Ship& ship = ::orbital::id_array::objects(m_instancedShips)[i];
 
     // TODO more of this should be in PhysicsSystem
 
@@ -88,9 +87,8 @@ void EntitySystem::updateRenderObjects(double const _dt, const orVec3 _origin)
 void EntitySystem::updateCamTargets(double const _dt, const orVec3 _origin)
 {
   // Update Bodies
-  for (int i = 0; i < (int)m_instancedBodies.size(); ++i) {
-    int id = i + 1;
-    Body& moon = getBody(id);
+  for (uint32_t i = 0; i < ::orbital::id_array::num_objects(m_instancedBodies); ++i) {
+    Body& moon = ::orbital::id_array::objects(m_instancedBodies)[i];
 
     PhysicsSystem::GravBody& body = m_physicsSystem.getGravBody(moon.m_gravBodyId);
     {
@@ -100,9 +98,8 @@ void EntitySystem::updateCamTargets(double const _dt, const orVec3 _origin)
   }
 
   // Update ships
-  for (int i = 0; i < (int)m_instancedShips.size(); ++i) {
-    int id = i + 1;
-    Ship& ship = getShip(id);
+  for (uint32_t i = 0; i < ::orbital::id_array::num_objects(m_instancedShips); ++i) {
+    Ship& ship = ::orbital::id_array::objects(m_instancedShips)[i];
 
     PhysicsSystem::ParticleBody& body = m_physicsSystem.getParticleBody(ship.m_particleBodyId);
     {

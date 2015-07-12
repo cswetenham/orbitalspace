@@ -60,7 +60,6 @@
 void PhysicsSystem::update(IntegrationMethod const integrationMethod, double const t, double const dt) {
 
   int const numParticles = (int)numParticleBodies();
-  int const numGravs = (int)numGravBodies();
   int const stateSize = numParticles;
 
   // State:
@@ -72,13 +71,13 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   // Load world state into state array
 
   int curIdx = 0;
-  for (int i = 0; i < numParticles; ++i, ++curIdx) {
-    Body& body = m_instancedParticleBodies[i];
+  for (uint32_t i = 0; i < orbital::id_array::num_objects(m_instancedParticleBodies); ++i, ++curIdx) {
+    Body& body = orbital::id_array::objects(m_instancedParticleBodies)[i];
     x_0.col(curIdx) = Vector3d(body.m_pos);
   }
 
-  for (int i = 0; i < numParticles; ++i, ++curIdx) {
-    Body& body = m_instancedParticleBodies[i];
+  for (uint32_t i = 0; i < orbital::id_array::num_objects(m_instancedParticleBodies); ++i, ++curIdx) {
+    Body& body = orbital::id_array::objects(m_instancedParticleBodies)[i];
     x_0.col(curIdx) = Vector3d(body.m_vel);
   }
 
@@ -147,8 +146,8 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
   // Store world state from array
 
   curIdx = 0;
-  for (int i = 0; i < numParticles; ++i, ++curIdx) {
-    Body& body = m_instancedParticleBodies[i];
+  for (uint32_t i = 0; i < orbital::id_array::num_objects(m_instancedParticleBodies); ++i, ++curIdx) {
+    Body& body = orbital::id_array::objects(m_instancedParticleBodies)[i];
 
     const double* const bodyPos = x_1.col(curIdx).data();
 
@@ -157,8 +156,8 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
     body.m_pos[2] = bodyPos[2];
   }
 
-  for (int i = 0; i < numParticles; ++i, ++curIdx) {
-    Body& body = m_instancedParticleBodies[i];
+  for (uint32_t i = 0; i < orbital::id_array::num_objects(m_instancedParticleBodies); ++i, ++curIdx) {
+    Body& body = orbital::id_array::objects(m_instancedParticleBodies)[i];
 
     const double* const bodyVel = x_1.col(curIdx).data();
 
@@ -169,15 +168,9 @@ void PhysicsSystem::update(IntegrationMethod const integrationMethod, double con
 
   // Update grav body state at end of timestep
   std::vector<orEphemerisCartesian> gravCartesian;
-  gravCartesian.resize(numGravs);
-  for (int gi = 0; gi < numGravs; ++gi) {
-    int const gid = gi + 1;
-    GravBody& gravBody = getGravBody(gid);
-    ephemerisCartesianFromJPL(gravBody.m_ephemeris, t+dt, gravCartesian[gi]);
-    if (gravBody.m_parentBodyId != 0) {
-      gravCartesian[gi].pos += gravCartesian[gravBody.m_parentBodyId-1].pos;
-      gravCartesian[gi].vel += gravCartesian[gravBody.m_parentBodyId-1].vel;
-    }
+  CalcGravEphemerisCartesian(t+dt, gravCartesian);
+  for (uint32_t gi = 0; gi < orbital::id_array::num_objects(m_instancedGravBodies); ++gi) {
+    GravBody& gravBody = orbital::id_array::objects(m_instancedGravBodies)[gi];
     gravBody.m_pos = orVec3(gravCartesian[gi].pos);
     gravBody.m_vel = orVec3(gravCartesian[gi].vel);
   }
@@ -192,16 +185,14 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
   Vector3d const bodyPos(_body.m_pos);
 
   double minDist = DBL_MAX;
-  int minDistId = 0;
+  int minDistIdx = 0;
 
-  for (int i = 0; i < numGravBodies(); ++i)
-  {
-    int const curId = i + 1;
-    GravBody const& soiBody = getGravBody(curId);
+  for (uint32_t gi = 0; gi < orbital::id_array::num_objects(m_instancedGravBodies); ++gi) {
+    GravBody const& soiBody = orbital::id_array::objects(m_instancedGravBodies)[gi];
     Vector3d const soiPos(soiBody.m_pos);
 
     double soi;
-    if (soiBody.m_parentBodyId == 0) {
+    if (!soiBody.m_parentBodyId) {
       // If body has no own parent, set infinite SOI
       soi = DBL_MAX;
     } else {
@@ -221,11 +212,11 @@ PhysicsSystem::GravBody const& PhysicsSystem::findSOIGravBody(ParticleBody const
 
     if (soiDistance < soi && soiDistance < minDist) {
       minDist = soiDistance;
-      minDistId = curId;
+      minDistIdx = gi;
     }
   }
-  ensure(minDistId > 0); // TODO return Id instead, -1 for none?
-  return getGravBody(minDistId);
+  ensure(minDistIdx > 0); // TODO return Id instead, -1 for none?
+  return orbital::id_array::objects(m_instancedGravBodies)[minDistIdx];
 }
 
 void PhysicsSystem::CalcDxDt(
@@ -269,26 +260,15 @@ template< class PP, class OA >
 void PhysicsSystem::CalcParticleGrav(double t, int numParticles, PP const& pp, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
   double const G = GRAV_CONSTANT;
-
-  // TODO pull out this code into its own function
-  int numGravs = (int)numGravBodies();
+  
   std::vector<orEphemerisCartesian> gravCartesian;
-  gravCartesian.resize(numGravs);
-  for (int gi = 0; gi < numGravs; ++gi) {
-    int const gid = gi + 1;
-    GravBody const& gravBody = getGravBody(gid);
-    ephemerisCartesianFromJPL(gravBody.m_ephemeris, t, gravCartesian[gi]);
-    if (gravBody.m_parentBodyId != 0) {
-      gravCartesian[gi].pos += gravCartesian[gravBody.m_parentBodyId-1].pos;
-      gravCartesian[gi].vel += gravCartesian[gravBody.m_parentBodyId-1].vel;
-    }
-  }
+  CalcGravEphemerisCartesian(t, gravCartesian);
 
-  for (int pi = 0; pi < numParticles; ++pi) {
+  for (uint32_t pi = 0; pi < orbital::id_array::num_objects(m_instancedParticleBodies); ++pi) {
     Vector3d a(0.0, 0.0, 0.0);
-    for (int gi = 0; gi < numGravs; ++gi) {
-      int const gid = gi + 1;
-      double const M = getGravBody(gid).m_mass;
+    for (uint32_t gi = 0; gi < orbital::id_array::num_objects(m_instancedGravBodies); ++gi) {
+      GravBody& gravBody = orbital::id_array::objects(m_instancedGravBodies)[gi];
+      double const M = gravBody.m_mass;
 
       double const mu = M * G;
 
@@ -308,10 +288,24 @@ void PhysicsSystem::CalcParticleGrav(double t, int numParticles, PP const& pp, O
 template< class OA >
 void PhysicsSystem::CalcParticleUserAcc(int numParticles, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a)
 {
-  // TODO need a better way of iterating over instances
-  for (int pi = 0; pi < numParticles; ++pi) {
-    int pid = pi + 1;
-    o_a.col(pi) += Eigen::Array<double, 3, 1>(getParticleBody(pid).m_userAcc.data);
+  for (uint32_t pi = 0; pi < orbital::id_array::num_objects(m_instancedParticleBodies); ++pi) {
+    o_a.col(pi) += Eigen::Array<double, 3, 1>(orbital::id_array::objects(m_instancedParticleBodies)[pi].m_userAcc.data);
   }
 }
 
+void PhysicsSystem::CalcGravEphemerisCartesian(double t, std::vector<orEphemerisCartesian>& out)
+{
+  out.resize(orbital::id_array::num_objects(m_instancedGravBodies));
+  for (uint32_t gi = 0; gi < orbital::id_array::num_objects(m_instancedGravBodies); ++gi) {
+    GravBody& gravBody = orbital::id_array::objects(m_instancedGravBodies)[gi];
+    ephemerisCartesianFromJPL(gravBody.m_ephemeris, t, out[gi]);
+    if (gravBody.m_parentBodyId) {
+      uint32_t pi = orbital::id_array::get_idx(m_instancedGravBodies, gravBody.m_parentBodyId);
+      // TODO this should be a proper hierarchy, we need to make sure the parent
+      // has been written first before we read it to add it
+      ensure(pi < gi);
+      out[gi].pos += out[pi].pos;
+      out[gi].vel += out[pi].vel;
+    }
+  }
+}

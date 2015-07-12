@@ -93,12 +93,12 @@ private:
 private:
   // TODO change all methods to start with lowercase
   Vector3d CalcPlayerThrust(PhysicsSystem::ParticleBody const& playerBody);
-  int spawnBody(
+  orbital::Id<EntitySystem::Body> spawnBody(
     std::string const& name,
     double const radius,
     double const mass,
     orEphemerisJPL const& ephemeris_jpl,
-    int const parent_grav_body_id
+    orbital::Id<PhysicsSystem::GravBody> const parent_grav_body_id
   );
 
   Eigen::Matrix4d calcScreenMatrix() const;
@@ -146,8 +146,8 @@ private:
   };
   CameraMode m_camMode;
 
-  int m_cameraId;
-  int m_cameraTargetId;
+  orbital::Id<CameraSystem::Camera> m_cameraId;
+  orbital::Id<CameraSystem::Target> m_cameraTargetId;
 
   struct OrbitalCamParams {
     OrbitalCamParams(double _dist) : dist(_dist), theta(0), phi(0) {}
@@ -164,8 +164,8 @@ private:
 
   RenderSystem m_renderSystem;
 
-  int m_uiTextTopLabel2DId;
-  int m_uiTextBottomLabel2DId;
+  orbital::Id<RenderSystem::Label2D> m_uiTextTopLabel2DId;
+  orbital::Id<RenderSystem::Label2D> m_uiTextBottomLabel2DId;
 
   enum {PALETTE_SIZE = 5};
 
@@ -191,22 +191,22 @@ private:
 
   EntitySystem m_entitySystem;
 
-  int m_playerShipId;
-  int m_suspectShipId;
+  orbital::Id<EntitySystem::Ship> m_playerShipId;
+  orbital::Id<EntitySystem::Ship> m_suspectShipId;
 
-  int m_sunBodyId;
+  orbital::Id<EntitySystem::Body> m_sunBodyId;
 
-  int m_earthBodyId;
-  int m_moonBodyId;
+  orbital::Id<EntitySystem::Body> m_earthBodyId;
+  orbital::Id<EntitySystem::Body> m_moonBodyId;
 
-  int m_mercuryBodyId;
-  int m_venusBodyId;
-  int m_marsBodyId;
-  int m_jupiterBodyId;
-  int m_saturnBodyId;
-  int m_neptuneBodyId;
-  int m_uranusBodyId;
-  int m_plutoBodyId;
+  orbital::Id<EntitySystem::Body> m_mercuryBodyId;
+  orbital::Id<EntitySystem::Body> m_venusBodyId;
+  orbital::Id<EntitySystem::Body> m_marsBodyId;
+  orbital::Id<EntitySystem::Body> m_jupiterBodyId;
+  orbital::Id<EntitySystem::Body> m_saturnBodyId;
+  orbital::Id<EntitySystem::Body> m_neptuneBodyId;
+  orbital::Id<EntitySystem::Body> m_uranusBodyId;
+  orbital::Id<EntitySystem::Body> m_plutoBodyId;
 
 #if 0
   int m_comPoiId;
@@ -239,8 +239,8 @@ private:
 
   int m_lastMouseX;
   int m_lastMouseY;
-  int m_mousePointId;
-  int m_mouseLabelId;
+  orbital::Id<RenderSystem::Point> m_mousePointId;
+  orbital::Id<RenderSystem::Label2D> m_mouseLabelId;
   int m_savedMouseX;
   int m_savedMouseY;
   struct Music {}; // TODO replace with appropriate type

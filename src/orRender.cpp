@@ -326,10 +326,7 @@ void RenderSystem::renderPoints() const
 {
   PERFTIMER("RenderPoints");
   glDisable(GL_LIGHTING);
-  for (int pi = 0; pi < (int)m_instancedPoints.size(); ++pi) {
-    int pid = pi + 1;
-    RenderSystem::Point const& point = getPoint(pid);
-
+  for (Point const& point : m_instancedPoints) {
     glColor3d(point.m_col[0], point.m_col[1], point.m_col[2]);
 
     glPointSize(8.0);
@@ -344,10 +341,8 @@ void RenderSystem::renderPoints() const
 void RenderSystem::projectLabel3Ds(Eigen::Matrix4d const& screenFromWorld)
 {
   PERFTIMER("ProjectLabel3Ds");
-  for (int li = 0; li < (int)m_instancedLabel3Ds.size(); ++li) {
-    int lid = li + 1;
-    RenderSystem::Label3D const& label3D = getLabel3D(lid);
-
+  
+  for (Label3D const& label3D : m_instancedLabel3Ds) {
     Eigen::Vector4d pos3d;
     pos3d.x() = label3D.m_pos[0]; // is this really the best way?
     pos3d.y() = label3D.m_pos[1];
@@ -397,15 +392,12 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   // thing_measure[_space]_unit?
 
-  for (int li = 0; li < (int)m_instancedLabel2Ds.size(); ++li) {
-    int lid = li + 1;
-    RenderSystem::Label2D const& label2D = getLabel2D(lid);
+  for (Label2D const& label2D : m_instancedLabel2Ds) {
     glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
 
-  for (int li = 0; li < (int)m_label2DBuffer.size(); ++li) {
-    RenderSystem::Label2D const& label2D = m_label2DBuffer[li];
+  for (Label2D const& label2D : m_label2DBuffer) {
     glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
     drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
   }
@@ -480,20 +472,14 @@ void RenderSystem::renderSpheres() const
   glEnable(GL_LIGHTING);
 
   PERFTIMER("RenderSpheres");
-  for (int si = 0; si < (int)m_instancedSpheres.size(); ++si) {
-    int sid = si + 1;
-    RenderSystem::Sphere const& sphere = getSphere(sid);
-
+  for (Sphere const& sphere : m_instancedSpheres) {
     glColor3d(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
 
     drawSolidSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
 
   glDisable(GL_LIGHTING);
-  for (int si = 0; si < (int)m_instancedSpheres.size(); ++si) {
-    int sid = si + 1;
-    RenderSystem::Sphere const& sphere = getSphere(sid);
-
+  for (Sphere const& sphere : m_instancedSpheres) {
     drawAxes(Vector3d(sphere.m_pos), 3 * sphere.m_radius);
   }
 }
@@ -502,10 +488,7 @@ void RenderSystem::renderOrbits() const
 {
   PERFTIMER("RenderOrbits");
   glDisable(GL_LIGHTING);
-  for (int oi = 0; oi < (int)m_instancedOrbits.size(); ++oi) {
-    int oid = oi + 1;
-    RenderSystem::Orbit const& orbit = getOrbit(oid);
-
+  for (Orbit const& orbit : m_instancedOrbits) {
     glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
 
     enum { NUM_STEPS = 10000 };

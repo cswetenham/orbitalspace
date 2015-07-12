@@ -86,7 +86,23 @@ public:
   };
 
   DECLARE_SYSTEM_TYPE(Orbit, Orbits);
-
+  
+  // TODO as an exercise, is there a nice way of doing this *without* callbacks?
+  /*
+  struct MenuEntry {
+    std::string m_text;
+    boost::function<void()> m_cb;
+  };
+  
+  struct Menu {
+    Menu() {}
+    
+    std::vector<MenuEntry> entries;
+    int m_focused_entry_idx;
+  };
+  
+  DECLARE_SYSTEM_TYPE(Menu, Menus);
+*/
 #if 0
   struct Trail
   {

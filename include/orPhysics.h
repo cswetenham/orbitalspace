@@ -31,12 +31,12 @@ public:
 
   struct GravBody : public Body
   {
-    GravBody() : Body(), m_radius(0), m_mass(0), m_parentBodyId(0) {}
+    GravBody() : Body(), m_radius(0), m_mass(0), m_parentBodyId() {}
 
     double m_radius;
     double m_mass;
     orEphemerisJPL m_ephemeris; // constant
-    int m_parentBodyId;
+    orbital::Id<GravBody> m_parentBodyId;
   };
 
   DECLARE_SYSTEM_TYPE(GravBody, GravBodies);
@@ -81,5 +81,7 @@ void CalcParticleGrav(double t, int numParticles, PP const& pp, OA /* would be &
 
 template< class OA >
 void CalcParticleUserAcc(int numParticles, OA /* would be & but doesn't work with temporary from Eigen's .block() */ o_a);
+
+void CalcGravEphemerisCartesian(double t, std::vector<orEphemerisCartesian>& out);
 
 }; // class PhysicsSystem

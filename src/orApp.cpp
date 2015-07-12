@@ -48,8 +48,8 @@ orApp::orApp(Config const& config):
 
   m_cameraSystem(),
   m_camMode(CameraMode_ThirdPerson),
-  m_cameraId(0),
-  m_cameraTargetId(0),
+  m_cameraId {},
+  m_cameraTargetId {},
   m_camParams(-3.1855e7),
 
   m_renderSystem(),
@@ -61,7 +61,7 @@ orApp::orApp(Config const& config):
   m_integrationMethod(PhysicsSystem::IntegrationMethod_RK4),
 
   m_entitySystem(m_cameraSystem, m_renderSystem, m_physicsSystem),
-  m_playerShipId(0),
+  m_playerShipId {},
 
   m_inputMode(InputMode_Default),
   m_thrusters(0),
@@ -355,12 +355,12 @@ void orApp::ShutdownRender()
   m_window = NULL;
 }
 
-int orApp::spawnBody(
+orbital::Id<EntitySystem::Body> orApp::spawnBody(
   std::string const& name,
   double const radius,
   double const mass,
   orEphemerisJPL const& ephemeris_jpl,
-  int const parent_grav_body_id
+  orbital::Id<PhysicsSystem::GravBody> const parent_grav_body_id
 )
 {
   orEphemerisCartesian ephemeris_cart;
@@ -382,7 +382,7 @@ int orApp::spawnBody(
   orVec3 pos(ephemeris_cart.pos + parent_pos);
   orVec3 vel(ephemeris_cart.vel + parent_vel);
 
-  int body_id;
+  orbital::Id<EntitySystem::Body> body_id;
   EntitySystem::Body& body = m_entitySystem.getBody(body_id = m_entitySystem.makeBody());
 
   {
@@ -477,7 +477,7 @@ void orApp::InitState()
   // Create Sun
   {
     orEphemerisJPL sun_ephemeris = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    m_sunBodyId = spawnBody("Sun", SUN_RADIUS, SUN_MASS, sun_ephemeris, 0);
+    m_sunBodyId = spawnBody("Sun", SUN_RADIUS, SUN_MASS, sun_ephemeris, orbital::Id<PhysicsSystem::GravBody>{});
   }
 
   // Set initial camera target to be the Sun
@@ -1249,7 +1249,7 @@ void orApp::RenderState()
 
   m_renderSystem.render(m_frameBuffer, clearCol, maxZ, screenFromProj, projFromCam, camFromWorld);
 
-  int pid = m_entitySystem.getShip(m_playerShipId).m_particleBodyId;
+  orbital::Id<PhysicsSystem::ParticleBody> pid = m_entitySystem.getShip(m_playerShipId).m_particleBodyId;
   Eigen::Vector3d cameraPos = m_cameraSystem.getCamera(m_cameraId).m_pos;
   Eigen::Vector3d pos = m_physicsSystem.getParticleBody(pid).m_pos;
   Eigen::Vector3d dir = m_physicsSystem.getParticleBody(pid).m_userAcc;

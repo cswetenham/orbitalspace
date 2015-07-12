@@ -57,7 +57,7 @@ struct Id {
     sparse_idx { sparse_idx_ }
   {}
 
-  inline constexpr operator bool() const noexcept { return sparse_idx != UINT16_MAX; }
+  inline constexpr explicit operator bool() const noexcept { return sparse_idx != UINT16_MAX; }
 
   uint16_t generation;
   uint16_t sparse_idx;
@@ -97,9 +97,25 @@ struct IdArray {
       _sparse_from_dense[i] = UINT16_MAX;
     }
   }
+
+  // TODO TEMP because I can't get the free function versions in id_array to be found
+    // TODO try putting them in orbital:: instead of orbital::id_array::
+  inline T* begin() {
+    return &_objects[0];
+  }
+  inline T const* begin() const {
+    return &_objects[0];
+  }
+  inline T* end() {
+    return &_objects[_num_objects];
+  }
+  inline T const* end() const {
+    return &_objects[_num_objects];
+  }
+  
 };
 
-namespace system_array {
+namespace id_array {
   
   template<typename T, uint32_t MAX_OBJECTS>
   inline auto num_objects(IdArray<T, MAX_OBJECTS> const& a) noexcept {
@@ -115,6 +131,27 @@ namespace system_array {
   inline auto objects(IdArray<T, MAX_OBJECTS> const& a) noexcept {
     return &a._objects[0];
   }
+ 
+  template<typename T, uint32_t MAX_OBJECTS>
+  inline T* begin(IdArray<T, MAX_OBJECTS>& a) {
+    return &a._objects[0];
+  }
+  
+  template<typename T, uint32_t MAX_OBJECTS>
+  inline T const* begin(IdArray<T, MAX_OBJECTS> const& a) {
+    return &a._objects[0];
+  }
+  
+  template<typename T, uint32_t MAX_OBJECTS>
+  inline T* end(IdArray<T, MAX_OBJECTS>& a) {
+    return &a._objects[a._num_objects];
+  }
+  
+  template<typename T, uint32_t MAX_OBJECTS>
+  inline T const* end(IdArray<T, MAX_OBJECTS> const& a) {
+    return &a._objects[a._num_objects];
+  }
+  
   
   template<typename T, uint32_t MAX_OBJECTS>
   inline bool has(IdArray<T, MAX_OBJECTS> const& a, Id<T> const id) {
@@ -127,7 +164,7 @@ namespace system_array {
   template<typename T, uint32_t MAX_OBJECTS>
   inline bool has(IdArray<T, MAX_OBJECTS> const& a, T const* const p) { // TODO think carefully about type of p - could be a const& for instance, but don't want to allow a temporary? Or does it not matter?
     return &a._objects[0] < p && p <= &a._objects[MAX_OBJECTS-1] // contained
-        && (static_cast<uintptr_t>(p) - static_cast<uintptr_t>(&a._objects[0])) % sizeof(T) == 0; // aligned
+        && (reinterpret_cast<uintptr_t>(p) - reinterpret_cast<uintptr_t>(&a._objects[0])) % sizeof(T) == 0; // aligned
   }
   
   template<typename T, uint32_t MAX_OBJECTS>
@@ -144,6 +181,14 @@ namespace system_array {
     ensure(has(a, id));
     auto& in = a._indices[id.sparse_idx];
 		return a._objects[in.dense_idx];
+	}
+  
+  template<typename T, uint32_t MAX_OBJECTS>
+  inline auto get_idx(IdArray<T, MAX_OBJECTS> const& a, Id<T> const id) {
+    ensure(id.sparse_idx < MAX_OBJECTS);
+    ensure(has(a, id));
+    auto& in = a._indices[id.sparse_idx];
+		return in.dense_idx;
 	}
   
   template<typename T, uint32_t MAX_OBJECTS>
@@ -218,6 +263,16 @@ namespace system_array {
 		a._indices[a._freelist_enqueue].next_free = sparse_idx;
 		a._freelist_enqueue = sparse_idx;
 	}
+  
+  // This is a simple way of iterating through all ids by dense_idx, not super efficient for a loop but handy for camera stuff for now.
+  // In future could store a list of camera ids / target ids in the cycle order we want.
+  template<typename T, uint32_t MAX_OBJECTS>
+  auto next_id(IdArray<T, MAX_OBJECTS> const& a, Id<T> id) {
+    ensure(has(a, id));
+    uint32_t dense_idx = get_idx(a, id);
+    uint32_t next_dense_idx = (dense_idx + 1) % num_objects(a);
+    return get_id(a, &objects(a)[next_dense_idx]);
+  }
 }
 
 } // namespace orbital
@@ -226,10 +281,11 @@ namespace system_array {
 // TODO can I express both const overloads in one in C++14?
 #define DECLARE_SYSTEM_TYPE(T_SINGULAR, T_PLURAL)\
 public:\
-  uint32_t num ## T_PLURAL () const { return ::orbital::system_array::num_objects( m_instanced ## T_PLURAL ); }\
-  auto make ## T_SINGULAR () { return ::orbital::system_array::add( m_instanced ## T_PLURAL ); }\
-  T_SINGULAR&       get ## T_SINGULAR ( ::orbital::Id<T_SINGULAR> id)       { return ::orbital::system_array::get_object( m_instanced ## T_PLURAL, id ); }\
-  T_SINGULAR const& get ## T_SINGULAR ( ::orbital::Id<T_SINGULAR> id) const { return ::orbital::system_array::get_object( m_instanced ## T_PLURAL, id ); }\
+  uint32_t num ## T_PLURAL () const { return ::orbital::id_array::num_objects( m_instanced ## T_PLURAL ); }\
+  auto make ## T_SINGULAR () { return ::orbital::id_array::add( m_instanced ## T_PLURAL ); }\
+  T_SINGULAR&       get ## T_SINGULAR ( ::orbital::Id<T_SINGULAR> id)       { return ::orbital::id_array::get_object( m_instanced ## T_PLURAL, id ); }\
+  T_SINGULAR const& get ## T_SINGULAR ( ::orbital::Id<T_SINGULAR> id) const { return ::orbital::id_array::get_object( m_instanced ## T_PLURAL, id ); }\
+  auto next ## T_SINGULAR ( ::orbital::Id< T_SINGULAR > id ) const { return ::orbital::id_array::next_id( m_instanced ## T_PLURAL, id ); }\
 private:\
   ::orbital::IdArray<T_SINGULAR> m_instanced ## T_PLURAL;\
 public:

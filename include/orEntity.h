@@ -3,7 +3,8 @@
 #include <vector>
 
 #include "orPhysics.h" // TODO don't like this dependency
-#include "orRender.h" // TODO don't like this dependency
+#include "orRender.h"
+#include "orCamera.h" // TODO don't like this dependency
 
 class CameraSystem;
 
@@ -21,12 +22,10 @@ public:
   }
 
   struct Ship {
-    Ship() : m_particleBodyId(0), m_pointId(0), m_trailId(0), m_orbitId(0), m_cameraTargetId(0) {}
-    int m_particleBodyId;
-    int m_pointId;
-    int m_trailId;
-    int m_orbitId;
-    int m_cameraTargetId;
+    orbital::Id<PhysicsSystem::ParticleBody> m_particleBodyId;
+    orbital::Id<RenderSystem::Point> m_pointId;
+    orbital::Id<RenderSystem::Orbit> m_orbitId;
+    orbital::Id<CameraSystem::Target> m_cameraTargetId;
   };
   DECLARE_SYSTEM_TYPE(Ship, Ships);
 
@@ -34,21 +33,19 @@ public:
 
   // TODO rename, collides with Physics::Body
   struct Body {
-    Body() : m_gravBodyId(0), m_sphereId(0), m_orbitId(0), m_trailId(0), m_cameraTargetId(0), m_label3DId(0) {}
-    int m_gravBodyId;
-    int m_sphereId;
-    int m_orbitId;
-    int m_trailId;
-    int m_cameraTargetId;
-    int m_label3DId;
+    orbital::Id<PhysicsSystem::GravBody> m_gravBodyId;
+    orbital::Id<RenderSystem::Sphere>  m_sphereId;
+    orbital::Id<RenderSystem::Orbit>   m_orbitId;
+    orbital::Id<CameraSystem::Target>  m_cameraTargetId;
+    orbital::Id<RenderSystem::Label3D> m_label3DId;
   };
+  
   DECLARE_SYSTEM_TYPE(Body, Bodies);
 
   // Point of interest; camera-targetable point.
   struct Poi {
-    Poi() : m_pointId(0), m_cameraTargetId(0) {}
-    int m_pointId;
-    int m_cameraTargetId;
+    orbital::Id<RenderSystem::Point> m_pointId;
+    orbital::Id<CameraSystem::Target> m_cameraTargetId;
   };
   DECLARE_SYSTEM_TYPE(Poi, Pois);
 

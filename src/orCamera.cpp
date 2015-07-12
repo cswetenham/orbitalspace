@@ -42,7 +42,7 @@ Eigen::Matrix4d CameraSystem::calcScreenMatrix(int width, int height) const
 }
 
 // Camera Space Coordinates -> Normalised Device Coordinates
-Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height, double minZ, double maxZ, double aspect) const
+Eigen::Matrix4d CameraSystem::calcProjMatrix(orbital::Id<Camera> cameraId, int width, int height, double minZ, double maxZ, double aspect) const
 {
   // Projection matrix (GL_PROJECTION)
   // Simplified for symmetric case
@@ -65,7 +65,7 @@ Eigen::Matrix4d CameraSystem::calcProjMatrix(int cameraId, int width, int height
 }
 
 // World Space Coordinates -> Camera Space Coordinates
-Eigen::Matrix4d CameraSystem::calcCameraMatrix( int cameraId, int targetId, Vector3d up ) const
+Eigen::Matrix4d CameraSystem::calcCameraMatrix( orbital::Id<Camera> cameraId, orbital::Id<Target> targetId, Vector3d up ) const
 {
   // Camera matrix (GL_MODELVIEW)
 
