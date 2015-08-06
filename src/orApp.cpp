@@ -201,9 +201,9 @@ void orApp::HandleInput()
   if (m_hasFocus && m_inputMode == InputMode_RotateCamera) {
 
     SDL_WarpMouseInWindow(m_window, m_config.windowWidth / 2, m_config.windowHeight / 2);
-    double const dx = (x - m_config.windowWidth / 2) * M_TAU / 300.0;
+    double const dx = (x - m_config.windowWidth / 2) * M_TAU / 2000.0;
     m_camParams.theta = orWrap(m_camParams.theta + dx, 0.0, M_TAU);
-    double const dy = (y - m_config.windowHeight / 2) * M_TAU / 300.0;
+    double const dy = (y - m_config.windowHeight / 2) * M_TAU / 2000.0;
     m_camParams.phi = Util::Clamp(m_camParams.phi + dy, -.249 * M_TAU, .249 * M_TAU);
   }
   m_lastMouseX = x;
