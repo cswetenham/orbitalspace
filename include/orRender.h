@@ -87,7 +87,34 @@ public:
 
   DECLARE_SYSTEM_TYPE(Orbit, Orbits);
   
+  // TODO move all code to old_style/ and new_style/ folders; new style is
+  // structs in headers, then headers/cpps for different operations on data,
+  // with everything namespaced, one folder per system.
+  
   // TODO as an exercise, is there a nice way of doing this *without* callbacks?
+  // NOTE yes:
+  
+  // Client code would allocate event ids from GUI system (we could instead allow an
+  // arbitrary uint32_t, but that would couple different systems using GUI since
+  // they would have to disambiguate IDs. Can always associate arbitrary data to
+  // an event on the user side.)
+  
+  // Client code would request association of event ids to certain events for
+  // certain UI elements:
+  // - selectable item selected
+  // - toggleable item toggled
+  // - slider item changed
+  // - text item edited
+  
+  // GUI system would produce an event stream each frame which could just be
+  // a stream of opaque IDs, perhaps with some associated value for toggles and
+  // sliders. Client code would parse stream for event ids it is interested in.
+  
+  // Something like hiding/showing nested menus could in theory be handled
+  // entirely by client code but it feels more like a concern of GUI code;
+  // client code just cares about actual user toggles etc.
+  
+   
   /*
   struct MenuEntry {
     std::string m_text;
@@ -102,7 +129,7 @@ public:
   };
   
   DECLARE_SYSTEM_TYPE(Menu, Menus);
-*/
+  */
 #if 0
   struct Trail
   {
