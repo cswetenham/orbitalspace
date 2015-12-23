@@ -4,9 +4,10 @@
 
 #include "Fixed64.h"
 
-#include <memory>
+#include "SDL_main.h"
 
-int main()
+extern "C"
+int main(int argc, char *argv[])
 {
   Timer::StaticInit();
 

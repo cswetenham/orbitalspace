@@ -111,6 +111,11 @@ void orApp::Init()
   // Show anything with priority of Info and above
   SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
 
+  // Init Eigen for multithreading... not clear what this actually does
+#if EIGEN_VERSION_AT_LEAST(3,1,0)
+  Eigen::initParallel();
+#endif
+
   InitState();
   InitRender();
 }
@@ -314,17 +319,24 @@ void orApp::InitRender()
 #endif
   // TODO backbuffer settings as above?
 
+  // TODO
+  // See https://open.gl/context
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
   // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
   m_window = SDL_CreateWindow(
     "Orbital Space", 0, 0, m_config.windowWidth, m_config.windowHeight,
     SDL_WINDOW_OPENGL);
-
+  
   // Create an OpenGL context associated with the window.
   m_gl_context = SDL_GL_CreateContext(m_window);
 
   // TODO some part of the SDL init causes a spurious error.
   // Find it, and add a loop calling glGetError() until it returns 0...
 
+  glewExperimental = GL_TRUE;
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     /* Problem: glewInit failed, something is seriously wrong. */
@@ -335,10 +347,11 @@ void orApp::InitRender()
 
   m_renderSystem.initRender();
 
-#ifdef WIN32 // TODO linux
-  sf::WindowHandle winHandle = m_window->getSystemHandle();
-  orPlatform::FocusWindow(winHandle);
+#ifdef WIN32 // TODO reimplement: set window focus
+  //sf::WindowHandle winHandle = m_window->getSystemHandle();
+  //orPlatform::FocusWindow(winHandle);
 #endif
+
   m_hasFocus = true;
 }
 

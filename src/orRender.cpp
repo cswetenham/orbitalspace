@@ -139,8 +139,8 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
   glPopMatrix();
 #else
   Vector3d const center(pos.x(), pos.y(), pos.z());
-  float const off_H = ( M_PI ) / float(stacks);
-  float const off_R = ( M_PI * 2.0 ) / float(slices);
+  float const off_H = ( M_TAU_F / 2.f ) / float(stacks);
+  float const off_R = ( M_TAU_F ) / float(slices);
 
   // draw the tips as tri_fans
   {
@@ -394,12 +394,12 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 
   for (Label2D const& label2D : m_instancedLabel2Ds) {
     glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
-    drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
+    drawString(label2D.m_text, (int)label2D.m_pos[0], (int)label2D.m_pos[1]);
   }
 
   for (Label2D const& label2D : m_label2DBuffer) {
     glColor3d(label2D.m_col[0], label2D.m_col[1], label2D.m_col[2]);
-    drawString(label2D.m_text, label2D.m_pos[0], label2D.m_pos[1]);
+    drawString(label2D.m_text, (int)label2D.m_pos[0], (int)label2D.m_pos[1]);
   }
 
   glEnd();
@@ -645,9 +645,9 @@ void RenderSystem::render(
 
     glEnable(GL_TEXTURE_2D);
 
-    GLfloat ambient[] = { 0.1, 0.1, 0.1, 1.0 };
-    GLfloat diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
-    // GLfloat specular[] = { 0.0, 0.0, 1.0, 1.0 };
+    GLfloat ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    // GLfloat specular[] = { 0.0f, 0.0f, 1.0f, 1.0f };
 
     // TODO NOTE XXX HACK this lights the orbits fine when the w is 0.0,
     // lights the sphere when the w is 1.0, but not the other way around.
