@@ -84,7 +84,7 @@ Eigen::Matrix4d CameraSystem::calcCameraMatrix( orbital::Id<Camera> cameraId, or
   camRot.col(1) = -camU;
   camRot.col(2) = -camF;
 
-  Eigen::Affine3d camT;
+  Eigen::Affine3d camT = Eigen::Affine3d::Identity();
   camT.linear() = camRot;
   // NOTE now we subtract the camera position from everything before sending it to the render system, instead
   // camT.translation() = cameraPos;

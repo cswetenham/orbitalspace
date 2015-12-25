@@ -35,7 +35,6 @@
 #   undef CALLBACK
 # endif
 
-
 # include <Eigen/OpenGLSupport>
 
 #endif	/* ORGFX_H */

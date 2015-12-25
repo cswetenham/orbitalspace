@@ -232,6 +232,14 @@
               <in>CMakeCXXCompilerId.cpp</in>
             </df>
           </df>
+          <df name="3.3.2">
+            <df name="CompilerIdC">
+              <in>CMakeCCompilerId.c</in>
+            </df>
+            <df name="CompilerIdCXX">
+              <in>CMakeCXXCompilerId.cpp</in>
+            </df>
+          </df>
           <in>feature_tests.c</in>
           <in>feature_tests.cxx</in>
         </df>
@@ -1132,9 +1140,19 @@
       <item path="build/CMakeFiles/3.2.2/CompilerIdC/CMakeCCompilerId.c"
             ex="false"
             tool="0"
-            flavor2="0">
+            flavor2="2">
       </item>
       <item path="build/CMakeFiles/3.2.2/CompilerIdCXX/CMakeCXXCompilerId.cpp"
+            ex="false"
+            tool="1"
+            flavor2="4">
+      </item>
+      <item path="build/CMakeFiles/3.3.2/CompilerIdC/CMakeCCompilerId.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="build/CMakeFiles/3.3.2/CompilerIdCXX/CMakeCXXCompilerId.cpp"
             ex="false"
             tool="1"
             flavor2="0">

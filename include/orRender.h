@@ -7,10 +7,25 @@
 
 #include <vector>
 
+// Note: Do not call between glBegin() and glEnd(); glGetError() is not allowed
+// between those calls (can be called as GL_CHECK(glEnd()) to test after the glEnd()
+#define GL_CHECK(expr) expr; _gl_check(__FILE__, __LINE__, #expr);
+
+inline void _gl_check(char const* file, int line, char const* expr) {
+  GLenum err = glGetError();
+  while(err!=GL_NO_ERROR) {
+    fprintf(stderr, "OpenGL Error: %d %s (%s:%d)\n", err, (char const*)gluErrorString(err), file, line);
+    err = glGetError();
+  }
+}
+
+
 struct SDL_Surface;
 
 class RenderSystem {
 public:
+  static inline void checkGLErrors() {} // TODO remove
+  
   RenderSystem();
   ~RenderSystem();
 
@@ -160,8 +175,6 @@ public:
   void render3D();
 
   void render(FrameBuffer const& frameBuffer, Colour clearCol, float clearDepth, Eigen::Matrix4d const& screenMtx, Eigen::Matrix4d const& projMtx, Eigen::Matrix4d const& camMtx); // TODO not the best params...
-
-  void checkGLErrors();
 
 private:
   void drawCircle(double const radius, int const steps) const;

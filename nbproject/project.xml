@@ -6,7 +6,7 @@
             <name>OrbitalSpace</name>
             <c-extensions>c,m</c-extensions>
             <cpp-extensions>cc,cpp,cxx</cpp-extensions>
-            <header-extensions>h</header-extensions>
+            <header-extensions>h,hpp,inl</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>

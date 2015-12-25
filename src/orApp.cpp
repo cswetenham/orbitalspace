@@ -107,6 +107,8 @@ void orApp::Init()
       SDL_GetError()
     );
   }
+  
+  GL_CHECK();
 
   // Show anything with priority of Info and above
   SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
@@ -263,19 +265,20 @@ static GLuint make_shader(GLenum type, const char* filename)
     GLuint shader;
     GLint shader_ok;
 
-    if (!source)
-        return 0;
+    if (!source) {
+      return 0;
+    }
 
-    shader = glCreateShader(type);
-    glShaderSource(shader, 1, (const GLchar**)&source, &length);
+    shader = GL_CHECK(glCreateShader(type));
+    GL_CHECK(glShaderSource(shader, 1, (const GLchar**)&source, &length));
     free(source);
-    glCompileShader(shader);
+    GL_CHECK(glCompileShader(shader));
 
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
+    GL_CHECK(glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok));
     if (!shader_ok) {
         fprintf(stderr, "Failed to compile %s:\n", filename);
         show_info_log(shader, glGetShaderiv, glGetShaderInfoLog);
-        glDeleteShader(shader);
+        GL_CHECK(glDeleteShader(shader));
         return 0;
     }
     return shader;
@@ -286,17 +289,17 @@ static GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
 {
     GLint program_ok;
 
-    GLuint program = glCreateProgram();
+    GLuint program = GL_CHECK(glCreateProgram());
 
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
+    GL_CHECK(glAttachShader(program, vertex_shader));
+    GL_CHECK(glAttachShader(program, fragment_shader));
+    GL_CHECK(glLinkProgram(program));
 
-    glGetProgramiv(program, GL_LINK_STATUS, &program_ok);
+    GL_CHECK(glGetProgramiv(program, GL_LINK_STATUS, &program_ok));
     if (!program_ok) {
         fprintf(stderr, "Failed to link shader program:\n");
         show_info_log(program, glGetProgramiv, glGetProgramInfoLog);
-        glDeleteProgram(program);
+        GL_CHECK(glDeleteProgram(program));
         return 0;
     }
     return program;
@@ -319,34 +322,64 @@ void orApp::InitRender()
 #endif
   // TODO backbuffer settings as above?
 
-  // TODO
+  // TODO this breaks everything for some reason? On both windows and linux, calling these means nothing is rendered
   // See https://open.gl/context
+#if 0
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-
+#endif
+  
+  RenderSystem::checkGLErrors();
+  
+  fprintf(stdout, "InitRender\n");
+  
+  RenderSystem::checkGLErrors();
+  
+  fprintf(stdout, "SDL_CreateWindow\n");
+  
   // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
   m_window = SDL_CreateWindow(
     "Orbital Space", 0, 0, m_config.windowWidth, m_config.windowHeight,
     SDL_WINDOW_OPENGL);
   
+  RenderSystem::checkGLErrors();
+  
+  fprintf(stdout, "SDL_CreateContext\n");
+  
   // Create an OpenGL context associated with the window.
   m_gl_context = SDL_GL_CreateContext(m_window);
 
+  RenderSystem::checkGLErrors();
   // TODO some part of the SDL init causes a spurious error.
   // Find it, and add a loop calling glGetError() until it returns 0...
 
+  fprintf(stderr, "glewInit\n");
+  
   glewExperimental = GL_TRUE;
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     /* Problem: glewInit failed, something is seriously wrong. */
-    fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+    fprintf(stderr, "glewInit(): Error: %s\n", glewGetErrorString(err));
   }
+  // glewInit() sets GL_INVALID_ENUM error flag for some reason - see
+  // https://www.opengl.org/wiki/OpenGL_Loading_Library
+  glGetError();
+  
+  RenderSystem::checkGLErrors();
 
+  fprintf(stderr, "makeFrameBuffer\n");
+  
   m_frameBuffer = m_renderSystem.makeFrameBuffer(m_config.renderWidth, m_config.renderHeight);
 
+  RenderSystem::checkGLErrors();
+  
+  fprintf(stderr, "initRender\n");
+  
   m_renderSystem.initRender();
 
+  RenderSystem::checkGLErrors();
+  
 #ifdef WIN32 // TODO reimplement: set window focus
   //sf::WindowHandle winHandle = m_window->getSystemHandle();
   //orPlatform::FocusWindow(winHandle);
@@ -1068,8 +1101,7 @@ void orApp::UpdateState()
       str << calendarDateFromSimTime(m_simTime) << "\n";
 
       str << "Time Scale: " << (int)m_timeScale << "\n";
-
-      // str << "FPS: " << (int)(1000.0 / Timer::PerfTimeToMillis(m_lastFrameDuration)) << "\n";
+      str << "Frame Time: " << (int)(Timer::PerfTimeToMillis(m_lastFrameDuration)) << "ms\n";
       // str << "Cam Dist: " << m_camDist << "\n";
       // str << "Cam Theta:" << m_camTheta << "\n";
       // str << "Cam Phi:" << m_camPhi << "\n";
@@ -1275,7 +1307,7 @@ void orApp::RenderState()
     m_renderSystem.render2D(m_frameBuffer.width, m_frameBuffer.height, screenFromWorld);
   }
 
-  glColor3d(1.0, 1.0, 1.0); // TODO ??? this colour seems to affect the colour
+  GL_CHECK(glColor3d(1.0, 1.0, 1.0)); // TODO ??? this colour seems to affect the colour
   // of everything else afterwards. Setting it to white makes everything look
   // fine except the planets which come out white.
 
@@ -1283,22 +1315,22 @@ void orApp::RenderState()
     PERFTIMER("PostEffect");
 
     // Render from 2D framebuffer to screen
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_config.windowWidth, m_config.windowHeight);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CHECK(glViewport(0, 0, m_config.windowWidth, m_config.windowHeight));
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    GL_CHECK(glMatrixMode(GL_PROJECTION));
+    GL_CHECK(glLoadIdentity());
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    GL_CHECK(glMatrixMode(GL_MODELVIEW));
+    GL_CHECK(glLoadIdentity());
 
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
+    GL_CHECK(glEnable(GL_TEXTURE_2D));
+    GL_CHECK(glDisable(GL_LIGHTING));
 
     float const scale = 1.0;
     float const uv_scale = 1.0;
 
-    glBindTexture(GL_TEXTURE_2D, m_frameBuffer.colorTextureId);
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, m_frameBuffer.colorTextureId));
     glBegin(GL_QUADS);
     glTexCoord2f(0.0, 0.0);
     glVertex3f(-scale, -scale, 0.0);
@@ -1308,9 +1340,9 @@ void orApp::RenderState()
     glVertex3f(+scale, +scale, 0.0);
     glTexCoord2f(0.0, uv_scale);
     glVertex3f(-scale, +scale, 0.0);
-    glEnd();
+    GL_CHECK(glEnd());
 
-    glDisable(GL_TEXTURE_2D);
+    GL_CHECK(glDisable(GL_TEXTURE_2D));
   }
 
   SDL_GL_SwapWindow(m_window);

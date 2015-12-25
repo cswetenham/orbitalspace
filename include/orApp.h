@@ -111,6 +111,7 @@ private:
   void updateOrbitHighlight();
 
 private:
+  // TODO finish implementing title screen, etc
   enum AppScreen { Screen_Title, Screen_Level } m_appScreen;
 
   class TitleScreen {

@@ -33,10 +33,10 @@ void RenderSystem::initRender()
   uint32_t width = m_fontImage->w;
   uint32_t height = m_fontImage->h;
 
-  glGenTextures(1, &m_fontTextureId);
-  glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
+  GL_CHECK(glGenTextures(1, &m_fontTextureId));
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, m_fontTextureId));
 
-  glTexImage2D(
+  GL_CHECK(glTexImage2D(
     GL_TEXTURE_2D,
     0,
     GL_INTENSITY,
@@ -46,10 +46,10 @@ void RenderSystem::initRender()
     GL_BGR,
     GL_UNSIGNED_BYTE,
     m_fontImage->pixels
-  );
+  ));
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 }
 
 void RenderSystem::shutdownRender()
@@ -67,32 +67,45 @@ RenderSystem::FrameBuffer RenderSystem::makeFrameBuffer(int width, int height)
 
   {
     // Based on OpenGL Tutorial 14 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-    checkGLErrors();
 
     // Allocate a texture ID for the texture we're going to render to
-    glGenTextures(1, &result.colorTextureId); checkGLErrors();
+    
+    GL_CHECK(glGenTextures(1, &result.colorTextureId));
     // Bind the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, result.colorTextureId); checkGLErrors();
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, result.colorTextureId));
     // Create an empty texture (last '0' is a null image data pointer)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0); checkGLErrors();
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0));
     // Make sure to use nearest-neighbour filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); checkGLErrors();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); checkGLErrors();
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 
     // The depth buffer
-    glGenRenderbuffers(1, &result.depthBufferId); checkGLErrors();
-    glBindRenderbuffer(GL_RENDERBUFFER, result.depthBufferId); checkGLErrors();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height); checkGLErrors();
+    GL_CHECK(glGenRenderbuffers(1, &result.depthBufferId));
+    GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, result.depthBufferId));
+    GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height));
 
     // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-    glGenFramebuffers(1, &result.frameBufferId); checkGLErrors();
-    glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId); checkGLErrors();
+    GL_CHECK(glGenFramebuffers(1, &result.frameBufferId));
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, result.frameBufferId));
     // Attach our texture and depth buffers to the frame buffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.colorTextureId, 0); checkGLErrors();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthBufferId); checkGLErrors();
+    GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.colorTextureId, 0));
+    GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, result.depthBufferId));
     // Enable the buffers
     GLenum drawBuffers[2] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT};
-    glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers); checkGLErrors();
+    GL_CHECK(glDrawBuffers(sizeof(drawBuffers) / sizeof(drawBuffers[0]), drawBuffers));
+    // glDrawBuffer
+    // GL_INVALID_OPERATION is generated if the default framebuffer is affected
+    // and none of the buffers indicated by buf exists.
+    // GL_INVALID_OPERATION is generated if a framebuffer object is affected and
+    // buf is not equal to GL_NONE or GL_COLOR_ATTACHMENT$m$, where $m$ is a
+    // value between 0 and GL_MAX_COLOR_ATTACHMENTS.
+    // glDrawBuffers
+    // GL_INVALID_OPERATION is generated if a symbolic constant other than
+    // GL_NONE appears more than once in bufs.
+    // GL_INVALID_OPERATION is generated if any of the entries in bufs (other
+    // than GL_NONE ) indicates a color buffer that does not exist in the
+    // current GL context.
+  
 
     // Check that our framebuffer is set up correctly
     ensure(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
@@ -118,25 +131,25 @@ void RenderSystem::drawCircle(double const radius, int const steps) const
         glNormal3d(x,y,0.0);
         glVertex3d(x*radius, y*radius, 0.0);
     }
-    glEnd();
+    GL_CHECK(glEnd());
 }
 
 void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
 {
   GLfloat mat_ones[]={ 1.0, 1.0, 1.0, 1.0 };
-  glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] );
+  GL_CHECK(glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, &mat_ones[0] ));
   // glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, &mat_ones[0] );
 #if 0
-  glPushMatrix();
+  GL_CHECK(glPushMatrix());
   GLUquadric* quad = gluNewQuadric();
-  gluQuadricDrawStyle(quad, GLU_FILL);
-  gluQuadricNormals(quad, GLU_SMOOTH);
-  gluQuadricOrientation(quad, GLU_OUTSIDE);
-  gluQuadricTexture(quad, GL_TRUE);
-  glTranslated(pos.x(), pos.y(), pos.z());
-  gluSphere(quad, radius, slices, stacks);
-  gluDeleteQuadric(quad);
-  glPopMatrix();
+  GL_CHECK(gluQuadricDrawStyle(quad, GLU_FILL));
+  GL_CHECK(gluQuadricNormals(quad, GLU_SMOOTH));
+  GL_CHECK(gluQuadricOrientation(quad, GLU_OUTSIDE));
+  GL_CHECK(gluQuadricTexture(quad, GL_TRUE));
+  GL_CHECK(glTranslated(pos.x(), pos.y(), pos.z()));
+  GL_CHECK(gluSphere(quad, radius, slices, stacks));
+  GL_CHECK(gluDeleteQuadric(quad));
+  GL_CHECK(glPopMatrix());
 #else
   Vector3d const center(pos.x(), pos.y(), pos.z());
   float const off_H = ( M_TAU_F / 2.f ) / float(stacks);
@@ -166,7 +179,7 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
       glNormal3dv( n.data() );
       glVertex3dv( p.data() );
     }
-    glEnd();
+    GL_CHECK(glEnd());
   }
 
   {
@@ -192,7 +205,7 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
       glNormal3dv( n.data() );
       glVertex3dv( p.data() );
     }
-    glEnd();
+    GL_CHECK(glEnd());
   }
 
   for ( int st=1; st<stacks-1; st++ )
@@ -224,18 +237,18 @@ void RenderSystem::drawSolidSphere(Vector3d const pos, double const radius, int 
         glVertex3dv( p.data() );
       }
     }
-    glEnd();
+    GL_CHECK(glEnd());
   }
 #endif
-  glNormal3d( 0.0, 0.0, 1.0 );
+  GL_CHECK(glNormal3d( 0.0, 0.0, 1.0 ));
 }
 
 void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int const slices, int const stacks) const
 {
   int curStack, curSlice;
 
-  glPushMatrix();
-  glTranslated(pos.x(), pos.y(), pos.z());
+  GL_CHECK(glPushMatrix());
+  GL_CHECK(glTranslated(pos.x(), pos.y(), pos.z()));
 
   /* Adjust z and radius as stacks and slices are drawn. */
 
@@ -260,7 +273,7 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
       glVertex3d(x*r*radius, y*radius, z*r*radius);
     }
 
-    glEnd();
+    GL_CHECK(glEnd());
   }
 
   /* Draw a line loop for each slice */
@@ -280,10 +293,10 @@ void RenderSystem::drawWireSphere(Vector3d const pos, double const radius, int c
       glVertex3d(x*radius, y*radius, z*radius);
     }
 
-    glEnd();
+    GL_CHECK(glEnd());
   }
 
-  glPopMatrix();
+  GL_CHECK(glPopMatrix());
 }
 
 void glColor3d(Vector3d const col)
@@ -309,7 +322,7 @@ void RenderSystem::drawLine(Vector3d const start, Vector3d const end, Vector3d c
     glVertex3d(cur_pos);
   }
   glVertex3d(end);
-  glEnd();
+  GL_CHECK(glEnd());
 }
 
 void RenderSystem::drawAxes(Vector3d const pos, double const size) const
@@ -325,15 +338,15 @@ void RenderSystem::drawAxes(Vector3d const pos, double const size) const
 void RenderSystem::renderPoints() const
 {
   PERFTIMER("RenderPoints");
-  glDisable(GL_LIGHTING);
+  GL_CHECK(glDisable(GL_LIGHTING));
   for (Point const& point : m_instancedPoints) {
-    glColor3d(point.m_col[0], point.m_col[1], point.m_col[2]);
+    GL_CHECK(glColor3d(point.m_col[0], point.m_col[1], point.m_col[2]));
 
-    glPointSize(8.0);
+    GL_CHECK(glPointSize(8.0));
     glBegin(GL_POINTS);
     glVertex3d(point.m_pos[0], point.m_pos[1], point.m_pos[2]);
-    glEnd();
-    glPointSize(1.0);
+    GL_CHECK(glEnd());
+    GL_CHECK(glPointSize(1.0));
   }
 }
 
@@ -366,18 +379,18 @@ void RenderSystem::renderLabels( int w_px, int h_px )
 {
   PERFTIMER("RenderLabels");
 
-  glDisable(GL_LIGHTING);
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_TEXTURE_2D);
+  GL_CHECK(glDisable(GL_LIGHTING));
+  GL_CHECK(glEnable(GL_DEPTH_TEST));
+  GL_CHECK(glEnable(GL_TEXTURE_2D));
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0, w_px, h_px, 0, 0, 1.0);
+  GL_CHECK(glMatrixMode(GL_PROJECTION));
+  GL_CHECK(glLoadIdentity());
+  GL_CHECK(glOrtho(0, w_px, h_px, 0, 0, 1.0));
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  GL_CHECK(glMatrixMode(GL_MODELVIEW));
+  GL_CHECK(glLoadIdentity());
 
-  glBindTexture(GL_TEXTURE_2D, m_fontTextureId);
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, m_fontTextureId));
 
   glBegin(GL_QUADS);
 
@@ -402,7 +415,7 @@ void RenderSystem::renderLabels( int w_px, int h_px )
     drawString(label2D.m_text, (int)label2D.m_pos[0], (int)label2D.m_pos[1]);
   }
 
-  glEnd();
+  GL_CHECK(glEnd());
 }
 
 void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
@@ -469,16 +482,16 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
 
 void RenderSystem::renderSpheres() const
 {
-  glEnable(GL_LIGHTING);
+  GL_CHECK(glEnable(GL_LIGHTING));
 
   PERFTIMER("RenderSpheres");
   for (Sphere const& sphere : m_instancedSpheres) {
-    glColor3d(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]);
+    GL_CHECK(glColor3d(sphere.m_col[0], sphere.m_col[1], sphere.m_col[2]));
 
     drawSolidSphere(Vector3d(sphere.m_pos), sphere.m_radius, 16, 16);
   }
 
-  glDisable(GL_LIGHTING);
+  GL_CHECK(glDisable(GL_LIGHTING));
   for (Sphere const& sphere : m_instancedSpheres) {
     drawAxes(Vector3d(sphere.m_pos), 3 * sphere.m_radius);
   }
@@ -487,9 +500,9 @@ void RenderSystem::renderSpheres() const
 void RenderSystem::renderOrbits() const
 {
   PERFTIMER("RenderOrbits");
-  glDisable(GL_LIGHTING);
+  GL_CHECK(glDisable(GL_LIGHTING));
   for (Orbit const& orbit : m_instancedOrbits) {
-    glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]);
+    GL_CHECK(glColor3d(orbit.m_col[0], orbit.m_col[1], orbit.m_col[2]));
 
     enum { NUM_STEPS = 10000 };
 
@@ -508,7 +521,7 @@ void RenderSystem::renderOrbits() const
     for (int i = 0; i < NUM_STEPS; ++i) {
       glVertex3d(posData[i][0], posData[i][1], posData[i][2]);
     }
-    glEnd();
+    GL_CHECK(glEnd());
   }
 }
 
@@ -519,7 +532,7 @@ void RenderSystem::renderTrails() const
   for (int ti = 0; ti < (int)m_instancedTrails.size(); ++ti) {
     int tid = ti + 1;
     Trail const& trail = getTrail(tid);
-    glBegin(GL_LINE_STRIP);
+    GL_CHECK(glBegin(GL_LINE_STRIP);
 
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
     {
@@ -531,17 +544,17 @@ void RenderSystem::renderTrails() const
       float const l = (float)(trail.m_trailPointAge[idx] / trail.m_duration);
       Vector3d c = orLerp(Vector3d(trail.m_colNew), Vector3d(trail.m_colOld), l);
 
-      glColor3d(c.x(), c.y(), c.z());
+      GL_CHECK(glColor3d(c.x(), c.y(), c.z());
 
-      glVertex3d(v.x(),v.y(),v.z());
+      GL_CHECK(glVertex3d(v.x(),v.y(),v.z());
     }
 
-    glEnd();
+    GL_CHECK(glEnd();
 
 
     // Debugging trail: show the trail points
 #if 0
-    glColor3d(0.0, 0.0, 1.0);
+    GL_CHECK(glColor3d(0.0, 0.0, 1.0);
 
     for (int i = 0; i < Trail::NUM_TRAIL_PTS; ++i)
     {
@@ -550,11 +563,11 @@ void RenderSystem::renderTrails() const
       int idx = (tailIdx + i) % Trail::NUM_TRAIL_PTS;
       Vector3d v = trail.m_trailPts[idx] + trail.m_HACKorigin;
 
-      glPointSize(10.0);
-      glBegin(GL_POINTS);
-      glVertex3d(v.x(), v.y(), v.z());
-      glEnd();
-      glPointSize(1.0);
+      GL_CHECK(glPointSize(10.0);
+      GL_CHECK(glBegin(GL_POINTS);
+      GL_CHECK(glVertex3d(v.x(), v.y(), v.z());
+      GL_CHECK(glEnd();
+      GL_CHECK(glPointSize(1.0);
     }
 #endif
   }
@@ -577,14 +590,6 @@ void RenderSystem::render3D()
 #endif
 }
 
-void RenderSystem::checkGLErrors()
-{
-  int gl_err = glGetError();
-  if(gl_err != GL_NO_ERROR) {
-    fprintf(stderr, "Error: %d %s", gl_err, (char const*)gluErrorString(gl_err));
-  }
-}
-
 #if 0
 void RenderSystem::clearBuffer(
   FrameBuffer const& frameBuffer,
@@ -592,16 +597,16 @@ void RenderSystem::clearBuffer(
   float clearDepth
 ) {
   // Render to our framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId);
-  glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthRenderBufferId);
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId));
+  GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthRenderBufferId));
 
    // Render on the whole framebuffer, complete from the lower left corner to the upper right
-  glViewport(0, 0, frameBuffer.width, frameBuffer.height);
+  GL_CHECK(glViewport(0, 0, frameBuffer.width, frameBuffer.height));
 
   // TODO what?
   // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
-  glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
-  glClearDepth(clearDepth);
+  GL_CHECK(glClearColor(clearCol.x, clearCol.y, clearCol.z, 0));
+  GL_CHECK(glClearDepth(clearDepth));
 }
 #endif
 
@@ -614,8 +619,8 @@ void RenderSystem::render(
   Eigen::Matrix4d const& camFromWorld
 )
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
+  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+  GL_CHECK(glLoadIdentity());
 
   m_label2DBuffer.clear();
 
@@ -623,27 +628,27 @@ void RenderSystem::render(
     PERFTIMER("Prepare3D");
 
     // Render to our framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId);
-    glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthBufferId);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer.frameBufferId));
+    GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, frameBuffer.depthBufferId));
 
     // Render on the whole framebuffer, complete from the lower left corner to the upper right
-    glViewport(0, 0, frameBuffer.width, frameBuffer.height);
+    GL_CHECK(glViewport(0, 0, frameBuffer.width, frameBuffer.height));
 
     // This is visibly not clearing the offscreen frame buffer, it's clearing the default one...
     // glClearColor(clearCol.x, clearCol.y, clearCol.z, 0);
     // glClearDepth(clearDepth);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMultMatrix( projFromCam );
+    GL_CHECK(glMatrixMode(GL_PROJECTION));
+    GL_CHECK(glLoadIdentity());
+    GL_CHECK(glMultMatrix( projFromCam ));
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glMultMatrix( camFromWorld );
+    GL_CHECK(glMatrixMode(GL_MODELVIEW));
+    GL_CHECK(glLoadIdentity());
+    GL_CHECK(glMultMatrix( camFromWorld ));
 
-    glEnable(GL_TEXTURE_2D);
+    GL_CHECK(glEnable(GL_TEXTURE_2D));
 
     GLfloat ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
     GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -665,26 +670,26 @@ void RenderSystem::render(
 
     GLfloat light_pos[] = { 0.0, 0.0, 0.0, 1.0 };
 
-    glShadeModel( GL_SMOOTH );
-    glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] );
-    glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] );
-    glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] );
-    glEnable( GL_LIGHT0 );
-    glEnable( GL_LIGHTING );
+    GL_CHECK(glShadeModel( GL_SMOOTH ));
+    GL_CHECK(glLightfv( GL_LIGHT0, GL_AMBIENT, &ambient[0] ));
+    GL_CHECK(glLightfv( GL_LIGHT0, GL_DIFFUSE, &diffuse[0] ));
+    GL_CHECK(glLightfv( GL_LIGHT0, GL_POSITION, &light_pos[0] ));
+    GL_CHECK(glEnable( GL_LIGHT0 ));
+    GL_CHECK(glEnable( GL_LIGHTING ));
 
-    glNormal3d(0,0,1);
+    GL_CHECK(glNormal3d(0,0,1));
 
-    glLineWidth(1.0);
+    GL_CHECK(glLineWidth(1.0));
 #if 0
-    glEnable(GL_POINT_SMOOTH);
-    glEnable(GL_LINE_SMOOTH);
+    GL_CHECK(glEnable(GL_POINT_SMOOTH));
+    GL_CHECK(glEnable(GL_LINE_SMOOTH));
 #endif
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    GL_CHECK(glEnable(GL_DEPTH_TEST));
+    GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    GL_CHECK(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
 
-    glDisable(GL_TEXTURE_2D);
+    GL_CHECK(glDisable(GL_TEXTURE_2D));
   }
 
   {
