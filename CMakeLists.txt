@@ -41,16 +41,21 @@ include_directories("./3rdparty/SDL/include")
 add_definitions(-DGL_GLEXT_PROTOTYPES)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
+# Old version
+#add_executable(OrbitalSpace
+#  src/main.cpp
+#  src/orApp.cpp
+#  src/orCamera.cpp
+#  src/orEntity.cpp
+#  src/orPhysics.cpp
+#  src/orRender.cpp
+#  src/util.cpp
+#  src/orProfile/perftimer.cpp
+#  src/timer.cpp
+#)
+
 add_executable(OrbitalSpace
   src/main.cpp
-  src/orApp.cpp
-  src/orCamera.cpp
-  src/orEntity.cpp
-  src/orPhysics.cpp
-  src/orRender.cpp
-  src/util.cpp
-  src/orProfile/perftimer.cpp
-  src/timer.cpp
 )
 
 target_link_libraries(OrbitalSpace

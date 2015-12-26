@@ -244,14 +244,6 @@
           <in>feature_tests.cxx</in>
         </df>
       </df>
-      <df name="CMakeFiles">
-        <df name="CompilerIdC">
-          <in>CMakeCCompilerId.c</in>
-        </df>
-        <df name="CompilerIdCXX">
-          <in>CMakeCXXCompilerId.cpp</in>
-        </df>
-      </df>
       <df name="Matlab">
         <df name="lambert">
           <in>lambert-test.m</in>
@@ -282,6 +274,7 @@
           <in>timer.cpp</in>
           <in>util.cpp</in>
         </df>
+        <in>main.cpp</in>
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -324,12 +317,12 @@
       <item path="/usr/share/cmake/Modules/CMakeCCompilerABI.c"
             ex="false"
             tool="0"
-            flavor2="0">
+            flavor2="2">
       </item>
       <item path="/usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
       </item>
       <item path="3rdparty/SDL/src/SDL.c" ex="false" tool="0" flavor2="0">
         <cTool flags="1">
@@ -1121,16 +1114,6 @@
         <cTool flags="1">
         </cTool>
       </item>
-      <item path="CMakeFiles/CompilerIdC/CMakeCCompilerId.c"
-            ex="false"
-            tool="0"
-            flavor2="2">
-      </item>
-      <item path="CMakeFiles/CompilerIdCXX/CMakeCXXCompilerId.cpp"
-            ex="false"
-            tool="1"
-            flavor2="4">
-      </item>
       <item path="Matlab/lagrange.m" ex="false" tool="0" flavor2="2">
       </item>
       <item path="Matlab/lambert/lambert-test.m" ex="false" tool="0" flavor2="2">
@@ -1152,12 +1135,12 @@
       <item path="build/CMakeFiles/3.3.2/CompilerIdC/CMakeCCompilerId.c"
             ex="false"
             tool="0"
-            flavor2="0">
+            flavor2="2">
       </item>
       <item path="build/CMakeFiles/3.3.2/CompilerIdCXX/CMakeCXXCompilerId.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
       </item>
       <item path="build/CMakeFiles/feature_tests.c" ex="false" tool="0" flavor2="10">
         <cTool flags="4">
@@ -1372,6 +1355,22 @@
           </incDir>
         </ccTool>
       </folder>
+      <item path="src/main.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/eigen3</pElem>
+            <pElem>/usr/include/eigen3/unsupported</pElem>
+            <pElem>include</pElem>
+            <pElem>3rdparty/SDL/include</pElem>
+            <pElem>build</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>GL_GLEXT_PROTOTYPES</Elem>
+            <Elem>_DEBUG</Elem>
+            <Elem>__STDC_LIMIT_MACROS</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
       <item path="src/old/main.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
