@@ -19,7 +19,6 @@ inline void _gl_check(char const* file, int line, char const* expr) {
   }
 }
 
-
 struct SDL_Surface;
 
 class RenderSystem {

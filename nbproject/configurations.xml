@@ -261,25 +261,27 @@
         <in>orbital.m</in>
       </df>
       <df name="src">
-        <df name="orPlatform">
-          <df name="win32">
-            <in>window_win32.cpp</in>
+        <df name="old">
+          <df name="orPlatform">
+            <df name="win32">
+              <in>window_win32.cpp</in>
+            </df>
           </df>
+          <df name="orProfile">
+            <in>perftimer.cpp</in>
+          </df>
+          <df name="orTask">
+            <in>taskSchedulerWorkStealing.cpp</in>
+          </df>
+          <in>main.cpp</in>
+          <in>orApp.cpp</in>
+          <in>orCamera.cpp</in>
+          <in>orEntity.cpp</in>
+          <in>orPhysics.cpp</in>
+          <in>orRender.cpp</in>
+          <in>timer.cpp</in>
+          <in>util.cpp</in>
         </df>
-        <df name="orProfile">
-          <in>perftimer.cpp</in>
-        </df>
-        <df name="orTask">
-          <in>taskSchedulerWorkStealing.cpp</in>
-        </df>
-        <in>main.cpp</in>
-        <in>orApp.cpp</in>
-        <in>orCamera.cpp</in>
-        <in>orEntity.cpp</in>
-        <in>orPhysics.cpp</in>
-        <in>orRender.cpp</in>
-        <in>timer.cpp</in>
-        <in>util.cpp</in>
       </df>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -1342,7 +1344,7 @@
           </preprocessorList>
         </cTool>
       </folder>
-      <folder path="0/src/orProfile">
+      <folder path="0/src/old/orProfile">
         <ccTool>
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1370,7 +1372,7 @@
           </incDir>
         </ccTool>
       </folder>
-      <item path="src/main.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/main.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1386,7 +1388,7 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orApp.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/orApp.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1402,7 +1404,7 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orCamera.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/orCamera.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1418,7 +1420,7 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orEntity.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/orEntity.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1434,7 +1436,7 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orPhysics.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/orPhysics.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1450,16 +1452,16 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orPlatform/win32/window_win32.cpp"
+      <item path="src/old/orPlatform/win32/window_win32.cpp"
             ex="false"
             tool="1"
             flavor2="4">
       </item>
-      <item path="src/orProfile/perftimer.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/orProfile/perftimer.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
         </ccTool>
       </item>
-      <item path="src/orRender.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/orRender.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1475,12 +1477,12 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/orTask/taskSchedulerWorkStealing.cpp"
+      <item path="src/old/orTask/taskSchedulerWorkStealing.cpp"
             ex="false"
             tool="1"
             flavor2="4">
       </item>
-      <item path="src/timer.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/timer.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>
@@ -1496,7 +1498,7 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/util.cpp" ex="false" tool="1" flavor2="11">
+      <item path="src/old/util.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="3">
           <incDir>
             <pElem>/usr/include/eigen3</pElem>

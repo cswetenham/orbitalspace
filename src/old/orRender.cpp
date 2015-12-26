@@ -468,7 +468,7 @@ void RenderSystem::drawString(std::string const& str, int pos_x, int pos_y)
     glVertex3d(   char_x_px,             char_y_px,             0);
 
     glTexCoord2f( char_l_tx + char_w_tx, char_t_tx               );
-    glVertex3d(   char_x_px + char_w_px, char_y_px,             0);
+    glVertex3d(   char_x_px + char_w_p`x, char_y_px,             0);
 
     glTexCoord2f( char_l_tx + char_w_tx, char_t_tx + char_h_tx   );
     glVertex3d(   char_x_px + char_w_px, char_y_px + char_h_px, 0);
