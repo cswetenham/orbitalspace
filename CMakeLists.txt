@@ -35,6 +35,8 @@ include_directories("/usr/include/eigen3")
 include_directories("/usr/include/eigen3/unsupported")
 include_directories("./include")
 
+include_directories("./3rdparty/glm")
+
 add_subdirectory("./3rdparty/SDL")
 include_directories("./3rdparty/SDL/include")
 

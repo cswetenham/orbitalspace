@@ -12,6 +12,10 @@
 # include <GL/gl.h>
 # include <GL/glu.h>
 
+// GLM
+
+#include <glm/glm.hpp>
+
 // SDL headers
 
 #include <SDL.h>
