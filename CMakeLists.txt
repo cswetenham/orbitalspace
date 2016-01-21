@@ -5,7 +5,7 @@ project (OrbitalSpace)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake/")
 
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -Wno-deprecated -fno-operator-names -std=c++1y -D_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -Wno-deprecated -Wno-comment -fno-operator-names -std=c++1y -D_DEBUG")
 
 #set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
@@ -20,14 +20,11 @@ find_package(Boost COMPONENTS thread program_options system date_time REQUIRED)
 
 find_package(OpenGL REQUIRED) # includes GLU
 
-find_package(GLUT REQUIRED)
-
 # TODO? find_package(GLEW REQUIRED)
 
 # No include for Threads
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OpenGL_INCLUDE_DIRS})
-include_directories(${GLUT_INCLUDE_DIRS})
 
 # TODO what?? Fix plz
 # TODO? find_package(Eigen3 REQUIRED)
@@ -40,7 +37,8 @@ include_directories("./3rdparty/glm")
 add_subdirectory("./3rdparty/SDL")
 include_directories("./3rdparty/SDL/include")
 
-add_definitions(-DGL_GLEXT_PROTOTYPES)
+include_directories("./3rdparty/glad/include")
+
 add_definitions(-D__STDC_LIMIT_MACROS)
 
 # Old version
@@ -58,14 +56,12 @@ add_definitions(-D__STDC_LIMIT_MACROS)
 
 add_executable(OrbitalSpace
   src/main.cpp
+  3rdparty/glad/src/glad.c # TODO build and link separately
 )
 
 target_link_libraries(OrbitalSpace
   ${CMAKE_THREAD_LIBS_INIT} # special case because pthread isn't always called pthread
   ${Boost_LIBRARIES}
   ${OpenGL_LIBRARIES}
-  GLU
-  ${GLUT_LIBRARIES}
-  GLEW
   SDL2
 )

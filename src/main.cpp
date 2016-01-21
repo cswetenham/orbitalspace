@@ -5,21 +5,16 @@
 // C++ headers
 
 // GL headers
-
-# define GLEW_STATIC
-# include <GL/glew.h>
-# undef GLEW_STATIC
-# include <GL/gl.h>
-# include <GL/glu.h>
+// OpenGL loader - loads/defines everything
+#include "glad/glad.h"
 
 // GLM
-
+#define GLM_FORCE_RADIANS 1
 #include <glm/glm.hpp>
 
 // SDL headers
 
 #include <SDL.h>
-#include <SDL_opengl.h>
 
 extern "C"
 int main(int argc, char *argv[])
@@ -34,8 +29,12 @@ int main(int argc, char *argv[])
   
   SDL_GLContext context = SDL_GL_CreateContext(window);
   
-  glewExperimental = GL_TRUE;
-  glewInit();
+  // Load OpenGL and OpenGL functions
+  gladLoadGLLoader(SDL_GL_GetProcAddress);
+  printf("OpenGL loaded\n");
+  printf("Vendor:   %s\n", glGetString(GL_VENDOR));
+  printf("Renderer: %s\n", glGetString(GL_RENDERER));
+  printf("Version:  %s\n", glGetString(GL_VERSION));
   
   GLuint vertexBuffer;
   glGenBuffers(1, &vertexBuffer);
