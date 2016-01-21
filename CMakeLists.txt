@@ -64,4 +64,5 @@ target_link_libraries(OrbitalSpace
   ${Boost_LIBRARIES}
   ${OpenGL_LIBRARIES}
   SDL2
+  GLU # for gluErrorString
 )

@@ -290,6 +290,8 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>3rdparty/glad/README.md</itemPath>
+    <itemPath>shaders/ch2.f.glsl</itemPath>
+    <itemPath>shaders/ch2.v.glsl</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
