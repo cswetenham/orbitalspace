@@ -182,6 +182,11 @@ int main(int argc, char *argv[])
   printf("Renderer: %s\n", GL_CHECK_R(glGetString(GL_RENDERER)));
   printf("Version:  %s\n", GL_CHECK_R(glGetString(GL_VERSION)));
   
+  // Explicitly set culling orientation and disable/enable culling
+  GL_CHECK(glFrontFace(GL_CCW));
+  //GL_CHECK(glDisable(GL_CULL_FACE));
+  GL_CHECK(glEnable(GL_CULL_FACE));
+  
   // Vertex array object: relates vbos to a shader program somehow??
   GLuint vao;
   GL_CHECK(glGenVertexArrays(1, &vao));
@@ -190,7 +195,7 @@ int main(int argc, char *argv[])
   GLuint vbo;
   GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
   
-  float vertices[] = {
+  GLfloat vertices[] = {
   //   X,     Y,    R,    G,    B
    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // Vertex 1 
     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Vertex 2
@@ -204,9 +209,9 @@ int main(int argc, char *argv[])
   GLuint ebo;
   GL_CHECK(glGenBuffers(1, &ebo));
   
-  float elements[] = {
-    0, 1, 2,
-    2, 3, 0
+  GLuint elements[] = {
+    2, 1, 0,
+    0, 3, 2
   };
   
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
@@ -254,6 +259,7 @@ int main(int argc, char *argv[])
     
     // Rendering
     GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    // GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
 
     // Swap
     SDL_GL_SwapWindow(window);
