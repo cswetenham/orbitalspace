@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 // C++ headers
+#include <chrono>
 
 // GL headers
 // OpenGL loader - loads/defines everything
@@ -16,18 +17,26 @@
 #include <glm/glm.hpp>
 
 // SDL headers
-
 #include <SDL.h>
 
 // TODO cleanup
-#define GL_CHECK(expr) expr; _gl_check(__FILE__, __LINE__, #expr);
+#define ENABLE_GL_CHECK 1
+#if ENABLE_GL_CHECK
+#define GL_CHECK_R(expr) _gl_check(expr, __FILE__, __LINE__, #expr)
+#define GL_CHECK(expr) expr; _gl_check(0, __FILE__, __LINE__, #expr);
+#else
+#define GL_CHECK_R(expr) expr
+#define GL_CHECK(expr) expr
+#endif
 
-inline void _gl_check(char const* file, int line, char const* expr) {
+template <typename T>
+inline T _gl_check(T t, char const* file, int line, char const* expr) {
   GLenum err = glGetError();
-  while(err!=GL_NO_ERROR) {
+  while(err != GL_NO_ERROR) {
     fprintf(stderr, "OpenGL Error: %d %s (%s:%d)\n", err, (char const*)gluErrorString(err), file, line);
     err = glGetError();
   }
+  return t;
 }
 
 // TODO cleanup
@@ -111,15 +120,23 @@ static GLuint make_shader(GLenum type, const char* filename)
   return shader;
 }
 
+struct ShaderInfo
+{
+  char const* shader_path;
+  GLuint shader_id;
+};
+
 // TODO cleanup
-static GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
+static GLuint make_program(int shader_count, ShaderInfo const* shader_infos)
 {
     GLuint program = GL_CHECK(glCreateProgram());
 
-    GL_CHECK(glAttachShader(program, vertex_shader));
-    GL_CHECK(glAttachShader(program, fragment_shader));
+    for (int i = 0; i < shader_count; ++i) {
+      GL_CHECK(glAttachShader(program, shader_infos[i].shader_id));
+    }
     
     // TODO well hrm we'll need to pass in an array or something
+    // Needs to be called before glLinkProgram and after glAttachShader I guess
     glBindFragDataLocation(program, 0, "outColor"); // not strictly needed since only 1 output
     
     GL_CHECK(glLinkProgram(program));
@@ -127,11 +144,21 @@ static GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
     GLint program_ok;
     GL_CHECK(glGetProgramiv(program, GL_LINK_STATUS, &program_ok));
     if (!program_ok) {
-        fprintf(stderr, "Failed to link shader program:\n"); // TODO report source filenames
-        show_program_info_log("", "", program);
-        GL_CHECK(glDeleteProgram(program));
-        return 0;
+      fprintf(stderr, "Failed to link shader program:\n");
+      for (int i = 0; i < shader_count; ++i) {
+        fprintf(stderr, shader_infos[i].shader_path);
+      }
+      show_program_info_log("", "", program);
+      // TODO hmm
+      // GL_CHECK(glDeleteProgram(program));
+      // return 0;
     }
+    
+    for (int i = 0; i < shader_count; ++i) {
+      // Can detach shaders after link
+      GL_CHECK(glDetachShader(program, shader_infos[i].shader_id));
+    }
+    
     return program;
 }
 
@@ -151,39 +178,61 @@ int main(int argc, char *argv[])
   // Load OpenGL and OpenGL functions
   gladLoadGLLoader(SDL_GL_GetProcAddress);
   printf("OpenGL loaded\n");
-  printf("Vendor:   %s\n", glGetString(GL_VENDOR));
-  printf("Renderer: %s\n", glGetString(GL_RENDERER));
-  printf("Version:  %s\n", glGetString(GL_VERSION));
+  printf("Vendor:   %s\n", GL_CHECK_R(glGetString(GL_VENDOR)));
+  printf("Renderer: %s\n", GL_CHECK_R(glGetString(GL_RENDERER)));
+  printf("Version:  %s\n", GL_CHECK_R(glGetString(GL_VERSION)));
   
-  // A triangle
-  float vertices[] = {
-    0.0f,  0.5f, // Vertex 1 (X, Y)
-    0.5f, -0.5f, // Vertex 2 (X, Y)
-   -0.5f, -0.5f  // Vertex 3 (X, Y)
-  };
+  // Vertex array object: relates vbos to a shader program somehow??
+  GLuint vao;
+  GL_CHECK(glGenVertexArrays(1, &vao));
+  GL_CHECK(glBindVertexArray(vao));
 
   GLuint vbo;
-  glGenBuffers(1, &vbo); // Generate 1 buffer
+  GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
   
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  float vertices[] = {
+  //   X,     Y,    R,    G,    B
+   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // Vertex 1 
+    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Vertex 2
+    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Vertex 3
+   -0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Vertex 4
+  };
+  
+  GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+  GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+  
+  GLuint ebo;
+  GL_CHECK(glGenBuffers(1, &ebo));
+  
+  float elements[] = {
+    0, 1, 2,
+    2, 3, 0
+  };
+  
+  GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+  GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
   
   // A basic clip-space shader
   
   GLuint vertexShader = make_shader(GL_VERTEX_SHADER, "shaders/ch2.v.glsl");
   GLuint fragmentShader = make_shader(GL_FRAGMENT_SHADER, "shaders/ch2.f.glsl");
-  GLuint shaderProgram = make_program(vertexShader, fragmentShader);
-  glUseProgram(shaderProgram);
+  ShaderInfo shader_infos[2];
+  shader_infos[0].shader_path = "shaders/ch2.v.glsl";
+  shader_infos[0].shader_id = vertexShader;
+  shader_infos[1].shader_path = "shaders/ch2.f.glsl";
+  shader_infos[1].shader_id = fragmentShader;
+  GLuint shaderProgram = make_program(2, shader_infos);
+  GL_CHECK(glUseProgram(shaderProgram));
+
+  // Bind position attribute to vertex array
+  GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
+  GL_CHECK(glEnableVertexAttribArray(posAttrib));
+  GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), 0));
   
-  // Vertex array object: binding of 1 or more vertex buffer objects to a shader program
-  GLuint vao;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  
-  GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-  glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(posAttrib);
-  
+  GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
+  GL_CHECK(glEnableVertexAttribArray(colAttrib));
+  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
+    
   SDL_Event windowEvent;
   while (true) {
     // Input handling
@@ -200,15 +249,24 @@ int main(int argc, char *argv[])
     }
     
     // Clear the screen to black
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    GL_CHECK(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
     
     // Rendering
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
     // Swap
     SDL_GL_SwapWindow(window);
   }
+  
+  GL_CHECK(glDeleteProgram(shaderProgram));
+  GL_CHECK(glDeleteShader(fragmentShader));
+  GL_CHECK(glDeleteShader(vertexShader));
+  
+  GL_CHECK(glDeleteBuffers(1, &ebo));
+  GL_CHECK(glDeleteBuffers(1, &vbo));
+  
+  GL_CHECK(glDeleteVertexArrays(1, &vao));
   
   SDL_GL_DeleteContext(context);
 
