@@ -19,6 +19,11 @@
 // SDL headers
 #include <SDL.h>
 
+// Image loading
+// Do this before you include this file in *one* C or C++ file to create the implementation.
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 // TODO cleanup
 #define ENABLE_GL_CHECK 1
 #if ENABLE_GL_CHECK
@@ -182,6 +187,8 @@ int main(int argc, char *argv[])
   printf("Renderer: %s\n", GL_CHECK_R(glGetString(GL_RENDERER)));
   printf("Version:  %s\n", GL_CHECK_R(glGetString(GL_VERSION)));
   
+  // TODO enable sRGB framebuffer + textures, and use it
+  
   // Explicitly set culling orientation and disable/enable culling
   GL_CHECK(glFrontFace(GL_CCW));
   //GL_CHECK(glDisable(GL_CULL_FACE));
@@ -196,11 +203,11 @@ int main(int argc, char *argv[])
   GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
   
   GLfloat vertices[] = {
-  //   X,     Y,    R,    G,    B
-   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // Vertex 1 
-    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Vertex 2
-    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Vertex 3
-   -0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Vertex 4
+  //   X,     Y,    R,    G,    B,    S,    T
+   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left 
+    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+   -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
   };
   
   GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
@@ -210,12 +217,36 @@ int main(int argc, char *argv[])
   GL_CHECK(glGenBuffers(1, &ebo));
   
   GLuint elements[] = {
-    2, 1, 0,
+    0, 2, 1,
     0, 3, 2
   };
   
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
+  
+  GLuint tex;
+  GL_CHECK(glGenTextures(1, &tex));
+  
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
+  // Set a border color in case we want to use GL_CLAMP_TO_BORDER
+  GLfloat border_color[] = { 1.0f, 0.0f, 1.0f, 1.0f };
+  GL_CHECK(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color));
+  // Set wrapping
+  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+  // Set filtering
+  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+  // load texture
+  int tex_width, tex_height, tex_channels;
+  uint8_t* tex_data = stbi_load("images/sample.png", &tex_width, &tex_height, &tex_channels, 3);
+  // TODO assert macro - or just use GLog?
+  assert(tex_data);
+  GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data));
+  // Free the image data
+  stbi_image_free(tex_data);
+  // Generate mipmaps after loading
+  GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
   
   // A basic clip-space shader
   
@@ -232,11 +263,15 @@ int main(int argc, char *argv[])
   // Bind position attribute to vertex array
   GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
   GL_CHECK(glEnableVertexAttribArray(posAttrib));
-  GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), 0));
+  GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0));
   
   GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
   GL_CHECK(glEnableVertexAttribArray(colAttrib));
-  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
+  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
+  
+  GLint texAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "texcoord"));
+  GL_CHECK(glEnableVertexAttribArray(texAttrib));
+  GL_CHECK(glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat))));
     
   SDL_Event windowEvent;
   while (true) {
@@ -268,6 +303,8 @@ int main(int argc, char *argv[])
   GL_CHECK(glDeleteProgram(shaderProgram));
   GL_CHECK(glDeleteShader(fragmentShader));
   GL_CHECK(glDeleteShader(vertexShader));
+  
+  GL_CHECK(glDeleteTextures(1, &tex));
   
   GL_CHECK(glDeleteBuffers(1, &ebo));
   GL_CHECK(glDeleteBuffers(1, &vbo));

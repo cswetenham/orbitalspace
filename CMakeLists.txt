@@ -39,6 +39,8 @@ include_directories("./3rdparty/SDL/include")
 
 include_directories("./3rdparty/glad/include")
 
+include_directories("./3rdparty/stb/include")
+
 add_definitions(-D__STDC_LIMIT_MACROS)
 
 # Old version
