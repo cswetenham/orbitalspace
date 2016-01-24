@@ -224,29 +224,62 @@ int main(int argc, char *argv[])
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
   
-  GLuint tex;
-  GL_CHECK(glGenTextures(1, &tex));
   
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
-  // Set a border color in case we want to use GL_CLAMP_TO_BORDER
-  GLfloat border_color[] = { 1.0f, 0.0f, 1.0f, 1.0f };
-  GL_CHECK(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color));
-  // Set wrapping
-  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-  // Set filtering
-  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-  GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-  // load texture
-  int tex_width, tex_height, tex_channels;
-  uint8_t* tex_data = stbi_load("images/sample.png", &tex_width, &tex_height, &tex_channels, 3);
-  // TODO assert macro - or just use GLog?
-  assert(tex_data);
-  GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data));
-  // Free the image data
-  stbi_image_free(tex_data);
-  // Generate mipmaps after loading
-  GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
+  GLuint texKitten;
+  {
+    GL_CHECK(glGenTextures(1, &texKitten));
+
+    GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texKitten));
+
+    // Set a border color in case we want to use GL_CLAMP_TO_BORDER
+    GLfloat border_color[] = { 1.0f, 0.0f, 1.0f, 1.0f };
+    GL_CHECK(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color));
+    // Set wrapping
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+    // Set filtering
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    // load texture
+    int tex_width, tex_height, tex_channels;
+    uint8_t* tex_data = stbi_load("images/sample.png", &tex_width, &tex_height, &tex_channels, 3);
+    // TODO assert macro - or just use GLog?
+    assert(tex_data);
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data));
+    // Free the image data
+    stbi_image_free(tex_data);
+    // Generate mipmaps after loading
+    GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
+  }
+  
+  GLuint texPuppy;
+  {
+    GL_CHECK(glGenTextures(1, &texPuppy));
+
+    GL_CHECK(glActiveTexture(GL_TEXTURE1));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texPuppy));
+
+    // Set a border color in case we want to use GL_CLAMP_TO_BORDER
+    GLfloat border_color[] = { 1.0f, 0.0f, 1.0f, 1.0f };
+    GL_CHECK(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color));
+    // Set wrapping
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+    // Set filtering
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    // load texture
+    int tex_width, tex_height, tex_channels;
+    uint8_t* tex_data = stbi_load("images/sample2.png", &tex_width, &tex_height, &tex_channels, 3);
+    // TODO assert macro - or just use GLog?
+    assert(tex_data);
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data));
+    // Free the image data
+    stbi_image_free(tex_data);
+    // Generate mipmaps after loading
+    GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
+  }
   
   // A basic clip-space shader
   
@@ -272,7 +305,11 @@ int main(int argc, char *argv[])
   GLint texAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "texcoord"));
   GL_CHECK(glEnableVertexAttribArray(texAttrib));
   GL_CHECK(glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat))));
-    
+  
+  // Bind textures to samplers
+  glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+  glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
+  
   SDL_Event windowEvent;
   while (true) {
     // Input handling
@@ -304,7 +341,8 @@ int main(int argc, char *argv[])
   GL_CHECK(glDeleteShader(fragmentShader));
   GL_CHECK(glDeleteShader(vertexShader));
   
-  GL_CHECK(glDeleteTextures(1, &tex));
+  GL_CHECK(glDeleteTextures(1, &texKitten));
+  GL_CHECK(glDeleteTextures(1, &texPuppy));
   
   GL_CHECK(glDeleteBuffers(1, &ebo));
   GL_CHECK(glDeleteBuffers(1, &vbo));

@@ -5,9 +5,13 @@ in vec2 Texcoord;
 
 out vec4 outColor;
 
-uniform sampler2D tex; // I don't have to bind/set this externally??
+uniform sampler2D texKitten; // I don't have to bind/set this externally??
+uniform sampler2D texPuppy;
 
 void main()
 {
-  outColor = texture(tex, Texcoord) * vec4(Color, 1.0);
+  vec4 colKitten = texture(texKitten, Texcoord);
+  vec4 colPuppy = texture(texPuppy, Texcoord);
+  vec4 texColor = mix(colKitten, colPuppy, 0.5);
+  outColor = texColor * vec4(Color, 1.0);
 }
