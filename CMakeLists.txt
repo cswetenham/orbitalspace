@@ -41,7 +41,14 @@ include_directories("./3rdparty/glad/include")
 
 include_directories("./3rdparty/stb/include")
 
+add_subdirectory("./3rdparty/glog")
+# TODO ugh
+include_directories("./build/3rdparty/glog")
+include_directories("./3rdparty/glog/src")
+# TODO ?? glog expects to be installed, everything is bad
+#include("./build/3rdparty/glog/CMakeFiles/Export/lib/cmake/glog/glog-targets.cmake")
 add_definitions(-D__STDC_LIMIT_MACROS)
+
 
 # Old version
 #add_executable(OrbitalSpace
@@ -65,6 +72,7 @@ target_link_libraries(OrbitalSpace
   ${CMAKE_THREAD_LIBS_INIT} # special case because pthread isn't always called pthread
   ${Boost_LIBRARIES}
   ${OpenGL_LIBRARIES}
+  glog
   SDL2
   GLU # for gluErrorString
 )

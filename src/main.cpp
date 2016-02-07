@@ -24,6 +24,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+#include "glog/logging.h"
+
 // TODO cleanup
 #define ENABLE_GL_CHECK 1
 #if ENABLE_GL_CHECK
@@ -38,7 +40,7 @@ template <typename T>
 inline T _gl_check(T t, char const* file, int line, char const* expr) {
   GLenum err = glGetError();
   while(err != GL_NO_ERROR) {
-    fprintf(stderr, "OpenGL Error: %d %s (%s:%d)\n", err, (char const*)gluErrorString(err), file, line);
+    LOG(ERROR) << "OpenGL Error: " << err << " " << (char const*)gluErrorString(err) << "(" << file << ":" << line << ")";
     err = glGetError();
   }
   return t;

@@ -1560,9 +1560,12 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>3rdparty/glad/include</pElem>
             <pElem>3rdparty/stb/include</pElem>
+            <pElem>build/3rdparty/glog</pElem>
+            <pElem>3rdparty/glog/src</pElem>
             <pElem>build</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>GOOGLE_GLOG_DLL_DECL=</Elem>
             <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
         </cTool>
@@ -1605,9 +1608,12 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>3rdparty/glad/include</pElem>
             <pElem>3rdparty/stb/include</pElem>
+            <pElem>build/3rdparty/glog</pElem>
+            <pElem>3rdparty/glog/src</pElem>
             <pElem>build</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>GOOGLE_GLOG_DLL_DECL=</Elem>
             <Elem>_DEBUG</Elem>
             <Elem>__STDC_LIMIT_MACROS</Elem>
           </preprocessorList>
