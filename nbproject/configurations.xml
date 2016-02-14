@@ -302,6 +302,8 @@
     <itemPath>3rdparty/glad/README.md</itemPath>
     <itemPath>shaders/ch2.f.glsl</itemPath>
     <itemPath>shaders/ch2.v.glsl</itemPath>
+    <itemPath>shaders/vertexcol.f.glsl</itemPath>
+    <itemPath>shaders/vertexcol.v.glsl</itemPath>
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
@@ -1589,6 +1591,10 @@
           </incDir>
         </ccTool>
       </folder>
+      <item path="shaders/vertexcol.f.glsl" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="shaders/vertexcol.v.glsl" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
           <incDir>

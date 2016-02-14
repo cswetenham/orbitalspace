@@ -51,6 +51,8 @@ inline T _gl_check(T t, char const* file, int line, char const* expr) {
   return t;
 }
 
+// TODO include Lua, use Lua object format for config files + saving/loading
+
 // TODO cleanup
 // Allocates a new string buffer for the contents of filename, and returns the
 // length in lenggh
@@ -84,8 +86,7 @@ char* file_contents(const char* filename, GLint* length)
 void show_shader_info_log(
   char const* shader_path,
   GLuint object
-)
-{
+) {
   GLint log_length;
   GL_CHECK(glGetShaderiv(object, GL_INFO_LOG_LENGTH, &log_length));
   char* log = (char*)malloc(log_length);
@@ -98,8 +99,7 @@ void show_program_info_log(
   char const* vertex_path,
   char const* fragment_path,
   GLuint object
-)
-{
+) {
   GLint log_length;
   GL_CHECK(glGetProgramiv(object, GL_INFO_LOG_LENGTH, &log_length));
   char* log = (char*)malloc(log_length);
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
   //GL_CHECK(glDisable(GL_CULL_FACE));
   GL_CHECK(glEnable(GL_CULL_FACE));
 
-  // Vertex array object: relates vbos to a shader program somehow??
+  // Vertex array object:
   GLuint vao;
   GL_CHECK(glGenVertexArrays(1, &vao));
   GL_CHECK(glBindVertexArray(vao));
@@ -239,6 +239,33 @@ int main(int argc, char *argv[])
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
 
+  // A basic clip-space shader
+
+  // TODO better resource loading
+  GLuint vertexShader = make_shader(GL_VERTEX_SHADER, "shaders/ch2.v.glsl");
+  GLuint fragmentShader = make_shader(GL_FRAGMENT_SHADER, "shaders/ch2.f.glsl");
+  ShaderInfo shader_infos[2];
+  shader_infos[0].shader_path = "shaders/ch2.v.glsl";
+  shader_infos[0].shader_id = vertexShader;
+  shader_infos[1].shader_path = "shaders/ch2.f.glsl";
+  shader_infos[1].shader_id = fragmentShader;
+  GLuint shaderProgram = make_program(2, shader_infos);
+  GL_CHECK(glUseProgram(shaderProgram));
+
+  // Bind position attribute to vertex array
+  GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
+  GL_CHECK(glEnableVertexAttribArray(posAttrib));
+  GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0));
+
+  GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
+  GL_CHECK(glEnableVertexAttribArray(colAttrib));
+  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
+
+  GLint texAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "texcoord"));
+  GL_CHECK(glEnableVertexAttribArray(texAttrib));
+  GL_CHECK(glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat))));
+
+  // Load textures
 
   GLuint texKitten;
   {
@@ -295,31 +322,6 @@ int main(int argc, char *argv[])
     // Generate mipmaps after loading
     GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
   }
-
-  // A basic clip-space shader
-
-  GLuint vertexShader = make_shader(GL_VERTEX_SHADER, "shaders/ch2.v.glsl");
-  GLuint fragmentShader = make_shader(GL_FRAGMENT_SHADER, "shaders/ch2.f.glsl");
-  ShaderInfo shader_infos[2];
-  shader_infos[0].shader_path = "shaders/ch2.v.glsl";
-  shader_infos[0].shader_id = vertexShader;
-  shader_infos[1].shader_path = "shaders/ch2.f.glsl";
-  shader_infos[1].shader_id = fragmentShader;
-  GLuint shaderProgram = make_program(2, shader_infos);
-  GL_CHECK(glUseProgram(shaderProgram));
-
-  // Bind position attribute to vertex array
-  GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
-  GL_CHECK(glEnableVertexAttribArray(posAttrib));
-  GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0));
-
-  GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
-  GL_CHECK(glEnableVertexAttribArray(colAttrib));
-  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
-
-  GLint texAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "texcoord"));
-  GL_CHECK(glEnableVertexAttribArray(texAttrib));
-  GL_CHECK(glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat))));
 
   // GUI state
   bool show_test_window = true;
@@ -383,13 +385,17 @@ int main(int argc, char *argv[])
     // Render game
     // Bind textures to samplers
     GL_CHECK(glUseProgram(shaderProgram));
+
     GL_CHECK(glBindVertexArray(vao));
+
     GL_CHECK(glActiveTexture(GL_TEXTURE0));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, texKitten));
+    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+
     GL_CHECK(glActiveTexture(GL_TEXTURE1));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, texPuppy));
-    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
+
     GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
     // GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
 
