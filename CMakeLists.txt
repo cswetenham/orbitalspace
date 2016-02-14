@@ -5,7 +5,7 @@ project (OrbitalSpace)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake/")
 
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -Wno-deprecated -Wno-comment -fno-operator-names -std=c++1y -D_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -Wall -Wno-deprecated -Wno-comment -fno-operator-names -std=c++11 -D_DEBUG")
 
 #set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
@@ -20,8 +20,6 @@ find_package(Boost COMPONENTS thread program_options system date_time REQUIRED)
 
 find_package(OpenGL REQUIRED) # includes GLU
 
-# TODO? find_package(GLEW REQUIRED)
-
 # No include for Threads
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OpenGL_INCLUDE_DIRS})
@@ -30,7 +28,6 @@ include_directories(${OpenGL_INCLUDE_DIRS})
 # TODO? find_package(Eigen3 REQUIRED)
 include_directories("/usr/include/eigen3")
 include_directories("/usr/include/eigen3/unsupported")
-include_directories("./include")
 
 include_directories("./3rdparty/glm")
 
@@ -41,12 +38,11 @@ include_directories("./3rdparty/glad/include")
 
 include_directories("./3rdparty/stb/include")
 
-add_subdirectory("./3rdparty/glog")
-# TODO ugh
-include_directories("./build/3rdparty/glog")
-include_directories("./3rdparty/glog/src")
-# TODO ?? glog expects to be installed, everything is bad
-#include("./build/3rdparty/glog/CMakeFiles/Export/lib/cmake/glog/glog-targets.cmake")
+include_directories("./3rdparty/imgui")
+
+include_directories("./include")
+include_directories("./src")
+
 add_definitions(-D__STDC_LIMIT_MACROS)
 
 
@@ -65,14 +61,18 @@ add_definitions(-D__STDC_LIMIT_MACROS)
 
 add_executable(OrbitalSpace
   src/main.cpp
+  src/util/timer.cpp
   3rdparty/glad/src/glad.c # TODO build and link separately
+  3rdparty/imgui/imgui.cpp
+  3rdparty/imgui/imgui_draw.cpp
+  3rdparty/imgui/imgui_demo.cpp
+  3rdparty/imgui/imgui_impl_sdl_gl3.cpp
 )
 
 target_link_libraries(OrbitalSpace
   ${CMAKE_THREAD_LIBS_INIT} # special case because pthread isn't always called pthread
   ${Boost_LIBRARIES}
   ${OpenGL_LIBRARIES}
-  glog
   SDL2
   GLU # for gluErrorString
 )

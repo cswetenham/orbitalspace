@@ -24,7 +24,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-#include "glog/logging.h"
+#include "util/platform.h"
+#include "util/logging.h"
+#include "util/timer.h"
+
+#include "imgui.h"
+#include "imgui_impl_sdl_gl3.h"
 
 // TODO cleanup
 #define ENABLE_GL_CHECK 1
@@ -40,7 +45,7 @@ template <typename T>
 inline T _gl_check(T t, char const* file, int line, char const* expr) {
   GLenum err = glGetError();
   while(err != GL_NO_ERROR) {
-    LOG(ERROR) << "OpenGL Error: " << err << " " << (char const*)gluErrorString(err) << "(" << file << ":" << line << ")";
+    LOGERR("OpenGL Error: %d %s (%s:%d)", err, (char const*)gluErrorString(err), file, line);
     err = glGetError();
   }
   return t;
@@ -54,12 +59,12 @@ char* file_contents(const char* filename, GLint* length)
   // TODO better logging + error handling
   assert(filename);
   assert(length);
-  
+
   FILE* f = fopen(filename, "r");
   char* buffer;
 
   if (!f) {
-    fprintf(stderr, "Unable to open %s for reading\n", filename);
+    LOGERR("Unable to open %s for reading\n", filename);
     return NULL;
   }
 
@@ -85,7 +90,7 @@ void show_shader_info_log(
   GL_CHECK(glGetShaderiv(object, GL_INFO_LOG_LENGTH, &log_length));
   char* log = (char*)malloc(log_length);
   GL_CHECK(glGetShaderInfoLog(object, log_length, NULL, log));
-  fprintf(stderr, "Error compiling shader %s: %s", shader_path, log);
+  LOGERR("Error compiling shader %s: %s", shader_path, log);
   free(log);
 }
 
@@ -99,7 +104,7 @@ void show_program_info_log(
   GL_CHECK(glGetProgramiv(object, GL_INFO_LOG_LENGTH, &log_length));
   char* log = (char*)malloc(log_length);
   GL_CHECK(glGetProgramInfoLog(object, log_length, NULL, log));
-  fprintf(stderr, "Error linking shaders %s, %s: %s", vertex_path, fragment_path, log);
+  LOGERR("Error linking shaders %s, %s: %s", vertex_path, fragment_path, log);
   free(log);
 }
 
@@ -119,7 +124,7 @@ static GLuint make_shader(GLenum type, const char* filename)
   GLint shader_ok;
   GL_CHECK(glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok));
   if (!shader_ok) {
-    fprintf(stderr, "Failed to compile %s:\n", filename);
+    LOGERR("Failed to compile %s:\n", filename);
     show_shader_info_log(filename, shader);
     GL_CHECK(glDeleteShader(shader));
     return 0;
@@ -141,61 +146,68 @@ static GLuint make_program(int shader_count, ShaderInfo const* shader_infos)
     for (int i = 0; i < shader_count; ++i) {
       GL_CHECK(glAttachShader(program, shader_infos[i].shader_id));
     }
-    
+
     // TODO well hrm we'll need to pass in an array or something
     // Needs to be called before glLinkProgram and after glAttachShader I guess
     glBindFragDataLocation(program, 0, "outColor"); // not strictly needed since only 1 output
-    
+
     GL_CHECK(glLinkProgram(program));
 
     GLint program_ok;
     GL_CHECK(glGetProgramiv(program, GL_LINK_STATUS, &program_ok));
     if (!program_ok) {
-      fprintf(stderr, "Failed to link shader program:\n");
+      LOGERR("Failed to link shader program:\n");
       for (int i = 0; i < shader_count; ++i) {
-        fprintf(stderr, shader_infos[i].shader_path);
+        LOGERR("- %s", shader_infos[i].shader_path);
       }
       show_program_info_log("", "", program);
       // TODO hmm
       // GL_CHECK(glDeleteProgram(program));
       // return 0;
     }
-    
+
     for (int i = 0; i < shader_count; ++i) {
       // Can detach shaders after link
       GL_CHECK(glDetachShader(program, shader_infos[i].shader_id));
     }
-    
+
     return program;
 }
 
 extern "C"
 int main(int argc, char *argv[])
 {
+  using namespace orbital;
+
+  timer::Init();
+
   SDL_Init(SDL_INIT_VIDEO);
-  
+
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-  SDL_Window* window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
-  
+  SDL_Window* window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 768, SDL_WINDOW_OPENGL);
+
   SDL_GLContext context = SDL_GL_CreateContext(window);
-  
+
   // Load OpenGL and OpenGL functions
   gladLoadGLLoader(SDL_GL_GetProcAddress);
-  printf("OpenGL loaded\n");
-  printf("Vendor:   %s\n", GL_CHECK_R(glGetString(GL_VENDOR)));
-  printf("Renderer: %s\n", GL_CHECK_R(glGetString(GL_RENDERER)));
-  printf("Version:  %s\n", GL_CHECK_R(glGetString(GL_VERSION)));
-  
+  LOGINFO("OpenGL loaded");
+  LOGINFO("Vendor:   %s", GL_CHECK_R(glGetString(GL_VENDOR)));
+  LOGINFO("Renderer: %s", GL_CHECK_R(glGetString(GL_RENDERER)));
+  LOGINFO("Version:  %s", GL_CHECK_R(glGetString(GL_VERSION)));
+
+  // Setup ImGui binding
+  ImGui_ImplSdlGL3_Init(window);
+
   // TODO enable sRGB framebuffer + textures, and use it
-  
+
   // Explicitly set culling orientation and disable/enable culling
   GL_CHECK(glFrontFace(GL_CCW));
   //GL_CHECK(glDisable(GL_CULL_FACE));
   GL_CHECK(glEnable(GL_CULL_FACE));
-  
+
   // Vertex array object: relates vbos to a shader program somehow??
   GLuint vao;
   GL_CHECK(glGenVertexArrays(1, &vao));
@@ -203,30 +215,31 @@ int main(int argc, char *argv[])
 
   GLuint vbo;
   GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
-  
+
   GLfloat vertices[] = {
   //   X,     Y,    R,    G,    B,    S,    T
-   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left 
+   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
    -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
   };
-  
+
   GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
   GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
-  
+
+  // Element buffer object
   GLuint ebo;
   GL_CHECK(glGenBuffers(1, &ebo));
-  
+
   GLuint elements[] = {
     0, 2, 1,
     0, 3, 2
   };
-  
+
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
-  
-  
+
+
   GLuint texKitten;
   {
     GL_CHECK(glGenTextures(1, &texKitten));
@@ -254,7 +267,7 @@ int main(int argc, char *argv[])
     // Generate mipmaps after loading
     GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
   }
-  
+
   GLuint texPuppy;
   {
     GL_CHECK(glGenTextures(1, &texPuppy));
@@ -282,9 +295,9 @@ int main(int argc, char *argv[])
     // Generate mipmaps after loading
     GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
   }
-  
+
   // A basic clip-space shader
-  
+
   GLuint vertexShader = make_shader(GL_VERTEX_SHADER, "shaders/ch2.v.glsl");
   GLuint fragmentShader = make_shader(GL_FRAGMENT_SHADER, "shaders/ch2.f.glsl");
   ShaderInfo shader_infos[2];
@@ -299,22 +312,25 @@ int main(int argc, char *argv[])
   GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
   GL_CHECK(glEnableVertexAttribArray(posAttrib));
   GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0));
-  
+
   GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
   GL_CHECK(glEnableVertexAttribArray(colAttrib));
   GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
-  
+
   GLint texAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "texcoord"));
   GL_CHECK(glEnableVertexAttribArray(texAttrib));
   GL_CHECK(glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat))));
-  
-  // Bind textures to samplers
-  glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
-  glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
-  
-  SDL_Event windowEvent;
+
+  // GUI state
+  bool show_test_window = true;
+  bool show_another_window = false;
+  ImVec4 clear_color = ImColor(114, 144, 154);
+
+  LOGINFO("Starting main loop");
+
   while (true) {
     // Input handling
+    SDL_Event windowEvent;
     if (SDL_PollEvent(&windowEvent)) {
       if (windowEvent.type == SDL_QUIT) {
         break;
@@ -326,33 +342,84 @@ int main(int argc, char *argv[])
         break;
       }
     }
-    
-    // Clear the screen to black
-    GL_CHECK(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
-    
+
+    ImGui_ImplSdlGL3_NewFrame();
+
+    // 1. Show a simple window
+    // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+    {
+        static float f = 0.0f;
+        ImGui::Text("Hello, world!");
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+        ImGui::ColorEdit3("clear color", (float*)&clear_color);
+        if (ImGui::Button("Test Window")) show_test_window ^= 1;
+        if (ImGui::Button("Another Window")) show_another_window ^= 1;
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    }
+
+    // 2. Show another simple window, this time using an explicit Begin/End pair
+    if (show_another_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
+        ImGui::Begin("Another Window", &show_another_window);
+        ImGui::Text("Hello");
+        ImGui::End();
+    }
+
+    // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+    if (show_test_window)
+    {
+        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+        ImGui::ShowTestWindow(&show_test_window);
+    }
+
     // Rendering
+    glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
+
+    // Clear the screen to black
+    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
+
+    // Render game
+    // Bind textures to samplers
+    GL_CHECK(glUseProgram(shaderProgram));
+    GL_CHECK(glBindVertexArray(vao));
+    GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texKitten));
+    GL_CHECK(glActiveTexture(GL_TEXTURE1));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texPuppy));
+    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
     GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
     // GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
+
+    // Render GUI
+    ImGui::Render();
 
     // Swap
     SDL_GL_SwapWindow(window);
   }
-  
+
+  LOGINFO("Exiting...");
+
+  // Cleanup
+
   GL_CHECK(glDeleteProgram(shaderProgram));
   GL_CHECK(glDeleteShader(fragmentShader));
   GL_CHECK(glDeleteShader(vertexShader));
-  
+
   GL_CHECK(glDeleteTextures(1, &texKitten));
   GL_CHECK(glDeleteTextures(1, &texPuppy));
-  
+
   GL_CHECK(glDeleteBuffers(1, &ebo));
   GL_CHECK(glDeleteBuffers(1, &vbo));
-  
-  GL_CHECK(glDeleteVertexArrays(1, &vao));
-  
-  SDL_GL_DeleteContext(context);
 
+  GL_CHECK(glDeleteVertexArrays(1, &vao));
+
+  ImGui_ImplSdlGL3_Shutdown();
+
+  SDL_GL_DeleteContext(context);
+  SDL_DestroyWindow(window);
   SDL_Quit();
 
   return 0;
