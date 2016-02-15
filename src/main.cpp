@@ -235,66 +235,20 @@ int main(int argc, char *argv[])
   GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
 
   struct Vertex {
-    glm::vec4 pos;
-    glm::vec4 col;
+    glm::vec3 pos;
+    glm::vec3 col;
   };
 
-#if 1
   Vertex vertices[] = {
-    { { -1.0f, -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, 0.5f } }, // Back-right-bottom
-    { { -1.0f, -1.0f,  1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } }, // Back-right-top
-    { { -1.0f,  1.0f, -1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 0.5f } }, // Back-left-bottom
-    { { -1.0f,  1.0f,  1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 0.5f } }, // Back-left-top
-    { {  1.0f, -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 0.5f } }, // Front-right-bottom
-    { {  1.0f, -1.0f,  1.0f, 1.0f }, { 1.0f, 0.0f, 1.0f, 0.5f } }, // Front-right-top
-    { {  1.0f,  1.0f, -1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f, 0.5f } }, // Front-left-bottom
-    { {  1.0f,  1.0f,  1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 0.5f } }  // Front-left-top
+    { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f } }, // Black Back-right-bottom
+    { { -1.0f, -1.0f,  1.0f }, { 1.0f, 0.0f, 0.0f } }, // Red Back-right-top
+    { { -1.0f,  1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f } }, // Green Back-left-bottom
+    { { -1.0f,  1.0f,  1.0f }, { 1.0f, 1.0f, 0.0f } }, // Yellow Back-left-top
+    { {  1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } }, // Blue Front-right-bottom
+    { {  1.0f, -1.0f,  1.0f }, { 1.0f, 0.0f, 1.0f } }, // Magenta Front-right-top
+    { {  1.0f,  1.0f, -1.0f }, { 0.0f, 1.0f, 1.0f } }, // Cyan Front-left-bottom
+    { {  1.0f,  1.0f,  1.0f }, { 1.0f, 1.0f, 1.0f } }  // White Front-left-top
   };
-#else
-  GLfloat vertices[] = {
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f
-    };
-#endif
 
   barf_floats(sizeof(vertices), (float*)vertices);
 
@@ -335,12 +289,12 @@ int main(int argc, char *argv[])
   LOGINFO("posAttrib=%d", posAttrib);
   GL_CHECK(glEnableVertexAttribArray(posAttrib));
   // (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
-  GL_CHECK(glVertexAttribPointer(posAttrib, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)));
+  GL_CHECK(glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)));
 
   GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
   LOGINFO("colAttrib=%d", colAttrib);
   GL_CHECK(glEnableVertexAttribArray(colAttrib));
-  GL_CHECK(glVertexAttribPointer(colAttrib, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col)));
+  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col)));
 
   // Set up matrices
   GLint uniModel = GL_CHECK_R(glGetUniformLocation(shaderProgram, "model"));
@@ -349,64 +303,6 @@ int main(int argc, char *argv[])
   LOGINFO("uniView=%d", uniView);
   GLint uniProj = GL_CHECK_R(glGetUniformLocation(shaderProgram, "proj"));
   LOGINFO("uniProj=%d", uniProj);
-
-  // Load textures
-
-  GLuint texKitten;
-  {
-    GL_CHECK(glGenTextures(1, &texKitten));
-
-    GL_CHECK(glActiveTexture(GL_TEXTURE0));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texKitten));
-
-    // Set a border color in case we want to use GL_CLAMP_TO_BORDER
-    GLfloat border_color[] = { 1.0f, 0.0f, 1.0f, 1.0f };
-    GL_CHECK(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color));
-    // Set wrapping
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-    // Set filtering
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    // load texture
-    int tex_width, tex_height, tex_channels;
-    uint8_t* tex_data = stbi_load("images/sample.png", &tex_width, &tex_height, &tex_channels, 3);
-    // TODO assert macro - or just use GLog?
-    assert(tex_data);
-    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data));
-    // Free the image data
-    stbi_image_free(tex_data);
-    // Generate mipmaps after loading
-    GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
-  }
-
-  GLuint texPuppy;
-  {
-    GL_CHECK(glGenTextures(1, &texPuppy));
-
-    GL_CHECK(glActiveTexture(GL_TEXTURE1));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texPuppy));
-
-    // Set a border color in case we want to use GL_CLAMP_TO_BORDER
-    GLfloat border_color[] = { 1.0f, 0.0f, 1.0f, 1.0f };
-    GL_CHECK(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color));
-    // Set wrapping
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-    // Set filtering
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    // load texture
-    int tex_width, tex_height, tex_channels;
-    uint8_t* tex_data = stbi_load("images/sample2.png", &tex_width, &tex_height, &tex_channels, 3);
-    // TODO assert macro - or just use GLog?
-    assert(tex_data);
-    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data));
-    // Free the image data
-    stbi_image_free(tex_data);
-    // Generate mipmaps after loading
-    GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
-  }
 
   // GUI state
   bool show_test_window = false;
@@ -501,8 +397,10 @@ int main(int argc, char *argv[])
     );
     GL_CHECK(glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)));
 
+    // TODO temp
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 #if 1
-    GL_CHECK(glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0));
+    GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(GLuint) * 3), GL_UNSIGNED_INT, 0));
 #else
     GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 36));
 #endif
@@ -521,9 +419,6 @@ int main(int argc, char *argv[])
   GL_CHECK(glDeleteProgram(shaderProgram));
   GL_CHECK(glDeleteShader(fragmentShader));
   GL_CHECK(glDeleteShader(vertexShader));
-
-  GL_CHECK(glDeleteTextures(1, &texKitten));
-  GL_CHECK(glDeleteTextures(1, &texPuppy));
 
   GL_CHECK(glDeleteBuffers(1, &ebo));
   GL_CHECK(glDeleteBuffers(1, &vbo));
