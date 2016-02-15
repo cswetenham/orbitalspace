@@ -15,6 +15,8 @@
 // GLM
 #define GLM_FORCE_RADIANS 1
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // SDL headers
 #include <SDL.h>
@@ -174,6 +176,19 @@ static GLuint make_program(int shader_count, ShaderInfo const* shader_infos)
     return program;
 }
 
+void barf_floats(size_t size, float const* data) {
+  size_t count = size / sizeof(float);
+  LOGINFO("size: %d", size);
+  LOGINFO("count: %d", count);
+
+  int idx = 0;
+  while (idx < count) {
+    LOGINFO("{%03.3f, %03.3f, %03.3f, %03.3f}", data[idx], data[idx+1], data[idx+2], data[idx+3]);
+    idx += 4;
+  }
+
+}
+
 extern "C"
 int main(int argc, char *argv[])
 {
@@ -205,8 +220,11 @@ int main(int argc, char *argv[])
 
   // Explicitly set culling orientation and disable/enable culling
   GL_CHECK(glFrontFace(GL_CCW));
-  //GL_CHECK(glDisable(GL_CULL_FACE));
-  GL_CHECK(glEnable(GL_CULL_FACE));
+  // TODO temp
+  GL_CHECK(glDisable(GL_CULL_FACE));
+  //GL_CHECK(glEnable(GL_CULL_FACE));
+
+  glEnable(GL_DEPTH_TEST);
 
   // Vertex array object:
   GLuint vao;
@@ -216,13 +234,69 @@ int main(int argc, char *argv[])
   GLuint vbo;
   GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
 
-  GLfloat vertices[] = {
-  //   X,     Y,    R,    G,    B,    S,    T
-   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-   -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+  struct Vertex {
+    glm::vec4 pos;
+    glm::vec4 col;
   };
+
+#if 1
+  Vertex vertices[] = {
+    { { -1.0f, -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, 0.5f } }, // Back-right-bottom
+    { { -1.0f, -1.0f,  1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.5f } }, // Back-right-top
+    { { -1.0f,  1.0f, -1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 0.5f } }, // Back-left-bottom
+    { { -1.0f,  1.0f,  1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 0.5f } }, // Back-left-top
+    { {  1.0f, -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 0.5f } }, // Front-right-bottom
+    { {  1.0f, -1.0f,  1.0f, 1.0f }, { 1.0f, 0.0f, 1.0f, 0.5f } }, // Front-right-top
+    { {  1.0f,  1.0f, -1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f, 0.5f } }, // Front-left-bottom
+    { {  1.0f,  1.0f,  1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 0.5f } }  // Front-left-top
+  };
+#else
+  GLfloat vertices[] = {
+        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f
+    };
+#endif
+
+  barf_floats(sizeof(vertices), (float*)vertices);
 
   GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
   GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
@@ -230,40 +304,51 @@ int main(int argc, char *argv[])
   // Element buffer object
   GLuint ebo;
   GL_CHECK(glGenBuffers(1, &ebo));
+  GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
 
   GLuint elements[] = {
-    0, 2, 1,
-    0, 3, 2
+    0, 1, 2, 2, 1, 3,
+    4, 5, 0, 0, 5, 1,
+    6, 7, 4, 4, 7, 5,
+    2, 3, 6, 6, 7, 3,
+    1, 5, 3, 3, 5, 7,
+    6, 2, 4, 4, 0, 2
   };
 
-  GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
 
   // A basic clip-space shader
 
   // TODO better resource loading
-  GLuint vertexShader = make_shader(GL_VERTEX_SHADER, "shaders/ch2.v.glsl");
-  GLuint fragmentShader = make_shader(GL_FRAGMENT_SHADER, "shaders/ch2.f.glsl");
+  GLuint vertexShader = make_shader(GL_VERTEX_SHADER, "shaders/vertexcol.v.glsl");
+  GLuint fragmentShader = make_shader(GL_FRAGMENT_SHADER, "shaders/vertexcol.f.glsl");
   ShaderInfo shader_infos[2];
-  shader_infos[0].shader_path = "shaders/ch2.v.glsl";
+  shader_infos[0].shader_path = "shaders/vertexcol.v.glsl";
   shader_infos[0].shader_id = vertexShader;
-  shader_infos[1].shader_path = "shaders/ch2.f.glsl";
+  shader_infos[1].shader_path = "shaders/vertexcol.f.glsl";
   shader_infos[1].shader_id = fragmentShader;
   GLuint shaderProgram = make_program(2, shader_infos);
   GL_CHECK(glUseProgram(shaderProgram));
 
   // Bind position attribute to vertex array
   GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
+  LOGINFO("posAttrib=%d", posAttrib);
   GL_CHECK(glEnableVertexAttribArray(posAttrib));
-  GL_CHECK(glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), 0));
+  // (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
+  GL_CHECK(glVertexAttribPointer(posAttrib, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)));
 
   GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
+  LOGINFO("colAttrib=%d", colAttrib);
   GL_CHECK(glEnableVertexAttribArray(colAttrib));
-  GL_CHECK(glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(2*sizeof(GLfloat))));
+  GL_CHECK(glVertexAttribPointer(colAttrib, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col)));
 
-  GLint texAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "texcoord"));
-  GL_CHECK(glEnableVertexAttribArray(texAttrib));
-  GL_CHECK(glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7*sizeof(GLfloat), (void*)(5*sizeof(GLfloat))));
+  // Set up matrices
+  GLint uniModel = GL_CHECK_R(glGetUniformLocation(shaderProgram, "model"));
+  LOGINFO("uniModel=%d", uniModel);
+  GLint uniView = GL_CHECK_R(glGetUniformLocation(shaderProgram, "view"));
+  LOGINFO("uniView=%d", uniView);
+  GLint uniProj = GL_CHECK_R(glGetUniformLocation(shaderProgram, "proj"));
+  LOGINFO("uniProj=%d", uniProj);
 
   // Load textures
 
@@ -324,9 +409,13 @@ int main(int argc, char *argv[])
   }
 
   // GUI state
-  bool show_test_window = true;
+  bool show_test_window = false;
   bool show_another_window = false;
   ImVec4 clear_color = ImColor(114, 144, 154);
+
+  ImVec4 eye_pos = ImVec4(3.0f, 3.0f, 3.0f, 1.0f);
+
+  float fov_y = 60.0f;
 
   LOGINFO("Starting main loop");
 
@@ -350,10 +439,10 @@ int main(int argc, char *argv[])
     // 1. Show a simple window
     // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
     {
-        static float f = 0.0f;
         ImGui::Text("Hello, world!");
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+        ImGui::SliderFloat("fov_y", &fov_y, 10.f, 140.0f);
         ImGui::ColorEdit3("clear color", (float*)&clear_color);
+        ImGui::DragFloat3("Eye Pos", (float*)&eye_pos, 1.0f, -10.0f, 10.0f);
         if (ImGui::Button("Test Window")) show_test_window ^= 1;
         if (ImGui::Button("Another Window")) show_another_window ^= 1;
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -380,7 +469,8 @@ int main(int argc, char *argv[])
 
     // Clear the screen to black
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
 
     // Render game
     // Bind textures to samplers
@@ -388,16 +478,34 @@ int main(int argc, char *argv[])
 
     GL_CHECK(glBindVertexArray(vao));
 
-    GL_CHECK(glActiveTexture(GL_TEXTURE0));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texKitten));
-    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+    glm::mat4 model;
+    model = glm::rotate(
+        model,
+        0.0f,
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    );
+    GL_CHECK(glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model)));
 
-    GL_CHECK(glActiveTexture(GL_TEXTURE1));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texPuppy));
-    glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
+    glm::mat4 view = glm::lookAt(
+        glm::vec3(eye_pos.x, eye_pos.y, eye_pos.z),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    );
+    GL_CHECK(glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)));
 
-    GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-    // GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
+    glm::mat4 proj = glm::perspective(
+        glm::radians(fov_y),
+        1024.0f / 768.0f,
+        0.01f,
+        100.0f
+    );
+    GL_CHECK(glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)));
+
+#if 1
+    GL_CHECK(glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0));
+#else
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 36));
+#endif
 
     // Render GUI
     ImGui::Render();

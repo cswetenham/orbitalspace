@@ -347,71 +347,86 @@
             flavor2="4">
       </item>
       <item path="3rdparty/SDL/src/SDL.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_assert.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_error.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_hints.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_log.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/atomic/SDL_atomic.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/atomic/SDL_spinlock.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/audio/SDL_audio.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
@@ -424,7 +439,7 @@
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
@@ -437,7 +452,7 @@
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
@@ -457,13 +472,10 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>SDL2_EXPORTS</Elem>
-          </preprocessorList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/audio/SDL_mixer.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
@@ -473,7 +485,7 @@
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/audio/SDL_wave.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
           <incDir>
             <pElem>3rdparty/glm</pElem>
             <pElem>build/3rdparty/SDL/include</pElem>
@@ -491,21 +503,21 @@
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/audio/dsp/SDL_dspaudio.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/audio/dummy/SDL_dummyaudio.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/audio/esd/SDL_esdaudio.c"
@@ -527,180 +539,180 @@
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_clipboardevents.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_dropevents.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_events.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_gesture.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_keyboard.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_mouse.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_quit.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_touch.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/events/SDL_windowevents.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/file/SDL_rwops.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/filesystem/unix/SDL_sysfilesystem.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/haptic/SDL_haptic.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/haptic/linux/SDL_syshaptic.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/joystick/SDL_gamecontroller.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/joystick/SDL_joystick.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/joystick/linux/SDL_sysjoystick.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/e_atan2.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/e_log.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/e_pow.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/e_rem_pio2.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/e_sqrt.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/k_cos.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/k_rem_pio2.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/k_sin.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_atan.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_copysign.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_cos.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_fabs.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_floor.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_scalbn.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/libm/s_sin.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/loadso/dlopen/SDL_sysloadso.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/main/dummy/SDL_dummy_main.c"
@@ -711,483 +723,483 @@
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/power/SDL_power.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/power/linux/SDL_syspower.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/SDL_render.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/SDL_yuv_mmx.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/SDL_yuv_sw.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/direct3d/SDL_render_d3d.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/opengl/SDL_render_gl.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/opengl/SDL_shaders_gl.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/opengles/SDL_render_gles.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/opengles2/SDL_render_gles2.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/opengles2/SDL_shaders_gles2.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/psp/SDL_render_psp.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_blendfillrect.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_blendline.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_blendpoint.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_drawline.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_drawpoint.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_render_sw.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/render/software/SDL_rotate.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_getenv.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_iconv.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_malloc.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_qsort.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_stdlib.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_string.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/SDL_thread.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/pthread/SDL_syscond.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/pthread/SDL_sysmutex.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/pthread/SDL_syssem.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/pthread/SDL_systhread.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/pthread/SDL_systls.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/timer/SDL_timer.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/timer/unix/SDL_systimer.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_RLEaccel.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_0.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_1.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_A.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_N.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_auto.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_copy.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_blit_slow.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_bmp.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_clipboard.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_egl.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_fillrect.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_pixels.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_rect.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_shape.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_stretch.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_surface.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/SDL_video.c" ex="false" tool="0" flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/dummy/SDL_nullevents.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/dummy/SDL_nullframebuffer.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/dummy/SDL_nullvideo.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11clipboard.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11dyn.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11events.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11framebuffer.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11keyboard.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11messagebox.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11modes.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11mouse.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11opengl.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11opengles.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11shape.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11touch.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11video.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11window.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/SDL_x11xinput2.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/edid-parse.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/video/x11/imKStoUCS.c"
             ex="false"
             tool="0"
             flavor2="2">
-        <cTool flags="1">
+        <cTool flags="2">
         </cTool>
       </item>
       <item path="3rdparty/glad/src/glad.c" ex="false" tool="0" flavor2="2">
@@ -1300,6 +1312,16 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
+        </cTool>
+      </folder>
+      <folder path="0/3rdparty/SDL/src/audio">
+        <cTool>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/audio/alsa">
@@ -1311,7 +1333,6 @@
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>SDL2_EXPORTS</Elem>
             <Elem>_OPTIMIZE__=1</Elem>
             <Elem>__PIC__=2</Elem>
             <Elem>__pic__=2</Elem>
@@ -1357,7 +1378,6 @@
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>SDL2_EXPORTS</Elem>
             <Elem>_OPTIMIZE__=1</Elem>
             <Elem>__PIC__=2</Elem>
             <Elem>__pic__=2</Elem>
@@ -1373,7 +1393,6 @@
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>SDL2_EXPORTS</Elem>
             <Elem>_OPTIMIZE__=1</Elem>
             <Elem>__PIC__=2</Elem>
             <Elem>__pic__=2</Elem>
@@ -1389,7 +1408,6 @@
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>SDL2_EXPORTS</Elem>
             <Elem>_OPTIMIZE__=1</Elem>
             <Elem>__PIC__=2</Elem>
             <Elem>__pic__=2</Elem>
@@ -1404,6 +1422,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/events">
@@ -1414,6 +1435,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/file">
@@ -1424,6 +1448,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/filesystem">
@@ -1434,6 +1461,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/haptic">
@@ -1444,6 +1474,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/joystick">
@@ -1454,6 +1487,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/libm">
@@ -1464,6 +1500,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/loadso">
@@ -1474,6 +1513,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/main">
@@ -1494,6 +1536,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/render">
@@ -1504,6 +1549,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/stdlib">
@@ -1514,6 +1562,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/thread">
@@ -1524,6 +1575,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/timer">
@@ -1534,6 +1588,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/SDL/src/video">
@@ -1544,6 +1601,9 @@
             <pElem>3rdparty/SDL/include</pElem>
             <pElem>build/3rdparty/SDL</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>SDL2_EXPORTS</Elem>
+          </preprocessorList>
         </cTool>
       </folder>
       <folder path="0/3rdparty/glad">
@@ -1591,10 +1651,6 @@
           </incDir>
         </ccTool>
       </folder>
-      <item path="shaders/vertexcol.f.glsl" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="shaders/vertexcol.v.glsl" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
           <incDir>
