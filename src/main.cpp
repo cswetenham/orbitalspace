@@ -220,9 +220,10 @@ int main(int argc, char *argv[])
 
   // Explicitly set culling orientation and disable/enable culling
   GL_CHECK(glFrontFace(GL_CCW));
+  // GL_CHECK(glFrontFace(GL_CW));
   // TODO temp
   GL_CHECK(glDisable(GL_CULL_FACE));
-  //GL_CHECK(glEnable(GL_CULL_FACE));
+  // GL_CHECK(glEnable(GL_CULL_FACE));
 
   glEnable(GL_DEPTH_TEST);
 
@@ -260,13 +261,13 @@ int main(int argc, char *argv[])
   GL_CHECK(glGenBuffers(1, &ebo));
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
 
-  GLuint elements[] = {
-    0, 1, 2, 2, 1, 3,
-    4, 5, 0, 0, 5, 1,
-    6, 7, 4, 4, 7, 5,
+  uint32_t elements[] = {
     2, 3, 6, 6, 7, 3,
     1, 5, 3, 3, 5, 7,
-    6, 2, 4, 4, 0, 2
+    6, 2, 4, 4, 0, 2,
+    0, 1, 2, 2, 1, 3,
+    4, 5, 0, 0, 5, 1,
+    6, 7, 4, 4, 7, 5
   };
 
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
@@ -306,9 +307,8 @@ int main(int argc, char *argv[])
 
   // GUI state
   bool show_test_window = false;
-  bool show_another_window = false;
+  bool wireframe = false;
   ImVec4 clear_color = ImColor(114, 144, 154);
-
   ImVec4 eye_pos = ImVec4(3.0f, 3.0f, 3.0f, 1.0f);
 
   float fov_y = 60.0f;
@@ -340,17 +340,8 @@ int main(int argc, char *argv[])
         ImGui::ColorEdit3("clear color", (float*)&clear_color);
         ImGui::DragFloat3("Eye Pos", (float*)&eye_pos, 1.0f, -10.0f, 10.0f);
         if (ImGui::Button("Test Window")) show_test_window ^= 1;
-        if (ImGui::Button("Another Window")) show_another_window ^= 1;
+        ImGui::Checkbox("Wireframe", &wireframe);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    }
-
-    // 2. Show another simple window, this time using an explicit Begin/End pair
-    if (show_another_window)
-    {
-        ImGui::SetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
-        ImGui::Begin("Another Window", &show_another_window);
-        ImGui::Text("Hello");
-        ImGui::End();
     }
 
     // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
@@ -369,6 +360,9 @@ int main(int argc, char *argv[])
 
 
     // Render game
+
+    glPolygonMode( GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL );
+
     // Bind textures to samplers
     GL_CHECK(glUseProgram(shaderProgram));
 
@@ -397,15 +391,12 @@ int main(int argc, char *argv[])
     );
     GL_CHECK(glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)));
 
-    // TODO temp
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-#if 1
-    GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(GLuint) * 3), GL_UNSIGNED_INT, 0));
-#else
-    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 36));
-#endif
+    GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(uint32_t)), GL_UNSIGNED_INT, 0));
+
 
     // Render GUI
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
     ImGui::Render();
 
     // Swap
