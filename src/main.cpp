@@ -222,8 +222,8 @@ int main(int argc, char *argv[])
   GL_CHECK(glFrontFace(GL_CCW));
   // GL_CHECK(glFrontFace(GL_CW));
   // TODO temp
-  GL_CHECK(glDisable(GL_CULL_FACE));
-  // GL_CHECK(glEnable(GL_CULL_FACE));
+  // GL_CHECK(glDisable(GL_CULL_FACE));
+  GL_CHECK(glEnable(GL_CULL_FACE));
 
   glEnable(GL_DEPTH_TEST);
 
@@ -262,12 +262,18 @@ int main(int argc, char *argv[])
   GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
 
   uint32_t elements[] = {
-    2, 3, 6, 6, 7, 3,
-    1, 5, 3, 3, 5, 7,
-    6, 2, 4, 4, 0, 2,
-    0, 1, 2, 2, 1, 3,
-    4, 5, 0, 0, 5, 1,
-    6, 7, 4, 4, 7, 5
+    2, 3, 6,
+    6, 3, 7,
+    1, 5, 3,
+    3, 5, 7,
+    6, 4, 2,
+    2, 4, 0,
+    0, 1, 2,
+    2, 1, 3,
+    4, 5, 0,
+    0, 5, 1,
+    6, 7, 4,
+    4, 7, 5
   };
 
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
@@ -392,7 +398,6 @@ int main(int argc, char *argv[])
     GL_CHECK(glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)));
 
     GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(uint32_t)), GL_UNSIGNED_INT, 0));
-
 
     // Render GUI
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
