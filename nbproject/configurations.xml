@@ -300,6 +300,7 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>3rdparty/glad/README.md</itemPath>
+    <itemPath>3rdparty/imgui/TODO.md</itemPath>
     <itemPath>shaders/ch2.f.glsl</itemPath>
     <itemPath>shaders/ch2.v.glsl</itemPath>
     <itemPath>shaders/vertexcol.f.glsl</itemPath>
@@ -1235,6 +1236,8 @@
       <item path="3rdparty/glad/src/glad.c" ex="false" tool="0" flavor2="2">
         <cTool flags="0">
         </cTool>
+      </item>
+      <item path="3rdparty/imgui/TODO.md" ex="false" tool="3" flavor2="0">
       </item>
       <item path="3rdparty/imgui/imgui.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">

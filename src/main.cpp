@@ -186,8 +186,37 @@ void barf_floats(size_t size, float const* data) {
     LOGINFO("{%03.3f, %03.3f, %03.3f, %03.3f}", data[idx], data[idx+1], data[idx+2], data[idx+3]);
     idx += 4;
   }
-
 }
+
+// A note on scale
+// Currently not planning anything outside the solar system
+// Voyager is outside the heliopause at 134 AU
+
+// A 64-bit int can represent distances up to +/-100 AU at a resolution of
+// 0.0015 mm. Or to keep units scaled in powers of 2 of SI units, if 2^44 m =
+// 2^63 units then 1 unit is about 0.0019 mm and we can represent over 100AU.
+
+// Minimum time resolution I'd simulate at might be 120 fps / 8ms; if we say
+// 1 unit = 1/2^10 seconds then 1 unit is about 1 ms and max is 292277266 years.
+
+// What about speeds?
+// Voyager's fastest speed was 17 km/s. Sun-grazing comets can reach 570 km/s.
+// If we scale for speeds up to +/- 1000 km/s, we can represent speeds at a
+// resolution of 1.08420217x10^-13 m/s. (not the same scale as distances -
+// would lead to constants in various calculations I might have to derive...)
+// Or if I keep the above resolutions, 1 unit distance per 1 unit time is
+// about 0.0019 m/s, and maximum is 2^64 units per 1 unit = something truly
+// absurd. What about scaling by 2^32? 2^31 units per 1 unit is still 8000 km/s
+// and will give good resolution.
+
+// Finally what about accelerations, and other quantities (orbital elements?)
+// TODO for now, maybe just think about the position aspect, and how we'd go
+// from fixed-point to rendering values in single-precision floats in shaders;
+// whatever I decide will also apply to using doubles then rendering to floats.
+// Want high-precision rendering of orbits - geometry shader to generate
+// vertices based on the view frustum and target resolution.
+
+// TODO debug camera vs game camera (model-view transform vs LOD/culling frustum)
 
 extern "C"
 int main(int argc, char *argv[])
@@ -319,6 +348,12 @@ int main(int argc, char *argv[])
 
   float fov_y = 90.0f;
 
+  ImVec2 size(1500.0f, 260.0f);
+  ImVec2 size_inner(1000.0f, 620.0f);
+
+  float external_scroll = 0.0f;
+  float external_scroll_max = 1000.0f;
+
   LOGINFO("Starting main loop");
 
   while (true) {
@@ -348,6 +383,30 @@ int main(int argc, char *argv[])
         if (ImGui::Button("Test Window")) show_test_window ^= 1;
         ImGui::Checkbox("Wireframe", &wireframe);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    }
+
+    // 2. Show timeline window
+    {
+      ImGui::Begin("Timeline", NULL, ImGuiWindowFlags_ShowBorders);
+        ImGui::SliderFloat2("size", &size.x, 0.0f, ImGui::GetIO().DisplaySize.x);
+        ImGui::SliderFloat2("size_inner", &size_inner.x, 0.0f, ImGui::GetIO().DisplaySize.x);
+        ImGui::BeginChild("inner_timeline", size, true, ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_ForceVerticalScrollbar);
+          ImGui::Columns(2, NULL, true);
+          // TODO entity list
+          ImGui::Text("Entity 1");
+          ImGui::Text("Entity 2");
+          ImGui::Text("Entity 3");
+          ImGui::NextColumn();
+          ImGui::BeginChild("timeline_timeline", size_inner, true, ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar ); // | ImGuiWindowFlags_ForceHorizontalScrollbar);
+            ImGui::SetScrollX(external_scroll);
+            external_scroll_max = ImGui::GetScrollMaxX();
+            // TODO entity timeline
+            ImGui::Text("Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline");
+          ImGui::EndChild();
+          ImGui::Columns(1);
+        ImGui::EndChild();
+        ImGui::SliderFloat("Time", &external_scroll, 0.0f, glm::max(external_scroll_max, 0.0f));
+      ImGui::End();
     }
 
     // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
