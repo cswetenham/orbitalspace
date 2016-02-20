@@ -357,6 +357,9 @@
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_assert.c" ex="false" tool="0" flavor2="2">
@@ -370,6 +373,9 @@
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_error.c" ex="false" tool="0" flavor2="2">
@@ -383,6 +389,9 @@
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_hints.c" ex="false" tool="0" flavor2="2">
@@ -396,6 +405,9 @@
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/SDL_log.c" ex="false" tool="0" flavor2="2">
@@ -409,6 +421,9 @@
           <preprocessorList>
             <Elem>SDL2_EXPORTS</Elem>
           </preprocessorList>
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/atomic/SDL_atomic.c"
@@ -857,6 +872,9 @@
             tool="0"
             flavor2="2">
         <cTool flags="2">
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_iconv.c"
@@ -864,6 +882,9 @@
             tool="0"
             flavor2="2">
         <cTool flags="2">
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_malloc.c"
@@ -878,6 +899,9 @@
             tool="0"
             flavor2="2">
         <cTool flags="2">
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_stdlib.c"
@@ -885,6 +909,9 @@
             tool="0"
             flavor2="2">
         <cTool flags="2">
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/stdlib/SDL_string.c"
@@ -892,6 +919,9 @@
             tool="0"
             flavor2="2">
         <cTool flags="2">
+          <undefinedList>
+            <Elem>__NO_INLINE__</Elem>
+          </undefinedList>
         </cTool>
       </item>
       <item path="3rdparty/SDL/src/thread/SDL_thread.c"

@@ -181,7 +181,7 @@ void barf_floats(size_t size, float const* data) {
   LOGINFO("size: %d", size);
   LOGINFO("count: %d", count);
 
-  int idx = 0;
+  size_t idx = 0;
   while (idx < count) {
     LOGINFO("{%03.3f, %03.3f, %03.3f, %03.3f}", data[idx], data[idx+1], data[idx+2], data[idx+3]);
     idx += 4;
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-  SDL_Window* window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 768, SDL_WINDOW_OPENGL);
+  SDL_Window* window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, SDL_WINDOW_OPENGL);
 
   SDL_GLContext context = SDL_GL_CreateContext(window);
 
@@ -314,10 +314,10 @@ int main(int argc, char *argv[])
   // GUI state
   bool show_test_window = false;
   bool wireframe = false;
-  ImVec4 clear_color = ImColor(114, 144, 154);
+  ImVec4 clear_color = ImColor(10, 10, 10);
   ImVec4 eye_pos = ImVec4(3.0f, 3.0f, 3.0f, 1.0f);
 
-  float fov_y = 60.0f;
+  float fov_y = 90.0f;
 
   LOGINFO("Starting main loop");
 
@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
 
     glm::mat4 proj = glm::perspective(
         glm::radians(fov_y),
-        1024.0f / 768.0f,
+        ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
         0.01f,
         100.0f
     );
