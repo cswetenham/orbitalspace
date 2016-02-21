@@ -18,3 +18,9 @@
   - right-click timeline to add custom maneuver at future time for controlled objects
   - Show delta-v for units
   - alternative timeline view showing total remaining delta-v over time instead of maneuvers chart
+
+  - DONE basic layout, actual timelines missing
+  - TODO draw timeline
+  - TODO interactivity
+  - TODO displaying patched conics? Or we could display future trajectory
+    relative to current SOI, or patch at SOI changes and maneuvers?

@@ -300,7 +300,7 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>3rdparty/glad/README.md</itemPath>
-    <itemPath>3rdparty/imgui/TODO.md</itemPath>
+    <itemPath>TODO.md</itemPath>
     <itemPath>shaders/ch2.f.glsl</itemPath>
     <itemPath>shaders/ch2.v.glsl</itemPath>
     <itemPath>shaders/vertexcol.f.glsl</itemPath>
@@ -1237,8 +1237,6 @@
         <cTool flags="0">
         </cTool>
       </item>
-      <item path="3rdparty/imgui/TODO.md" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="3rdparty/imgui/imgui.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="3">
         </ccTool>
@@ -1265,6 +1263,8 @@
       <item path="Matlab/lambert/lambert.m" ex="false" tool="0" flavor2="2">
       </item>
       <item path="Matlab/orbital.m" ex="false" tool="0" flavor2="2">
+      </item>
+      <item path="TODO.md" ex="false" tool="3" flavor2="0">
       </item>
       <item path="build/CMakeFiles/3.2.2/CompilerIdC/CMakeCCompilerId.c"
             ex="false"

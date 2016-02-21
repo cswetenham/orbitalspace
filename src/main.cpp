@@ -216,6 +216,10 @@ void barf_floats(size_t size, float const* data) {
 // Want high-precision rendering of orbits - geometry shader to generate
 // vertices based on the view frustum and target resolution.
 
+// One option first of all, is to allow the camera matrices to use doubles by
+// pre-computing them, and then submitting only screen-space vertices - but
+// this does mean re-computing the vertices every time the camera changes.
+
 // TODO debug camera vs game camera (model-view transform vs LOD/culling frustum)
 
 extern "C"
@@ -230,6 +234,14 @@ int main(int argc, char *argv[])
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
+  // No idea what effect these have on performance!
+  SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   SDL_Window* window = SDL_CreateWindow("OpenGL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, SDL_WINDOW_OPENGL);
 
@@ -253,8 +265,16 @@ int main(int argc, char *argv[])
   // TODO temp
   // GL_CHECK(glDisable(GL_CULL_FACE));
   GL_CHECK(glEnable(GL_CULL_FACE));
+  // Possibly needed for logarithmic depth buffer calculations.
+  // "If enabled, the -wc <= zc <= wc plane equation is ignored by view volume
+  // clipping (effectively, there is no near or far plane clipping).
+  // See glDepthRange."
+  // Note that with the logarithmic shaders, the near and far planes as set by
+  // the perspective matrix still seem to be used for clipping...
+  // TODO figure out what is going on
+  GL_CHECK(glEnable(GL_DEPTH_CLAMP));
 
-  glEnable(GL_DEPTH_TEST);
+  GL_CHECK(glEnable(GL_DEPTH_TEST));
 
   // Vertex array object:
   GLuint vao;
@@ -340,6 +360,12 @@ int main(int argc, char *argv[])
   GLint uniProj = GL_CHECK_R(glGetUniformLocation(shaderProgram, "proj"));
   LOGINFO("uniProj=%d", uniProj);
 
+  GLint uniFcoef = GL_CHECK_R(glGetUniformLocation(shaderProgram, "Fcoef"));
+  LOGINFO("uniFcoef=%d", uniFcoef);
+  GLint uniFcoef_half = GL_CHECK_R(glGetUniformLocation(shaderProgram, "Fcoef_half"));
+  LOGINFO("uniFcoef_half=%d", uniFcoef_half);
+
+
   // GUI state
   bool show_test_window = false;
   bool wireframe = false;
@@ -348,8 +374,12 @@ int main(int argc, char *argv[])
 
   float fov_y = 90.0f;
 
+  float nearplane = 1.0f;
+  float farplane = 100.0f;
+
   ImVec2 size(1500.0f, 260.0f);
   ImVec2 size_inner(1000.0f, 620.0f);
+  ImVec2 size_entities(100.0f, 620.0f);
 
   float external_scroll = 0.0f;
   float external_scroll_max = 1000.0f;
@@ -378,8 +408,10 @@ int main(int argc, char *argv[])
     {
         ImGui::Text("Hello, world!");
         ImGui::SliderFloat("fov_y", &fov_y, 10.f, 140.0f);
+        // TODO near plane
+        // TOOD far plane
         ImGui::ColorEdit3("clear color", (float*)&clear_color);
-        ImGui::DragFloat3("Eye Pos", (float*)&eye_pos, 1.0f, -10.0f, 10.0f);
+        ImGui::DragFloat3("Eye Pos", (float*)&eye_pos, 0.1f, -10.0f, 10.0f);
         if (ImGui::Button("Test Window")) show_test_window ^= 1;
         ImGui::Checkbox("Wireframe", &wireframe);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -390,20 +422,26 @@ int main(int argc, char *argv[])
       ImGui::Begin("Timeline", NULL, ImGuiWindowFlags_ShowBorders);
         ImGui::SliderFloat2("size", &size.x, 0.0f, ImGui::GetIO().DisplaySize.x);
         ImGui::SliderFloat2("size_inner", &size_inner.x, 0.0f, ImGui::GetIO().DisplaySize.x);
+        ImGui::SliderFloat2("size_entities", &size_entities.x, 0.0f, ImGui::GetIO().DisplaySize.x);
         ImGui::BeginChild("inner_timeline", size, true, ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_ForceVerticalScrollbar);
-          ImGui::Columns(2, NULL, true);
+          // ImGui::Columns(2, NULL, true);
           // TODO entity list
+          // ImGui::PushItemWidth(60.0f);
+          ImGui::BeginChild("entities_column", size_entities, true, ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoScrollbar);
           ImGui::Text("Entity 1");
           ImGui::Text("Entity 2");
           ImGui::Text("Entity 3");
-          ImGui::NextColumn();
+          // ImGui::NextColumn();
+          ImGui::EndChild();
+          ImGui::SameLine();
+          // ImGui::PopItemWidth();
           ImGui::BeginChild("timeline_timeline", size_inner, true, ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar ); // | ImGuiWindowFlags_ForceHorizontalScrollbar);
             ImGui::SetScrollX(external_scroll);
             external_scroll_max = ImGui::GetScrollMaxX();
             // TODO entity timeline
             ImGui::Text("Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline Image of a Timeline");
           ImGui::EndChild();
-          ImGui::Columns(1);
+          // ImGui::Columns(1);
         ImGui::EndChild();
         ImGui::SliderFloat("Time", &external_scroll, 0.0f, glm::max(external_scroll_max, 0.0f));
       ImGui::End();
@@ -451,10 +489,14 @@ int main(int argc, char *argv[])
     glm::mat4 proj = glm::perspective(
         glm::radians(fov_y),
         ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
-        0.01f,
-        100.0f
+        nearplane,
+        farplane
     );
     GL_CHECK(glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj)));
+
+    float Fcoef = 2.0 / glm::log2(farplane + 1.0);
+    GL_CHECK(glUniform1f(uniFcoef, Fcoef));
+    GL_CHECK(glUniform1f(uniFcoef_half, Fcoef * 0.5));
 
     GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(uint32_t)), GL_UNSIGNED_INT, 0));
 
