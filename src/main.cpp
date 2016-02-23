@@ -471,14 +471,6 @@ int main(int argc, char *argv[])
 
     GL_CHECK(glBindVertexArray(vao));
 
-    glm::mat4 model;
-    model = glm::rotate(
-        model,
-        0.0f,
-        glm::vec3(0.0f, 0.0f, 1.0f)
-    );
-    GL_CHECK(glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model)));
-
     glm::mat4 view = glm::lookAt(
         glm::vec3(eye_pos.x, eye_pos.y, eye_pos.z),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -498,7 +490,20 @@ int main(int argc, char *argv[])
     GL_CHECK(glUniform1f(uniFcoef, Fcoef));
     GL_CHECK(glUniform1f(uniFcoef_half, Fcoef * 0.5));
 
-    GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(uint32_t)), GL_UNSIGNED_INT, 0));
+    for (int x = -10; x < 10; ++x) {
+      for (int y = -10; y < 10; ++y) {
+        glm::mat4 model;
+        model = glm::rotate(
+            model,
+            0.0f,
+            glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+        model = glm::translate(model, glm::vec3(3.0f * x, 3.0f * y, 0.0f));
+        GL_CHECK(glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model)));
+
+        GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(uint32_t)), GL_UNSIGNED_INT, 0));
+      }
+    }
 
     // Render GUI
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
