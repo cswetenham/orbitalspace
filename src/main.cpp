@@ -25,6 +25,7 @@
 // Do this before you include this file in *one* C or C++ file to create the implementation.
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+#include <vector>
 
 #include "util/platform.h"
 #include "util/logging.h"
@@ -32,6 +33,10 @@
 
 #include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
+
+// Tau is at least twice as cool as Pi
+#define M_TAU      6.28318530717958647693
+#define M_TAU_F    6.28318530717958647693f
 
 // TODO cleanup
 #define ENABLE_GL_CHECK 1
@@ -183,8 +188,20 @@ void barf_floats(size_t size, float const* data) {
 
   size_t idx = 0;
   while (idx < count) {
-    LOGINFO("{%03.3f, %03.3f, %03.3f, %03.3f}", data[idx], data[idx+1], data[idx+2], data[idx+3]);
-    idx += 4;
+    LOGINFO("{%03.3f, %03.3f, %03.3f} {%03.3f, %03.3f, %03.3f}", data[idx], data[idx+1], data[idx+2], data[idx+3], data[idx+4], data[idx+5]);
+    idx += 6;
+  }
+}
+
+void barf_ints(size_t size, uint32_t const* data) {
+  size_t count = size / sizeof(uint32_t);
+  LOGINFO("size: %d", size);
+  LOGINFO("count: %d", count);
+
+  size_t idx = 0;
+  while (idx < count) {
+    LOGINFO("{%03d, %03d, %03d}", data[idx], data[idx+1], data[idx+2]);
+    idx += 3;
   }
 }
 
@@ -221,6 +238,215 @@ void barf_floats(size_t size, float const* data) {
 // this does mean re-computing the vertices every time the camera changes.
 
 // TODO debug camera vs game camera (model-view transform vs LOD/culling frustum)
+
+struct Vertex {
+  glm::vec3 pos;
+  glm::vec3 col;
+};
+
+glm::vec3 col3(glm::vec3 p, glm::vec3 min, glm::vec3 max) {
+  return glm::vec3(
+    (p.x - min.x) / (max.x - min.x),
+    (p.y - min.y) / (max.y - min.y),
+    (p.z - min.z) / (max.z - min.z)
+  );
+}
+
+struct VertexBuffer {
+  std::vector<Vertex> vertices;
+  std::vector<uint32_t> indices;
+};
+
+struct VertexFanBufferAdaptor {
+  VertexBuffer* buffer;
+  uint32_t start_idx;
+  uint32_t num_pushed;
+};
+
+VertexFanBufferAdaptor makeVertexFanBufferAdaptor(VertexBuffer* buffer) {
+  VertexFanBufferAdaptor r;
+  r.buffer = buffer;
+  r.start_idx = 0;
+  r.num_pushed = 0;
+  return r;
+}
+
+void pushBack(VertexFanBufferAdaptor* adaptor, Vertex v) {
+  if (adaptor->num_pushed == 0) {
+    adaptor->start_idx = adaptor->buffer->vertices.size();
+  }
+
+  adaptor->num_pushed++;
+  adaptor->buffer->vertices.push_back(v);
+
+  if (adaptor->num_pushed >= 3) {
+    adaptor->buffer->indices.push_back(adaptor->start_idx);
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 1);
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 2);
+  }
+}
+
+void end(VertexFanBufferAdaptor* adaptor) {}
+
+struct VertexQuadsBufferAdaptor {
+  VertexBuffer* buffer;
+  uint32_t start_idx;
+  uint32_t num_pushed;
+};
+
+VertexQuadsBufferAdaptor makeVertexQuadsBufferAdaptor(VertexBuffer* buffer) {
+  VertexQuadsBufferAdaptor r;
+  r.buffer = buffer;
+  r.start_idx = 0;
+  r.num_pushed = 0;
+  return r;
+}
+
+void pushBack(VertexQuadsBufferAdaptor* adaptor, Vertex v) {
+  if (adaptor->num_pushed == 0) {
+    adaptor->start_idx = adaptor->buffer->vertices.size();
+  }
+
+  adaptor->num_pushed++;
+  adaptor->buffer->vertices.push_back(v);
+
+  if (adaptor->num_pushed < 3) {
+    return;
+  }
+
+  if (adaptor->num_pushed % 2 == 0) {
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 3);
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 2);
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 1);
+  } else {
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 3);
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 1);
+    adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 2);
+  }
+}
+
+void end(VertexQuadsBufferAdaptor* adaptor) {
+  // TODO
+}
+
+uint32_t makeSolidSphereBuffers(
+  glm::vec3 const pos,
+  float const radius,
+  int const slices,
+  int const stacks
+) {
+  VertexBuffer vb;
+  glm::vec3 const center = pos;
+  float const off_H = ( M_TAU_F / 2.f ) / float(stacks);
+  float const off_R = ( M_TAU_F ) / float(slices);
+
+  glm::vec3 const min = center - glm::vec3(radius, radius, radius);
+  glm::vec3 const max = center + glm::vec3(radius, radius, radius);
+
+  // draw the tips as tri_fans
+  {
+    VertexFanBufferAdaptor vb_fan = makeVertexFanBufferAdaptor(&vb);
+    glm::vec3 n(
+      sin( 0.0f ) * sin( 0.0f ),
+      cos( 0.0f ) * sin( 0.0f ),
+      cos( 0.0f )
+    );
+    Vertex v;
+    v.pos = center + n * radius;
+    // v.normal = n;
+    v.col = col3(v.pos, min, max);
+
+    pushBack(&vb_fan, v);
+
+    for ( int sl = 0; sl < slices + 1; sl++ )
+    {
+      float a = float(sl) * off_R;
+      glm::vec3 n(
+        sin( a ) * sin( off_H ),
+        cos( a ) * sin( off_H ),
+        cos( off_H )
+      );
+      Vertex v;
+      v.pos = center + n * radius;
+      // v.normal = n;
+      v.col = col3(v.pos, min, max);
+      pushBack(&vb_fan, v);
+    }
+    end(&vb_fan);
+  }
+
+  {
+    VertexFanBufferAdaptor vb_fan = makeVertexFanBufferAdaptor(&vb);
+    glm::vec3 n(
+      sin( 0.0f ) * sin( M_PI ),
+      cos( 0.0f ) * sin( M_PI ),
+      cos( M_PI )
+    );
+    Vertex v;
+    v.pos = center + n * radius;
+    // v.normal = n;
+    v.col = col3(v.pos, min, max);
+
+    pushBack(&vb_fan, v);
+
+    for ( int sl = slices; sl >= 0; sl-- )
+    {
+      float a = float(sl) * off_R;
+      glm::vec3 n(
+        sin( a ) * sin( M_PI-off_H ),
+        cos( a ) * sin( M_PI-off_H ),
+        cos( M_PI-off_H )
+      );
+      Vertex v;
+      v.pos = center + n * radius;
+      // v.normal = n;
+      v.col = col3(v.pos, min, max);
+      pushBack(&vb_fan, v);
+    }
+    end(&vb_fan);
+  }
+
+  for ( int st = 1; st < stacks - 1; st++ )
+  {
+    float b = float(st) * off_H;
+    VertexQuadsBufferAdaptor vb_quads = makeVertexQuadsBufferAdaptor(&vb);
+    for ( int sl = 0; sl < slices + 1; sl++ )
+    {
+      float a = float(sl)*off_R;
+      {
+        glm::vec3 n(
+          sin( a ) * sin( b ),
+          cos( a ) * sin( b ),
+          cos( b )
+        );
+        Vertex v;
+        v.pos = center + n * radius;
+        // v.normal = n;
+        v.col = col3(v.pos, min, max);
+        pushBack(&vb_quads, v);
+      }
+
+      {
+        glm::vec3 n(
+          sin( a ) * sin( b+off_H ),
+          cos( a ) * sin( b+off_H ),
+          cos( b+off_H )
+        );
+        Vertex v;
+        v.pos = center + n * radius;
+        // v.normal = n;
+        v.col = col3(v.pos, min, max);
+        pushBack(&vb_quads, v);
+      }
+    }
+    end(&vb_quads);
+  }
+  GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vb.vertices.size() * sizeof(Vertex), vb.vertices.data(), GL_STATIC_DRAW));
+  GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vb.indices.size() * sizeof(uint32_t), vb.indices.data(), GL_STATIC_DRAW));
+  barf_floats(vb.vertices.size() * sizeof(Vertex), (float*)vb.vertices.data());
+  barf_ints(vb.indices.size() * sizeof(uint32_t), vb.indices.data());
+  return vb.indices.size();
+}
 
 extern "C"
 int main(int argc, char *argv[])
@@ -275,20 +501,27 @@ int main(int argc, char *argv[])
   GL_CHECK(glEnable(GL_DEPTH_CLAMP));
 
   GL_CHECK(glEnable(GL_DEPTH_TEST));
+  // GL_CHECK(glDisable(GL_DEPTH_TEST));
 
   // Vertex array object:
   GLuint vao;
   GL_CHECK(glGenVertexArrays(1, &vao));
   GL_CHECK(glBindVertexArray(vao));
 
+  // Vertex buffer object
   GLuint vbo;
-  GL_CHECK(glGenBuffers(1, &vbo)); // Generate 1 buffer
+  GL_CHECK(glGenBuffers(1, &vbo));
 
-  struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 col;
-  };
+  // Element buffer object
+  GLuint ebo;
+  GL_CHECK(glGenBuffers(1, &ebo));
 
+  // Bind them
+  GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+  GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+
+  // Cubes
+#if 0
   Vertex vertices[] = {
     { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, 0.0f } }, // Black Back-right-bottom
     { { -1.0f, -1.0f,  1.0f }, { 1.0f, 0.0f, 0.0f } }, // Red Back-right-top
@@ -299,16 +532,6 @@ int main(int argc, char *argv[])
     { {  1.0f,  1.0f, -1.0f }, { 0.0f, 1.0f, 1.0f } }, // Cyan Front-left-bottom
     { {  1.0f,  1.0f,  1.0f }, { 1.0f, 1.0f, 1.0f } }  // White Front-left-top
   };
-
-  barf_floats(sizeof(vertices), (float*)vertices);
-
-  GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-  GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
-
-  // Element buffer object
-  GLuint ebo;
-  GL_CHECK(glGenBuffers(1, &ebo));
-  GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
 
   uint32_t elements[] = {
     2, 3, 6,
@@ -325,7 +548,16 @@ int main(int argc, char *argv[])
     4, 7, 5
   };
 
+  size_t num_elements = sizeof(elements) / sizeof(uint32_t);
+
+  barf_floats(sizeof(vertices), (float*)vertices);
+
+  GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW));
+#else
+  // Barfs into currently bound buffers, probably not the best API
+  size_t const num_elements = makeSolidSphereBuffers(glm::vec3(0,0,0), 1.0f, 32, 64);
+#endif
 
   // A basic clip-space shader
 
@@ -501,7 +733,7 @@ int main(int argc, char *argv[])
         model = glm::translate(model, glm::vec3(3.0f * x, 3.0f * y, 0.0f));
         GL_CHECK(glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model)));
 
-        GL_CHECK(glDrawElements(GL_TRIANGLES, sizeof(elements) / (sizeof(uint32_t)), GL_UNSIGNED_INT, 0));
+        GL_CHECK(glDrawElements(GL_TRIANGLES, num_elements, GL_UNSIGNED_INT, 0));
       }
     }
 
