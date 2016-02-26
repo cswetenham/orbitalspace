@@ -286,8 +286,6 @@ void pushBack(VertexFanBufferAdaptor* adaptor, Vertex v) {
   }
 }
 
-void end(VertexFanBufferAdaptor* adaptor) {}
-
 struct VertexQuadsBufferAdaptor {
   VertexBuffer* buffer;
   uint32_t start_idx;
@@ -323,10 +321,6 @@ void pushBack(VertexQuadsBufferAdaptor* adaptor, Vertex v) {
     adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 1);
     adaptor->buffer->indices.push_back(adaptor->start_idx + adaptor->num_pushed - 2);
   }
-}
-
-void end(VertexQuadsBufferAdaptor* adaptor) {
-  // TODO
 }
 
 uint32_t makeSolidSphereBuffers(
@@ -372,7 +366,6 @@ uint32_t makeSolidSphereBuffers(
       v.col = col3(v.pos, min, max);
       pushBack(&vb_fan, v);
     }
-    end(&vb_fan);
   }
 
   {
@@ -403,7 +396,6 @@ uint32_t makeSolidSphereBuffers(
       v.col = col3(v.pos, min, max);
       pushBack(&vb_fan, v);
     }
-    end(&vb_fan);
   }
 
   for ( int st = 1; st < stacks - 1; st++ )
@@ -439,12 +431,11 @@ uint32_t makeSolidSphereBuffers(
         pushBack(&vb_quads, v);
       }
     }
-    end(&vb_quads);
   }
   GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vb.vertices.size() * sizeof(Vertex), vb.vertices.data(), GL_STATIC_DRAW));
   GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, vb.indices.size() * sizeof(uint32_t), vb.indices.data(), GL_STATIC_DRAW));
-  barf_floats(vb.vertices.size() * sizeof(Vertex), (float*)vb.vertices.data());
-  barf_ints(vb.indices.size() * sizeof(uint32_t), vb.indices.data());
+  // barf_floats(vb.vertices.size() * sizeof(Vertex), (float*)vb.vertices.data());
+  // barf_ints(vb.indices.size() * sizeof(uint32_t), vb.indices.data());
   return vb.indices.size();
 }
 
@@ -576,7 +567,6 @@ int main(int argc, char *argv[])
   GLint posAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "position"));
   LOGINFO("posAttrib=%d", posAttrib);
   GL_CHECK(glEnableVertexAttribArray(posAttrib));
-  // (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
   GL_CHECK(glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)));
 
   GLint colAttrib = GL_CHECK_R(glGetAttribLocation(shaderProgram, "color"));
