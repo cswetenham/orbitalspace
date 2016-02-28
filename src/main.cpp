@@ -439,6 +439,41 @@ uint32_t makeSolidSphereBuffers(
   return vb.indices.size();
 }
 
+struct OrbitalCamParams {
+  OrbitalCamParams() : dist(0), theta(0), phi(0) {}
+  float dist;
+  float theta;
+  float phi;
+};
+
+OrbitalCamParams camParams;
+
+glm::mat4 CamMtxFromCamParams(OrbitalCamParams const& params)
+{
+  static bool show_debug = true;
+
+  glm::mat4 displacement = glm::translate(glm::lookAt(glm::vec3(0,0,0), glm::vec3(0,1.f,0), glm::vec3(0,0,1.f)), glm::vec3(0.f, params.dist, 0.f));
+  glm::mat4 phiRot = glm::rotate(displacement, params.phi, glm::vec3(1.f, 0.f, 0.f));
+  glm::mat4 thetaRot = glm::rotate(phiRot, params.theta, glm::vec3(0.f, 0.f, 1.f));
+  
+  glm::mat4 cam_mtx = thetaRot;
+
+  ImGui::Begin("CamPosMatrix", &show_debug);
+#if 1
+  ImGui::Columns(4);
+  for (int i = 0; i < 4; ++i) {
+    ImGui::Text("%+03.3f", phiRot[i].x); ImGui::NextColumn();
+    ImGui::Text("%+03.3f", phiRot[i].y); ImGui::NextColumn();
+    ImGui::Text("%+03.3f", phiRot[i].z); ImGui::NextColumn();
+    ImGui::Text("%+03.3f", phiRot[i].w); ImGui::NextColumn();
+    ImGui::Separator();
+  }
+#endif
+  ImGui::End();
+
+  return cam_mtx;
+}
+
 extern "C"
 int main(int argc, char *argv[])
 {
@@ -592,7 +627,6 @@ int main(int argc, char *argv[])
   bool show_test_window = false;
   bool wireframe = false;
   ImVec4 clear_color = ImColor(10, 10, 10);
-  ImVec4 eye_pos = ImVec4(3.0f, 3.0f, 3.0f, 1.0f);
 
   float fov_y = 90.0f;
 
@@ -605,6 +639,8 @@ int main(int argc, char *argv[])
 
   float external_scroll = 0.0f;
   float external_scroll_max = 1000.0f;
+
+  camParams.dist = 2.0f;
 
   LOGINFO("Starting main loop");
 
@@ -633,7 +669,10 @@ int main(int argc, char *argv[])
         // TODO near plane
         // TOOD far plane
         ImGui::ColorEdit3("clear color", (float*)&clear_color);
-        ImGui::DragFloat3("Eye Pos", (float*)&eye_pos, 0.1f, -10.0f, 10.0f);
+        // ImGui::DragFloat3("Eye Pos", (float*)&eye_pos, 0.1f, -10.0f, 10.0f);
+        ImGui::DragFloat("Eye Dist", &camParams.dist, 0.1f, 0.f, 100.f);
+        ImGui::DragFloat("Eye Elevation", &camParams.phi, 0.1f, -0.25f * M_TAU_F, 0.25f * M_TAU_F);
+        ImGui::DragFloat("Eye Swivel", &camParams.theta, 0.1f, -0.5f * M_TAU_F, 0.5f * M_TAU_F);
         if (ImGui::Button("Test Window")) show_test_window ^= 1;
         ImGui::Checkbox("Wireframe", &wireframe);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -693,11 +732,7 @@ int main(int argc, char *argv[])
 
     GL_CHECK(glBindVertexArray(vao));
 
-    glm::mat4 view = glm::lookAt(
-        glm::vec3(eye_pos.x, eye_pos.y, eye_pos.z),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f)
-    );
+    glm::mat4 view = CamMtxFromCamParams(camParams);
     GL_CHECK(glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view)));
 
     glm::mat4 proj = glm::perspective(
